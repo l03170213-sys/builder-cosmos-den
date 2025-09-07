@@ -352,7 +352,7 @@ export default function Repondants() {
                         {categoriesByRespondent.map((c, idx) => (
                           <div key={idx} className="flex justify-between items-center px-2 py-1 border-b last:border-b-0">
                             <div className="text-sm text-gray-700">{c.name}</div>
-                            <div className="text-sm font-medium text-gray-900">{c.value}</div>
+                            <div className="text-sm font-medium text-gray-900">{c.value ? formatAverage(c.value) : '—'}</div>
                           </div>
                         ))}
                       </div>
