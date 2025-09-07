@@ -419,7 +419,7 @@ export default function Repondants() {
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogContent className="max-w-3xl" aria-describedby="respondent-dialog-desc">
-              <DialogTitle>{selected?.name || selected?.email || 'Fiche répondant'}</DialogTitle>
+              <DialogTitle>{selected?.name ? selected.name : 'Anonyme'}</DialogTitle>
               <DialogDescription id="respondent-dialog-desc">Détails et moyennes pour le répondant sélectionné</DialogDescription>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
