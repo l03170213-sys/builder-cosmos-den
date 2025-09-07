@@ -158,7 +158,8 @@ export default function Repondants() {
     queryKey: ['resortAverages'],
     queryFn: async () => {
       try {
-        const r = await fetch('/api/resort/vm-resort-albanie/averages');
+        const apiUrl = new URL('/api/resort/vm-resort-albanie/averages', window.location.origin).toString();
+        const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
           console.error('Unable to load averages, status', r.status);
           return null;
