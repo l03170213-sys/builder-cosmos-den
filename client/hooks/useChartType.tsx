@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-import { useEffect, useState } from "react";
-
 export type ChartType = "bar" | "line" | "pie" | "radar";
 
 export function useChartType(defaultType: ChartType = "bar") {
