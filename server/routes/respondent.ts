@@ -143,6 +143,14 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     }
 
     // Try cols-as-respondents: find column index
+    console.debug('[respondent] no row match, trying column match. cols length:', cols.length);
+    // log sample of first 10 rows for debugging
+    try {
+      const sample = rows.slice(0, 10).map((r: any, idx: number) => ({ idx, cells: (r.c || []).map(cellToString) }));
+      console.debug('[respondent] sample rows:', JSON.stringify(sample));
+      if (rows[5]) console.debug('[respondent] row 6 raw:', JSON.stringify((rows[5].c || []).map(cellToString)));
+    } catch (e) { /* ignore */ }
+
     let colIndex = -1;
     for (let i = 0; i < cols.length; i++) {
       const lbl = (cols[i] || '').toString().trim().toLowerCase();
