@@ -160,11 +160,20 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
     sectionTitle.style.fontWeight = '700';
     container.appendChild(sectionTitle);
 
-    // No distribution graphic in official export — show table full width
+    // Insert the cloned distribution (listEl) full width
+    const clonedList = listEl.cloneNode(true) as HTMLElement;
+    clonedList.style.width = '100%';
+    clonedList.style.display = 'block';
+    clonedList.style.verticalAlign = 'top';
+    clonedList.querySelectorAll('.animate-pulse').forEach((el: any) => (el.className = ''));
+
+    // Right below: table generated from matrice moyenne sheet
     const tableContainer = document.createElement('div');
     tableContainer.style.width = '100%';
     tableContainer.style.verticalAlign = 'top';
+    tableContainer.style.marginTop = '12px';
 
+    container.appendChild(clonedList);
     container.appendChild(tableContainer);
 
     // Fetch matrice moyenne to build the table on the right
