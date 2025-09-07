@@ -104,14 +104,14 @@ export default function Repondants() {
     queryKey: ["repondants"],
     queryFn: async () => {
       try {
-        // Try to fetch via internal API if available
-        try {
-          const apiUrl = new URL('/api/resort/vm-resort-albanie/respondents', window.location.origin).toString();
-          const r = await fetch(apiUrl, { credentials: 'same-origin' });
-          if (r.ok) return (await r.json());
-        } catch (e) {
-          // ignore and fallback to direct gviz
+        // Fetch from internal server endpoint only (avoid client-side Google fetch/CORS)
+        const apiUrl = new URL('/api/resort/vm-resort-albanie/respondents', window.location.origin).toString();
+        const r = await fetch(apiUrl, { credentials: 'same-origin' });
+        if (!r.ok) {
+          console.error('Unable to load respondents from server, status', r.status);
+          return [];
         }
+        return await r.json();
 
         const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
         const r = await fetch(gurl);
