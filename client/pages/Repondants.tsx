@@ -114,12 +114,12 @@ export default function Repondants() {
         return await r.json();
 
         const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
-        const r = await fetch(gurl);
-        if (!r.ok) {
-          console.error('Unable to fetch sheet, status', r.status);
+        const gurlResp = await fetch(gurl);
+        if (!gurlResp.ok) {
+          console.error('Unable to fetch sheet, status', gurlResp.status);
           return [];
         }
-        const text = await r.text();
+        const text = await gurlResp.text();
         const parsed = parseGviz(text);
         const cols: string[] = (parsed.table.cols || []).map((c: any) => (c.label || '').toString().toLowerCase());
         const rows: any[] = parsed.table.rows || [];
