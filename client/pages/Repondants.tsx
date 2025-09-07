@@ -198,45 +198,6 @@ export default function Repondants() {
   // keep loading state in sync
   React.useEffect(() => { setLoadingRespondentData(Boolean(respondentQuery.isFetching)); }, [respondentQuery.isFetching]);
 
-  // fetch global summary (respondents + recommendation rate)
-  const { data: summary, isLoading: loadingSummary } = useQuery({
-    queryKey: ['resortSummary'],
-    queryFn: async () => {
-      try {
-        const r = await fetch('/api/resort/vm-resort-albanie/summary');
-        if (!r.ok) {
-          console.error('Unable to load summary, status', r.status);
-          return null;
-        }
-        return r.json();
-      } catch (err) {
-        console.error('Failed to fetch summary:', err);
-        return null;
-      }
-    },
-    enabled: true,
-    refetchOnWindowFocus: false,
-  });
-
-  // fetch averages (overallAverage)
-  const { data: averages, isLoading: loadingAverages } = useQuery({
-    queryKey: ['resortAverages'],
-    queryFn: async () => {
-      try {
-        const r = await fetch('/api/resort/vm-resort-albanie/averages');
-        if (!r.ok) {
-          console.error('Unable to load averages, status', r.status);
-          return null;
-        }
-        return r.json();
-      } catch (err) {
-        console.error('Failed to fetch averages:', err);
-        return null;
-      }
-    },
-    enabled: true,
-    refetchOnWindowFocus: false,
-  });
 
   // state to hold selected respondent and per-category values
   const [selected, setSelected] = React.useState<any>(null);
