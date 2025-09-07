@@ -23,6 +23,7 @@ function cellToString(c: any) {
 }
 
 export default function Repondants() {
+  const [dialogOpen, setDialogOpen] = React.useState(false);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["repondants"],
     queryFn: async () => {
