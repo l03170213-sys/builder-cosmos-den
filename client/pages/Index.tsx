@@ -11,11 +11,22 @@ export default function Index() {
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
     queryKey: ["resort-averages"],
     queryFn: async () => {
-      const r = await fetch("/api/resort/vm-resort-albanie/averages");
-      if (!r.ok) throw new Error("Network error");
-      return (await r.json()) as ResortAveragesResponse;
+      try {
+        const url = new URL('/api/resort/vm-resort-albanie/averages', window.location.origin).toString();
+        const r = await fetch(url, { credentials: 'same-origin' });
+        if (!r.ok) {
+          const text = await r.text().catch(() => r.statusText);
+          throw new Error(`Server error: ${r.status} ${text}`);
+        }
+        return (await r.json()) as ResortAveragesResponse;
+      } catch (err) {
+        console.error('Failed fetching averages:', err);
+        throw err;
+      }
     },
     refetchInterval: 1000 * 60 * 10, // every 10 minutes
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   const { data: summary, isLoading: loadingSummary } = useQuery<import("@shared/api").ResortSummaryResponse>({
