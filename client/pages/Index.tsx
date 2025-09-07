@@ -321,6 +321,30 @@ export default function Index() {
               )}
             </div>
           </section>
+
+          {/* Hidden PDF summary used for page 2 generation */}
+          <div id="pdf-summary" aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+            <div style={{ fontFamily: 'Inter, Arial, Helvetica, sans-serif', color: '#0f172a' }}>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 14, color: '#64748b' }}>Note Moyenne Globale</div>
+                <div style={{ fontSize: 28, fontWeight: 700 }}>{data ? `${data.overallAverage.toFixed(1)}/5` : '—'}</div>
+                <div style={{ fontSize: 12, color: '#94a3b8' }}>{data ? `Mise à jour: ${new Date(data.updatedAt).toLocaleDateString('fr-FR')}` : ''}</div>
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 14, color: '#64748b' }}>Taux de Recommandation</div>
+                <div style={{ fontSize: 28, fontWeight: 700 }}>{summary && summary.recommendationRate != null ? `${Math.round(summary.recommendationRate * 100)}%` : '—'}</div>
+                <div style={{ fontSize: 12, color: '#94a3b8' }}>{summary ? `Basé sur ${summary.respondents || 0} répondants` : ''}</div>
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 14, color: '#64748b' }}>Réponses Totales</div>
+                <div style={{ fontSize: 28, fontWeight: 700 }}>{summary ? `${summary.respondents ?? '—'}` : '—'}</div>
+                <div style={{ fontSize: 12, color: '#94a3b8' }}>Nombre total de lignes non vides (feuille 1)</div>
+              </div>
+            </div>
+          </div>
+
         </main>
       </div>
     </div>
