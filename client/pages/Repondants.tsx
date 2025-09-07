@@ -518,7 +518,10 @@ export default function Repondants() {
           </Card>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl" aria-describedby="respondent-dialog-desc">
+              <DialogTitle>{selected?.name || selected?.email || 'Fiche répondant'}</DialogTitle>
+              <DialogDescription id="respondent-dialog-desc">Détails et moyennes pour le répondant sélectionné</DialogDescription>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
                   <div className="text-xs text-muted-foreground">Note Général</div>
