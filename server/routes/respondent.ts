@@ -166,6 +166,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       }
     }
 
+    console.debug('[respondent] column match index:', colIndex);
     if (colIndex !== -1) {
       const cats: { name: string; value: string }[] = [];
       for (const r of rows) {
