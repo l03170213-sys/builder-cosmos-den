@@ -142,12 +142,13 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
     // fill cards from summaryEl content
     const avg = summaryEl.querySelectorAll('div')[0]?.querySelectorAll('div')[1]?.textContent || '';
     const updated = summaryEl.querySelectorAll('div')[0]?.querySelectorAll('div')[2]?.textContent || '';
-    const rate = summaryEl.querySelectorAll('div')[1]?.querySelectorAll('div')[1]?.textContent || '';
-    const rateSub = summaryEl.querySelectorAll('div')[1]?.querySelectorAll('div')[2]?.textContent || '';
-    const total = summaryEl.querySelectorAll('div')[2]?.querySelectorAll('div')[1]?.textContent || '';
+    const respondents = summaryEl.querySelectorAll('div')[1]?.querySelectorAll('div')[1]?.textContent || '';
+    const respondentsSub = summaryEl.querySelectorAll('div')[1]?.querySelectorAll('div')[2]?.textContent || '';
+    const rate = summaryEl.querySelectorAll('div')[2]?.querySelectorAll('div')[1]?.textContent || '';
+    const rateSub = summaryEl.querySelectorAll('div')[2]?.querySelectorAll('div')[2]?.textContent || '';
 
     cardsRow.appendChild(makeCard('Moyenne générale', avg, updated));
-    cardsRow.appendChild(makeCard('Nombre de réponses', total, 'Nombre de lignes (réponses)'));
+    cardsRow.appendChild(makeCard('Nombre de réponses', respondents, respondentsSub || 'Nombre de lignes (réponses)'));
     cardsRow.appendChild(makeCard('Taux de Recommandation', rate, rateSub));
 
     container.appendChild(cardsRow);
