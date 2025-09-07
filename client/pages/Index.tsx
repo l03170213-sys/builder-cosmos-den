@@ -32,10 +32,21 @@ export default function Index() {
   const { data: summary, isLoading: loadingSummary } = useQuery<import("@shared/api").ResortSummaryResponse>({
     queryKey: ["resort-summary"],
     queryFn: async () => {
-      const r = await fetch("/api/resort/vm-resort-albanie/summary");
-      if (!r.ok) throw new Error("Network error summary");
-      return (await r.json()) as import("@shared/api").ResortSummaryResponse;
+      try {
+        const url = new URL('/api/resort/vm-resort-albanie/summary', window.location.origin).toString();
+        const r = await fetch(url, { credentials: 'same-origin' });
+        if (!r.ok) {
+          const text = await r.text().catch(() => r.statusText);
+          throw new Error(`Server error: ${r.status} ${text}`);
+        }
+        return (await r.json()) as import("@shared/api").ResortSummaryResponse;
+      } catch (err) {
+        console.error('Failed fetching summary:', err);
+        throw err;
+      }
     },
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   return (
