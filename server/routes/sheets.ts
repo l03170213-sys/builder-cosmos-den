@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import type { ResortAveragesResponse } from "@shared/api";
 
 const SHEET_ID = "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
-const GID_MATRICE_MOYENNE = "1595451985";
+const GID_MATRICE_MOYENNE = "1104314362";
 
 function parseGviz(text: string) {
   const start = text.indexOf("(");
