@@ -68,6 +68,7 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
         date: cellToString(c[idxDate]) || '',
         postal: cellToString(c[idxPostal]) || '',
         duration: cellToString(c[idxDuration]) || '',
+        age: cellToString(c[idxAge]) || '',
         feedback: cellToString(c[idxFeedback]) || '',
       };
     }).filter((it) => it.email || it.note || it.date || it.postal || it.duration || it.feedback);
