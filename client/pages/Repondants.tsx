@@ -382,6 +382,16 @@ export default function Repondants() {
                 </div>
               </div>
 
+              <div className="mt-4">
+                <div className="rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
+                  <div className="text-xs text-muted-foreground">Votre avis compte pour nous ! :)</div>
+                  <div className="mt-2 text-sm">
+                    {selected && (selected.feedback ? <div className="whitespace-pre-wrap text-sm text-gray-800">{selected.feedback}</div> : <div className="text-sm text-muted-foreground">Aucun commentaire fourni.</div>)}
+                    {!selected && <div className="text-sm text-muted-foreground">Sélectionnez un répondant pour voir le commentaire.</div>}
+                  </div>
+                </div>
+              </div>
+
             </DialogContent>
           </Dialog>
 
