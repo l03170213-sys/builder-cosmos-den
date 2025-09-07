@@ -58,9 +58,13 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
       const c = r.c || [];
-      const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
-      if (!first) continue;
-      if (first === qEmail || first === qName) candidateRowIdxs.push(i);
+      // scan all cells in the row to find exact email or name match
+      let matched = false;
+      for (let ci = 0; ci < c.length; ci++) {
+        const cellVal = c[ci] && c[ci].v != null ? String(c[ci].v).trim().toLowerCase() : '';
+        if (cellVal && (cellVal === qEmail || cellVal === qName)) { matched = true; break; }
+      }
+      if (matched) candidateRowIdxs.push(i);
     }
 
     const result = { categories: null as null | { name: string; value: string }[], overall: null as null | string, column: null as null | string };
