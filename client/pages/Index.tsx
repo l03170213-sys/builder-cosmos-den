@@ -4,8 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CategoryBars, CategoryDistribution, StatCard } from "@/components/dashboard";
 import type { ResortAveragesResponse } from "@shared/api";
 import { useQuery } from "@tanstack/react-query";
+import { useChartType } from "@/hooks/useChartType";
 
 export default function Index() {
+  const chartType = useChartType("bar");
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
     queryKey: ["resort-averages"],
     queryFn: async () => {
