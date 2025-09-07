@@ -187,6 +187,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       return res.status(200).json(result);
     }
 
+    console.debug('[respondent] not found. params:', { email: qEmail, name: qName, date: qDate, rows: rows.length, cols: cols.length });
     return res.status(404).json({ error: 'Respondent not found in matrice' });
   } catch (err) {
     console.error('Failed to fetch respondent details:', err);
