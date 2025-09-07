@@ -269,10 +269,11 @@ export default function Repondants() {
                     <tbody className="bg-white divide-y divide-gray-100">
                       {data.map((row: any, i: number) => (
                         <tr key={i} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-800">{row.name}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{row.email}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{row.note}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{row.date}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{row.postal}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{row.duration}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">
                             <button onClick={() => { setSelected(row); setDialogOpen(true); }} className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100">
                               <Eye className="h-4 w-4" />
