@@ -112,152 +112,91 @@ export default function Repondants() {
           return [];
         }
         return await r.json();
-
-        const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
-        const gurlResp = await fetch(gurl);
-        if (!gurlResp.ok) {
-          console.error('Unable to fetch sheet, status', gurlResp.status);
-          return [];
-        }
-        const text = await gurlResp.text();
-        const parsed = parseGviz(text);
-        const cols: string[] = (parsed.table.cols || []).map((c: any) => (c.label || '').toString().toLowerCase());
-        const rows: any[] = parsed.table.rows || [];
-
-        // Determine likely column indices
-        const idxName = cols.findIndex((c) => c.includes('nom') || c.includes('name'));
-        const idxEmail = cols.findIndex((c) => c.includes('mail') || c.includes('email'));
-        // Use column L (index 11) for Note if present in sheet1, but we'll overwrite using matrice moyenne when possible
-        const idxNote = (cols[11] != null && cols[11] !== '') ? 11 : cols.findIndex((c) => c.includes('note') || c.includes('rating'));
-        // Date: prefer 'submitted at' or 'timestamp' or any 'date'
-        let idxDate = cols.findIndex((c) => c.includes('submitted at') || c.includes('submitted') || c.includes('timestamp'));
-        if (idxDate === -1) idxDate = cols.findIndex((c) => c.includes('date'));
-        // Postal code, duration and feedback columns
-        const idxPostal = cols.findIndex((c) => c.includes('postal') || c.includes('code postal') || c.includes('zipcode') || c.includes('zip'));
-        const idxDuration = cols.findIndex((c) => c.includes('dur') || c.includes('duree') || c.includes('durée') || c.includes('duration'));
-        const idxFeedback = cols.findIndex((c) => c.includes('votre avis') || c.includes("votre avis compte") || c.includes('commentaire') || c.includes('feedback') || c.includes('votre avis'));
-
-        let items = rows
-          .map((rrow: any) => {
-            const c = rrow.c || [];
-            return {
-              name: cellToString(c[idxName]) || cellToString(c[0]) || '',
-              email: cellToString(c[idxEmail]) || '',
-              note: cellToString(c[idxNote]) || '',
-              date: cellToString(c[idxDate]) || '',
-              postal: cellToString(c[idxPostal]) || '',
-              duration: cellToString(c[idxDuration]) || '',
-              feedback: cellToString(c[idxFeedback]) || '',
-            };
-          })
-          .filter((it) => it.email || it.note || it.date || it.postal || it.duration || it.feedback);
-
-        // Try to augment notes using matrice moyenne (prefer this source for the respondent's Note)
-        try {
-          const GID_MATRICE_MOYENNE = '1595451985';
-          const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
-          const mr = await fetch(mgurl);
-          if (mr.ok) {
-            const mtext = await mr.text();
-            const start = mtext.indexOf('(');
-            const end = mtext.lastIndexOf(')');
-            const mjson = JSON.parse(mtext.slice(start + 1, end));
-            const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || '').toString());
-            const mrows: any[] = mjson.table.rows || [];
-
-            const lastRow = mrows[mrows.length - 1];
-
-            const getNoteFromMatrice = (resp: any) => {
-            if (!mrows || mrows.length === 0) return null;
-            const targetEmail = resp.email ? String(resp.email).trim().toLowerCase() : '';
-            const targetName = resp.name ? String(resp.name).trim().toLowerCase() : '';
-            const targetDate = formatDateToFR(resp.date || '');
-
-            // Scenario A: rows are respondents, first cell is identifier. There may be multiple matches; try to disambiguate by date.
-            const candidateRowIdxs: number[] = [];
-            for (let i = 0; i < mrows.length; i++) {
-              const r = mrows[i];
-              const c = r.c || [];
-              const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
-              if (!first) continue;
-              if (first === targetEmail || first === targetName) candidateRowIdxs.push(i);
-            }
-            if (candidateRowIdxs.length === 1) {
-              const row = mrows[candidateRowIdxs[0]];
-              const cells = row.c || [];
-              const overallCell = cells[mcols.length - 1];
-              return cellToString(overallCell) || null;
-            }
-            if (candidateRowIdxs.length > 1) {
-              // try to find matching date within the candidate rows (any cell matching date)
-              for (const idx of candidateRowIdxs) {
-                const row = mrows[idx];
-                const cells = row.c || [];
-                const foundDate = cells.some((cell: any) => formatDateToFR(cellToString(cell)) === targetDate && targetDate !== '');
-                if (foundDate) {
-                  const overallCell = row.c && row.c[mcols.length - 1];
-                  return cellToString(overallCell) || null;
-                }
-              }
-              // fallback to first candidate
-              const row = mrows[candidateRowIdxs[0]];
-              const overallCell = row.c && row.c[mcols.length - 1];
-              return cellToString(overallCell) || null;
-            }
-
-            // Scenario B: cols are respondents. find column index matching respondent header
-            // collect candidate columns that match email/name
-            const candidateCols: number[] = [];
-            for (let i = 0; i < mcols.length; i++) {
-              const lbl = (mcols[i] || '').toString().trim().toLowerCase();
-              if (!lbl) continue;
-              if (lbl === targetEmail || lbl === targetName) { candidateCols.push(i); continue; }
-              if (targetEmail && lbl.includes(targetEmail)) { candidateCols.push(i); continue; }
-              if (targetName && lbl.includes(targetName)) { candidateCols.push(i); continue; }
-            }
-
-            let chosenCol = -1;
-            if (candidateCols.length === 1) chosenCol = candidateCols[0];
-            else if (candidateCols.length > 1) {
-              // try to disambiguate using date present in header
-              for (const ci of candidateCols) {
-                const lbl = (mcols[ci] || '').toString();
-                if (formatDateToFR(lbl).replace(/\s/g, '') === targetDate.replace(/\s/g, '')) { chosenCol = ci; break; }
-                if (lbl.includes(targetDate)) { chosenCol = ci; break; }
-              }
-              // if still not chosen, try prefer column L (index 11) if within candidates
-              if (chosenCol === -1 && candidateCols.includes(11)) chosenCol = 11;
-              // else pick first
-              if (chosenCol === -1) chosenCol = candidateCols[0];
-            }
-
-            if (chosenCol !== -1 && lastRow) {
-              const valCell = lastRow.c && lastRow.c[chosenCol];
-              return cellToString(valCell) || null;
-            }
-
-            return null;
-          };
-
-            items = items.map((it) => {
-              const fromM = getNoteFromMatrice(it);
-              if (fromM) return { ...it, note: fromM };
-              return it;
-            });
-          }
-        } catch (err) {
-          // ignore matrice errors
-          console.error('Failed to augment notes from matrice:', err);
-        }
-
-        return items;
       } catch (err) {
         console.error('Failed to fetch respondents:', err);
         return [];
       }
     },
     refetchOnWindowFocus: false,
+    refetchInterval: 30000,
   });
+
+  // fetch global summary (respondents + recommendation rate)
+  const { data: summary, isLoading: loadingSummary } = useQuery({
+    queryKey: ['resortSummary'],
+    queryFn: async () => {
+      try {
+        const r = await fetch('/api/resort/vm-resort-albanie/summary');
+        if (!r.ok) {
+          console.error('Unable to load summary, status', r.status);
+          return null;
+        }
+        return r.json();
+      } catch (err) {
+        console.error('Failed to fetch summary:', err);
+        return null;
+      }
+    },
+    enabled: true,
+    refetchOnWindowFocus: false,
+    refetchInterval: 30000,
+  });
+
+  // fetch averages (overallAverage)
+  const { data: averages, isLoading: loadingAverages } = useQuery({
+    queryKey: ['resortAverages'],
+    queryFn: async () => {
+      try {
+        const r = await fetch('/api/resort/vm-resort-albanie/averages');
+        if (!r.ok) {
+          console.error('Unable to load averages, status', r.status);
+          return null;
+        }
+        return r.json();
+      } catch (err) {
+        console.error('Failed to fetch averages:', err);
+        return null;
+      }
+    },
+    enabled: true,
+    refetchOnWindowFocus: false,
+    refetchInterval: 30000,
+  });
+
+  // respondent details query (poll while dialog open)
+  const respondentQuery = useQuery({
+    queryKey: ['respondentDetails', selected?.email, selected?.name, selected?.date],
+    queryFn: async () => {
+      if (!selected) return null;
+      const params = new URLSearchParams();
+      if (selected?.email) params.set('email', selected.email);
+      if (selected?.name) params.set('name', selected.name);
+      if (selected?.date) params.set('date', selected.date);
+      const url = `/api/resort/vm-resort-albanie/respondent?${params.toString()}`;
+      const r = await fetch(url, { credentials: 'same-origin' });
+      if (!r.ok) {
+        if (r.status === 404) return null;
+        throw new Error('Unable to load respondent details');
+      }
+      return await r.json();
+    },
+    enabled: !!selected && dialogOpen,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false,
+    onSuccess: (d: any) => {
+      setCategoriesByRespondent(d?.categories || null);
+      setRespondentNoteGeneral(d?.overall || null);
+      setRespondentColumnLetter(d?.column || null);
+    },
+    onError: (err) => {
+      console.error('Failed to fetch respondent details:', err);
+      setCategoriesByRespondent(null);
+      setRespondentNoteGeneral(null);
+      setRespondentColumnLetter(null);
+    }
+  });
+  // keep loading state in sync
+  React.useEffect(() => { setLoadingRespondentData(Boolean(respondentQuery.isFetching)); }, [respondentQuery.isFetching]);
 
   // fetch global summary (respondents + recommendation rate)
   const { data: summary, isLoading: loadingSummary } = useQuery({
