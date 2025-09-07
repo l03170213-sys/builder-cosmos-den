@@ -37,7 +37,7 @@ function makePage2Clone(original: HTMLElement) {
 
   // Title for page 2
   const title = document.createElement("h3");
-  title.textContent = "Notes par cat��gorie";
+  title.textContent = "Notes par catégorie";
   title.style.margin = "0 0 12px 0";
   title.style.fontSize = "18px";
   title.style.fontWeight = "700";
@@ -238,7 +238,28 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
 
     const final = new jsPDF({ unit: 'px', format: 'a4', orientation: 'landscape' });
     const img = canvas.toDataURL('image/png');
-    final.addImage(img, 'PNG', 10, 10, final.internal.pageSize.getWidth() - 20, final.internal.pageSize.getHeight() - 20);
+
+    // Fit to page while preserving aspect ratio and keeping margins
+    const margin = 20;
+    const pageW = final.internal.pageSize.getWidth();
+    const pageH = final.internal.pageSize.getHeight();
+
+    // create an image to read its natural size
+    const imgEl = new Image();
+    imgEl.src = img;
+    await new Promise((res) => { imgEl.onload = res; });
+    const imgW = imgEl.naturalWidth;
+    const imgH = imgEl.naturalHeight;
+
+    const availableW = pageW - margin * 2;
+    const availableH = pageH - margin * 2;
+    const scale = Math.min(availableW / imgW, availableH / imgH, 1);
+    const drawW = imgW * scale;
+    const drawH = imgH * scale;
+    const x = (pageW - drawW) / 2;
+    const y = (pageH - drawH) / 2;
+
+    final.addImage(img, 'PNG', x, y, drawW, drawH);
     final.save(filename);
     return;
   }
