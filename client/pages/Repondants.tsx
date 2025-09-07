@@ -311,7 +311,7 @@ export default function Repondants() {
                       {data.map((row: any, i: number) => (
                         <tr key={i} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm text-gray-600">{row.email}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{row.note}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{row.note ? formatAverage(row.note) : '—'}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{formatDateToFR(row.date)}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{row.age || '—'}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{row.postal}</td>
