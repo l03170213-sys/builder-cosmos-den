@@ -46,24 +46,32 @@ export default function Repondants() {
       const rows: any[] = parsed.table.rows || [];
 
       // Determine likely column indices
-      const idxName = cols.findIndex((c) => c.includes('nom') || c.includes('name'));
-      const idxEmail = cols.findIndex((c) => c.includes('mail') || c.includes('email'));
-      const idxNote = cols.findIndex((c) => c.includes('note') || c.includes('rating'));
-      const idxDate = cols.findIndex((c) => c.includes('date'));
+    const idxName = cols.findIndex((c) => c.includes('nom') || c.includes('name'));
+    const idxEmail = cols.findIndex((c) => c.includes('mail') || c.includes('email'));
+    // Use column L (index 11) for Note if present, otherwise try to detect
+    const idxNote = (cols[11] != null && cols[11] !== '') ? 11 : cols.findIndex((c) => c.includes('note') || c.includes('rating'));
+    // Date: prefer 'submitted at' or 'timestamp' or any 'date'
+    let idxDate = cols.findIndex((c) => c.includes('submitted at') || c.includes('submitted') || c.includes('timestamp'));
+    if (idxDate === -1) idxDate = cols.findIndex((c) => c.includes('date'));
+    // Postal code and duration columns
+    const idxPostal = cols.findIndex((c) => c.includes('postal') || c.includes('code postal') || c.includes('zipcode') || c.includes('zip'));
+    const idxDuration = cols.findIndex((c) => c.includes('dur') || c.includes('duree') || c.includes('durée') || c.includes('duration'));
 
-      const items = rows
-        .map((rrow: any) => {
-          const c = rrow.c || [];
-          return {
-            name: cellToString(c[idxName]) || cellToString(c[0]) || '',
-            email: cellToString(c[idxEmail]) || '',
-            note: cellToString(c[idxNote]) || '',
-            date: cellToString(c[idxDate]) || '',
-          };
-        })
-        .filter((it) => it.name || it.email || it.note || it.date);
+    const items = rows
+      .map((rrow: any) => {
+        const c = rrow.c || [];
+        return {
+          name: cellToString(c[idxName]) || cellToString(c[0]) || '',
+          email: cellToString(c[idxEmail]) || '',
+          note: cellToString(c[idxNote]) || '',
+          date: cellToString(c[idxDate]) || '',
+          postal: cellToString(c[idxPostal]) || '',
+          duration: cellToString(c[idxDuration]) || '',
+        };
+      })
+      .filter((it) => it.email || it.note || it.date || it.postal || it.duration);
 
-      return items;
+    return items;
     },
     refetchOnWindowFocus: false,
   });
