@@ -60,6 +60,43 @@ export default function Index() {
 
           <section className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">
+              <div className="flex items-center justify-between mb-3 gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-muted-foreground">Type de graphique</label>
+                  <select
+                    aria-label="type-chart"
+                    defaultValue="bar"
+                    id="chart-type-select"
+                    className="rounded-md border px-2 py-1 text-sm"
+                    onChange={(e) => {
+                      const val = e.target.value as "bar" | "line";
+                      const ev = new CustomEvent("chart-type-change", { detail: val });
+                      window.dispatchEvent(ev);
+                    }}
+                  >
+                    <option value="bar">Barres</option>
+                    <option value="line">Ligne</option>
+                  </select>
+                </div>
+
+                <div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const exportFn = (await import("@/components/ExportButton")).default;
+                        await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", filename: "vm-resort-report.pdf" });
+                      } catch (err) {
+                        console.error(err);
+                        alert("Erreur lors de l'export PDF");
+                      }
+                    }}
+                    className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white text-sm"
+                  >
+                    Exporter PDF
+                  </button>
+                </div>
+              </div>
+
               {isLoading || !data ? (
                 <Card>
                   <CardHeader>
@@ -70,7 +107,7 @@ export default function Index() {
                   </CardContent>
                 </Card>
               ) : (
-                <CategoryBars data={data.categories} />
+                <CategoryBars data={data.categories} id="chart-wrapper" />
               )}
             </div>
             <div>
@@ -86,7 +123,9 @@ export default function Index() {
                   </CardContent>
                 </Card>
               ) : (
-                <CategoryDistribution data={data.categories} />
+                <div id="list-wrapper">
+                  <CategoryDistribution data={data.categories} />
+                </div>
               )}
             </div>
           </section>
