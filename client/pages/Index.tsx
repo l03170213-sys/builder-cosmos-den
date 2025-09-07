@@ -141,6 +141,8 @@ export default function Index() {
                   >
                     <option value="bar">Barres</option>
                     <option value="line">Ligne</option>
+                    <option value="pie">Camembert</option>
+                    <option value="radar">Radar</option>
                   </select>
                 </div>
 
