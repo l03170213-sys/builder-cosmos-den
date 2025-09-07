@@ -82,7 +82,13 @@ export default function Index() {
             <h2 className="text-2xl font-semibold">Dashboard de VM Resort - Albanie</h2>
           </div>
 
-          {isError && (
+          {serverAvailable === false && (
+            <div className="rounded-md border border-destructive/20 bg-red-50 p-4 text-sm">
+              Impossible de contacter l'API interne. Vérifiez que le serveur est démarré et que l'URL du projet autorise les requêtes vers /api. Consultez la console serveur pour plus de détails.
+            </div>
+          )}
+
+          {isError && serverAvailable !== false && (
             <div className="rounded-md border border-destructive/20 bg-red-50 p-4 text-sm">
               Impossible de charger les données Google Sheets. Vérifiez le lien ou les permissions du document.
             </div>
