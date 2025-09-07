@@ -38,6 +38,17 @@ function formatDateToFR(raw: string) {
   return s;
 }
 
+// Normalize a header label: remove punctuation/spaces and lowercase to match variants like "Âges :"
+function normalizeLabel(s: string) {
+  if (!s) return '';
+  // keep letters and numbers, remove punctuation and spaces
+  try {
+    return s.toString().normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, '').toLowerCase();
+  } catch (e) {
+    return s.toString().toLowerCase().replace(/[^a-z0-9]+/gi, '');
+  }
+}
+
 export const getResortRespondents: RequestHandler = async (_req, res) => {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
