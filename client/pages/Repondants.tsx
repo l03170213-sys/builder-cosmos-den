@@ -98,6 +98,16 @@ function formatDateToFR(raw: string) {
   return s;
 }
 
+// Format average numbers to one decimal and use comma as decimal separator (e.g. "3,7")
+function formatAverage(raw: any) {
+  if (raw == null || raw === '') return '';
+  const n = Number(String(raw).replace(',', '.'));
+  if (Number.isNaN(n)) return String(raw);
+  // round to one decimal
+  const s = n.toFixed(1);
+  return s.replace('.', ',');
+}
+
 export default function Repondants() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { data, isLoading, isError } = useQuery({
