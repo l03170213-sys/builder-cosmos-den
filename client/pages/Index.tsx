@@ -9,6 +9,7 @@ import { useChartType } from "@/hooks/useChartType";
 
 export default function Index() {
   const chartType = useChartType("bar");
+  const [showValues, setShowValues] = React.useState(false);
 
   const [serverAvailable, setServerAvailable] = React.useState<boolean | undefined>(undefined);
 
