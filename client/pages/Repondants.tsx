@@ -26,7 +26,23 @@ function cellToString(c: any) {
 function formatDateToFR(raw: string) {
   if (!raw) return '';
   const s = raw.toString().trim();
-  // If already in DD/MM/YYYY, normalize
+
+  // If string contains a clear date part with time (e.g. '09/07/2025 09:51:37'), extract date part first
+  const dateWithTimeMatch = s.match(/^(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+/);
+  if (dateWithTimeMatch) {
+    const datePart = dateWithTimeMatch[1];
+    // normalize day/month/year
+    const dmY = datePart.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (dmY) {
+      const d = dmY[1].padStart(2, '0');
+      const m = dmY[2].padStart(2, '0');
+      let y = dmY[3];
+      if (y.length === 2) y = '20' + y;
+      return `${d}/${m}/${y}`;
+    }
+  }
+
+  // If already in DD/MM/YYYY (no time) normalize
   const dmY = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
   if (dmY) {
     const d = dmY[1].padStart(2, '0');
@@ -35,7 +51,17 @@ function formatDateToFR(raw: string) {
     if (y.length === 2) y = '20' + y;
     return `${d}/${m}/${y}`;
   }
-  // Try ISO parse
+
+  // Try ISO-like date/time or date-only strings (e.g. 2025-07-09T09:51:37 or 2025-07-09 09:51:37)
+  const isoDateMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s].*)?$/);
+  if (isoDateMatch) {
+    const d = isoDateMatch[3];
+    const m = isoDateMatch[2];
+    const y = isoDateMatch[1];
+    return `${d}/${m}/${y}`;
+  }
+
+  // Try generic Date parse and format only date part
   const dt = new Date(s);
   if (!isNaN(dt.getTime())) {
     const d = String(dt.getDate()).padStart(2, '0');
@@ -43,6 +69,7 @@ function formatDateToFR(raw: string) {
     const y = dt.getFullYear();
     return `${d}/${m}/${y}`;
   }
+
   // Try Excel serial number (days since 1899-12-30)
   const num = Number(s);
   if (!Number.isNaN(num) && num > 0) {
@@ -53,6 +80,7 @@ function formatDateToFR(raw: string) {
     const y = dt2.getUTCFullYear();
     return `${d}/${m}/${y}`;
   }
+
   return s;
 }
 
