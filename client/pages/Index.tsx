@@ -259,7 +259,7 @@ export default function Index() {
                     id="chart-type-select"
                     className="rounded-md border px-2 py-1 text-sm"
                     onChange={(e) => {
-                      const val = e.target.value as "bar" | "line";
+                      const val = e.target.value as "bar" | "line" | "pie" | "radar";
                       const ev = new CustomEvent("chart-type-change", { detail: val });
                       window.dispatchEvent(ev);
                     }}
