@@ -55,6 +55,45 @@ function makePage2Clone(original: HTMLElement) {
   return container;
 }
 
+function makeSummaryClone(summaryEl: HTMLElement) {
+  const container = document.createElement('div');
+  container.style.width = '1123px'; // landscape A4 approx at 96dpi
+  container.style.minHeight = '794px';
+  container.style.padding = '48px';
+  container.style.background = 'white';
+  container.style.boxSizing = 'border-box';
+  container.style.fontFamily = 'Inter, Arial, Helvetica, sans-serif';
+  container.style.color = '#0f172a';
+
+  const header = document.createElement('div');
+  header.style.display = 'flex';
+  header.style.justifyContent = 'space-between';
+  header.style.alignItems = 'center';
+
+  const left = document.createElement('div');
+  left.innerHTML = `<h1 style="margin:0;font-size:22px;font-weight:800">VM Resort - Albanie</h1><div style="margin-top:6px;color:#475569">Rapport de satisfaction</div>`;
+  const right = document.createElement('div');
+  right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
+  header.appendChild(left);
+  header.appendChild(right);
+  container.appendChild(header);
+
+  const hr = document.createElement('div');
+  hr.style.height = '1px';
+  hr.style.background = '#e6edf3';
+  hr.style.margin = '16px 0 20px 0';
+  container.appendChild(hr);
+
+  // Insert the summary element
+  const clonedSummary = summaryEl.cloneNode(true) as HTMLElement;
+  clonedSummary.style.width = '100%';
+  clonedSummary.style.marginTop = '8px';
+  clonedSummary.querySelectorAll('.animate-pulse').forEach((el) => (el.className = ''));
+  container.appendChild(clonedSummary);
+
+  return container;
+}
+
 export default async function exportToPdf(options: { chartId: string; listId: string; summaryId?: string; filename?: string }) {
   const { chartId, listId, summaryId, filename = "vm-resort-report.pdf" } = options;
   const chartEl = document.getElementById(chartId);
