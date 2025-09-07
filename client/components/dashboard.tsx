@@ -20,7 +20,7 @@ export function StatCard({ title, value, subtitle, icon }: { title: string; valu
   );
 }
 
-export function CategoryBars({ data, chartType = "bar", id = "chart-wrapper" }: { data: CategoryAverage[]; chartType?: "bar" | "line" | "pie" | "radar"; id?: string }) {
+export function CategoryBars({ data, chartType = "bar", id = "chart-wrapper", showValues = false }: { data: CategoryAverage[]; chartType?: "bar" | "line" | "pie" | "radar"; id?: string; showValues?: boolean }) {
   const chartData = data.map((d) => ({ name: d.name, Note: d.average }));
   const colors = ["#7c3aed", "#06b6d4", "#ef4444", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#f97316"];
 
