@@ -58,11 +58,15 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
       const c = r.c || [];
-      // scan all cells in the row to find exact email or name match
+      // scan all cells in the row to find exact or partial email/name match
       let matched = false;
       for (let ci = 0; ci < c.length; ci++) {
         const cellVal = c[ci] && c[ci].v != null ? String(c[ci].v).trim().toLowerCase() : '';
-        if (cellVal && (cellVal === qEmail || cellVal === qName)) { matched = true; break; }
+        if (!cellVal) continue;
+        if (cellVal === qEmail || cellVal === qName) { matched = true; break; }
+        // allow partial matches (e.g. header contains email with additional text)
+        if (qEmail && cellVal.includes(qEmail)) { matched = true; break; }
+        if (qName && cellVal.includes(qName)) { matched = true; break; }
       }
       if (matched) candidateRowIdxs.push(i);
     }
@@ -84,15 +88,24 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
       const row = rows[chosenIdx];
       const cells = row.c || [];
-      const maxCols = Math.min(cols.length, cells.length);
+      const lastCellIdx = Math.max(0, cells.length - 1);
+      // Determine overall index: prefer column 11 (L) if present and non-empty, otherwise use last column available
+      let overallIndex = 11;
+      if (!(cells[11] && cells[11].v != null)) {
+        overallIndex = Math.max(0, Math.min(cols.length - 1, lastCellIdx));
+      }
+
       const cats: { name: string; value: string }[] = [];
-      for (let i = 1; i < maxCols - 1; i++) {
-        const catName = cols[i] || `Col ${i}`;
+      for (let i = 1; i <= lastCellIdx; i++) {
+        if (i === overallIndex) continue;
+        const catName = (cols[i] && cols[i] !== '') ? cols[i] : `Col ${i + 1}`;
         const val = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
         cats.push({ name: catName, value: val });
       }
-      const overallCell = (cells[11] && cells[11].v != null) ? cells[11] : cells[cols.length - 1];
-      const overall = overallCell && overallCell.v != null ? String(overallCell.v) : null;
+
+      const overallCell = (cells[overallIndex] && cells[overallIndex].v != null) ? cells[overallIndex] : null;
+      const overall = overallCell ? String(overallCell.v) : null;
+
       result.categories = cats;
       result.overall = overall;
       result.column = null;
