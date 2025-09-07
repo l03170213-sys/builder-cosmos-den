@@ -1,6 +1,60 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
+function makePage2Clone(original: HTMLElement) {
+  // Create a clean container that mimics the example PDF layout
+  const container = document.createElement("div");
+  container.style.width = "794px"; // A4 portrait width approx at 96dpi
+  container.style.minHeight = "1123px";
+  container.style.padding = "48px";
+  container.style.background = "white";
+  container.style.boxSizing = "border-box";
+  container.style.fontFamily = "Inter, Arial, Helvetica, sans-serif";
+  container.style.color = "#0f172a";
+
+  // Header like example
+  const header = document.createElement("div");
+  header.style.display = "flex";
+  header.style.justifyContent = "space-between";
+  header.style.alignItems = "center";
+
+  const left = document.createElement("div");
+  left.innerHTML = `<h2 style="margin:0;font-size:20px;font-weight:700">VM Resort - Albanie</h2><div style="margin-top:8px;color:#475569">Rapport de satisfaction</div>`;
+
+  const right = document.createElement("div");
+  right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
+
+  header.appendChild(left);
+  header.appendChild(right);
+  container.appendChild(header);
+
+  // Divider
+  const hr = document.createElement("div");
+  hr.style.height = "1px";
+  hr.style.background = "#e6edf3";
+  hr.style.margin = "20px 0";
+  container.appendChild(hr);
+
+  // Title for page 2
+  const title = document.createElement("h3");
+  title.textContent = "Notes par catégorie";
+  title.style.margin = "0 0 12px 0";
+  title.style.fontSize = "18px";
+  title.style.fontWeight = "700";
+  container.appendChild(title);
+
+  // Clone the original list into the container
+  const cloned = original.cloneNode(true) as HTMLElement;
+  // Apply sizes
+  cloned.style.width = "100%";
+  cloned.style.marginTop = "8px";
+  // Remove any animations
+  cloned.querySelectorAll(".animate-pulse").forEach((el) => (el.className = ""));
+
+  container.appendChild(cloned);
+  return container;
+}
+
 export default async function exportToPdf(options: { chartId: string; listId: string; filename?: string }) {
   const { chartId, listId, filename = "vm-resort-report.pdf" } = options;
   const chartEl = document.getElementById(chartId);
@@ -8,40 +62,28 @@ export default async function exportToPdf(options: { chartId: string; listId: st
   if (!chartEl || !listEl) throw new Error("Chart or list element not found");
 
   // Render chart as canvas
-  const chartCanvas = await html2canvas(chartEl, { scale: 2, useCORS: true, backgroundColor: null });
-  const listCanvas = await html2canvas(listEl, { scale: 2, useCORS: true, backgroundColor: null });
+  const chartCanvas = await html2canvas(chartEl, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
 
-  const pdf = new jsPDF({ unit: "px", format: "a4" });
+  // Create a styled clone for page 2 to better match the example PDF
+  const page2 = makePage2Clone(listEl);
+  page2.style.position = "fixed";
+  page2.style.left = "-9999px";
+  document.body.appendChild(page2);
 
-  // Page 1: landscape with chart
-  const a4Width = pdf.internal.pageSize.getWidth();
-  const a4Height = pdf.internal.pageSize.getHeight();
+  const listCanvas = await html2canvas(page2, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
 
-  // convert to landscape size
-  pdf.setProperties({ title: filename });
+  // remove clone
+  document.body.removeChild(page2);
 
-  // Add chart image scaled to landscape page while preserving aspect ratio
-  const chartImgData = chartCanvas.toDataURL("image/png");
-  // Rotate page to landscape by swapping w/h when placing image
-  const landscapeW = a4Height; // swap
-  const landscapeH = a4Width;
-  // create a new page in orientation landscape: jsPDF doesn't have easy rotate, so we'll add image centered and then add a page rotated by using addPage with dimensions swapped
-  // Workaround: create landscape page by creating a new jsPDF with landscape orientation and then copy images; easier: directly use internal API to set page orientation
-  const pdfLandscape = new jsPDF({ unit: "px", format: "a4", orientation: "landscape" });
-  pdfLandscape.addImage(chartImgData, "PNG", 20, 20, pdfLandscape.internal.pageSize.getWidth() - 40, pdfLandscape.internal.pageSize.getHeight() - 40);
-
-  // Now add portrait page for list
-  const pdfFinal = new jsPDF({ unit: "px", format: "a4", orientation: "landscape" });
-  // Compose into final PDF: add landscape chart as first page
-  const chartPage = pdfLandscape.output("datauristring");
-  // Unfortunately jsPDF cannot import datauri of a whole PDF; instead we'll build final PDF directly: first add chart image then add a new page and add list image
   const final = new jsPDF({ unit: "px", format: "a4", orientation: "landscape" });
+
+  // Page 1: chart in landscape
+  const chartImgData = chartCanvas.toDataURL("image/png");
   final.addImage(chartImgData, "PNG", 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
 
-  // Add new page for list in portrait orientation: we'll add a portrait page by adding page with flipped orientation
-  final.addPage([a4Width, a4Height], "portrait");
+  // Page 2: add portrait page and draw list
+  final.addPage([final.internal.pageSize.getHeight(), final.internal.pageSize.getWidth()], "portrait");
   const listImgData = listCanvas.toDataURL("image/png");
-  // Fit list image into portrait page
   final.addImage(listImgData, "PNG", 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
 
   final.save(filename);
