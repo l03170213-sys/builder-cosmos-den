@@ -109,7 +109,7 @@ export default function Index() {
                   </CardContent>
                 </Card>
               ) : (
-                <CategoryBars data={data.categories} id="chart-wrapper" />
+                <CategoryBars data={data.categories} id="chart-wrapper" chartType={chartType} />
               )}
             </div>
             <div>
