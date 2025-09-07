@@ -275,10 +275,33 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
   document.body.removeChild(page2);
 
   const final = new jsPDF({ unit: 'px', format: 'a4', orientation: 'landscape' });
+
+  // Helper to add an image and scale it to fit the current page
+  const addScaledImage = async (pdf: any, dataUrl: string) => {
+    const margin = 20;
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgEl = new Image();
+    imgEl.src = dataUrl;
+    await new Promise((res) => { imgEl.onload = res; });
+    const imgW = imgEl.naturalWidth;
+    const imgH = imgEl.naturalHeight;
+    const availW = pageW - margin * 2;
+    const availH = pageH - margin * 2;
+    const scale = Math.min(availW / imgW, availH / imgH, 1);
+    const drawW = imgW * scale;
+    const drawH = imgH * scale;
+    const x = (pageW - drawW) / 2;
+    const y = (pageH - drawH) / 2;
+    pdf.addImage(dataUrl, 'PNG', x, y, drawW, drawH);
+  };
+
   const chartImgData = chartCanvas.toDataURL('image/png');
-  final.addImage(chartImgData, 'PNG', 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
+  await addScaledImage(final, chartImgData);
+
   final.addPage([final.internal.pageSize.getHeight(), final.internal.pageSize.getWidth()], 'portrait');
   const listImgData = listCanvas.toDataURL('image/png');
-  final.addImage(listImgData, 'PNG', 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
+  await addScaledImage(final, listImgData);
+
   final.save(filename);
 }
