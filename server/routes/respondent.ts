@@ -201,6 +201,62 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       return res.status(200).json(result);
     }
 
+    // Last resort: try to locate respondent row in sheet1 and map to matrice row by index
+    try {
+      console.debug('[respondent] attempting sheet1->matrice index mapping for', { email: qEmail, name: qName });
+      const sheet1Url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
+      const sr = await fetch(sheet1Url);
+      if (sr.ok) {
+        const stext = await sr.text();
+        const sjson = parseGviz(stext);
+        const srows: any[] = sjson.table.rows || [];
+        // find row index in sheet1 matching email/name/date
+        let foundIdx = -1;
+        for (let i = 0; i < srows.length; i++) {
+          const rc = srows[i].c || [];
+          for (const cell of rc) {
+            const v = cell && cell.v != null ? String(cell.v).trim().toLowerCase() : '';
+            if (!v) continue;
+            if (qEmail && v === qEmail) { foundIdx = i; break; }
+            if (qName && v === qName) { foundIdx = i; break; }
+            if (qEmail && v.includes(qEmail)) { foundIdx = i; break; }
+            if (qName && v.includes(qName)) { foundIdx = i; break; }
+          }
+          if (foundIdx !== -1) break;
+          // date match
+          if (qDate) {
+            const anyCellMatchesDate = (srows[i].c || []).some((cell: any) => formatDateToFR(cellToString(cell)) === formatDateToFR(qDate));
+            if (anyCellMatchesDate) { foundIdx = i; break; }
+          }
+        }
+        if (foundIdx !== -1 && foundIdx < rows.length) {
+          console.debug('[respondent] mapped sheet1 row', foundIdx + 1, 'to matrice row');
+          const row = rows[foundIdx];
+          const cells = row.c || [];
+          const lastCellIdx = Math.max(0, cells.length - 1);
+          let overallIndex = 11;
+          if (!(cells[11] && cells[11].v != null)) {
+            overallIndex = Math.max(0, Math.min(cols.length - 1, lastCellIdx));
+          }
+          const cats: { name: string; value: string }[] = [];
+          for (let i = 1; i <= lastCellIdx; i++) {
+            if (i === overallIndex) continue;
+            const catName = (cols[i] && cols[i] !== '') ? cols[i] : `Col ${i + 1}`;
+            const val = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
+            cats.push({ name: catName, value: val });
+          }
+          const overallCell = (cells[overallIndex] && cells[overallIndex].v != null) ? cells[overallIndex] : null;
+          const overall = overallCell ? String(overallCell.v) : null;
+          result.categories = cats;
+          result.overall = overall;
+          result.column = null;
+          return res.status(200).json(result);
+        }
+      }
+    } catch (e) {
+      console.error('sheet1 mapping attempt failed:', e);
+    }
+
     console.debug('[respondent] not found. params:', { email: qEmail, name: qName, date: qDate, rows: rows.length, cols: cols.length });
     return res.status(404).json({ error: 'Respondent not found in matrice' });
   } catch (err) {
