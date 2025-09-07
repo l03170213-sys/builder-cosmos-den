@@ -19,3 +19,9 @@ export interface ResortAveragesResponse {
   overallAverage: number; // last column "moyenne generale"
   categories: CategoryAverage[]; // derived from header columns (excluding first and last)
 }
+
+export interface ResortSummaryResponse {
+  resort: string;
+  respondents: number; // number of non-empty rows in sheet1
+  recommendationRate: number | null; // 0..1 or null if not available
+}
