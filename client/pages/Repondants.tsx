@@ -245,8 +245,8 @@ export default function Repondants() {
         if (selected?.email) params.set('email', selected.email);
         if (selected?.name) params.set('name', selected.name);
         if (selected?.date) params.set('date', selected.date);
-        const url = `/api/resort/vm-resort-albanie/respondent?${params.toString()}`;
-        const r = await fetch(url, { credentials: 'same-origin' });
+        const apiUrl = new URL(`/api/resort/vm-resort-albanie/respondent?${params.toString()}`, window.location.origin).toString();
+        const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
           if (r.status === 404) {
             if (mounted) {
@@ -305,7 +305,7 @@ export default function Repondants() {
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Date</th>
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Âges</th>
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Code postal</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Durée du voyage</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Dur��e du voyage</th>
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
                       </tr>
                     </thead>
