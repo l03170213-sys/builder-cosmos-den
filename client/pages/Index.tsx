@@ -18,6 +18,12 @@ export default function Index() {
     refetchInterval: 1000 * 60 * 10, // every 10 minutes
   });
 
+  const { data: summary, isLoading: loadingSummary } = useQuery(["resort-summary"], async () => {
+    const r = await fetch("/api/resort/vm-resort-albanie/summary");
+    if (!r.ok) throw new Error("Network error summary");
+    return (await r.json()) as import("@shared/api").ResortSummaryResponse;
+  });
+
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
       <Sidebar />
