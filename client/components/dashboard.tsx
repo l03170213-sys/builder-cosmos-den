@@ -20,7 +20,7 @@ export function StatCard({ title, value, subtitle, icon }: { title: string; valu
   );
 }
 
-export function CategoryBars({ data }: { data: CategoryAverage[] }) {
+export function CategoryBars({ data, chartType = "bar", id = "chart-wrapper" }: { data: CategoryAverage[]; chartType?: "bar" | "line"; id?: string }) {
   const chartData = data.map((d) => ({ name: d.name, Note: d.average }));
   return (
     <Card className="h-full">
@@ -28,15 +28,25 @@ export function CategoryBars({ data }: { data: CategoryAverage[] }) {
         <CardTitle className="text-lg">Notes par Catégorie</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[320px]">
+        <div id={id} className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-20} height={60} textAnchor="end" />
-              <YAxis domain={[0, 5]} ticks={[0,1,2,3,4,5]} />
-              <Tooltip />
-              <Bar dataKey="Note" fill="#8884d8" radius={[6, 6, 0, 0]} />
-            </BarChart>
+            {chartType === "bar" ? (
+              <BarChart data={chartData} margin={{ left: 8, right: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-20} height={60} textAnchor="end" />
+                <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
+                <Tooltip />
+                <Bar dataKey="Note" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            ) : (
+              <LineChart data={chartData} margin={{ left: 8, right: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-20} height={60} textAnchor="end" />
+                <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
+                <Tooltip />
+                <Line type="monotone" dataKey="Note" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 3 }} />
+              </LineChart>
+            )}
           </ResponsiveContainer>
         </div>
       </CardContent>
