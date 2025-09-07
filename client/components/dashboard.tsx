@@ -38,7 +38,9 @@ export function CategoryBars({ data, chartType = "bar", id = "chart-wrapper", sh
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-20} height={60} textAnchor="end" />
                 <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
                 <Tooltip />
-                <Bar dataKey="Note" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Note" fill="#8b5cf6" radius={[6, 6, 0, 0]}>
+                  {showValues && <LabelList dataKey="Note" position="top" formatter={(val: any) => `${Number(val).toFixed(1)}`} />}
+                </Bar>
               </BarChart>
             ) : chartType === "line" ? (
               <LineChart data={chartData} margin={{ left: 8, right: 8 }}>
