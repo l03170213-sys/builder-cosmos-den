@@ -37,7 +37,7 @@ function makePage2Clone(original: HTMLElement) {
 
   // Title for page 2
   const title = document.createElement("h3");
-  title.textContent = "Notes par catégorie";
+  title.textContent = "Notes par cat��gorie";
   title.style.margin = "0 0 12px 0";
   title.style.fontSize = "18px";
   title.style.fontWeight = "700";
@@ -100,37 +100,145 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
   const listEl = document.getElementById(listId);
   if (!listEl) throw new Error("List element not found");
 
-  // If summaryId provided -> official mode: create page1 from summary, page2 from list (no chart)
+  // If summaryId provided -> official mode: build a single landscape page with summary + distribution + table
   if (summaryId) {
     const summaryEl = document.getElementById(summaryId);
     if (!summaryEl) throw new Error('Summary element not found');
 
-    const page1 = makeSummaryClone(summaryEl);
-    const page2 = makePage2Clone(listEl);
+    // build a landscape container that mirrors the sample
+    const container = document.createElement('div');
+    container.style.width = '1123px'; // landscape a4 approx at 96dpi
+    container.style.minHeight = '794px';
+    container.style.padding = '24px';
+    container.style.background = 'white';
+    container.style.boxSizing = 'border-box';
+    container.style.fontFamily = 'Inter, Arial, Helvetica, sans-serif';
+    container.style.color = '#0f172a';
 
-    page1.style.position = 'fixed';
-    page1.style.left = '-9999px';
-    document.body.appendChild(page1);
-    const page1Canvas = await html2canvas(page1, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-    document.body.removeChild(page1);
+    // Header row with three cards
+    const cardsRow = document.createElement('div');
+    cardsRow.style.display = 'flex';
+    cardsRow.style.gap = '16px';
+    cardsRow.style.marginBottom = '18px';
 
-    page2.style.position = 'fixed';
-    page2.style.left = '-9999px';
-    document.body.appendChild(page2);
-    const page2Canvas = await html2canvas(page2, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-    document.body.removeChild(page2);
+    const makeCard = (title: string, valueHtml: string, subtitle?: string) => {
+      const c = document.createElement('div');
+      c.style.flex = '1';
+      c.style.border = '1px solid #e6edf3';
+      c.style.borderRadius = '8px';
+      c.style.padding = '12px';
+      c.style.background = '#fff';
+      c.innerHTML = `<div style="font-size:12px;color:#64748b">${title}</div><div style="font-size:22px;font-weight:700;margin-top:6px">${valueHtml}</div>${subtitle ? `<div style="font-size:12px;color:#94a3b8;margin-top:6px">${subtitle}</div>` : ''}`;
+      return c;
+    };
 
-    const final = new jsPDF({ unit: 'px', format: 'a4', orientation: 'portrait' });
+    // fill cards from summaryEl content
+    const avg = summaryEl.querySelectorAll('div')[0]?.querySelectorAll('div')[1]?.textContent || '';
+    const updated = summaryEl.querySelectorAll('div')[0]?.querySelectorAll('div')[2]?.textContent || '';
+    const rate = summaryEl.querySelectorAll('div')[1]?.querySelectorAll('div')[1]?.textContent || '';
+    const rateSub = summaryEl.querySelectorAll('div')[1]?.querySelectorAll('div')[2]?.textContent || '';
+    const total = summaryEl.querySelectorAll('div')[2]?.querySelectorAll('div')[1]?.textContent || '';
 
-    // Page 1: summary (portrait)
-    const img1 = page1Canvas.toDataURL('image/png');
-    final.addImage(img1, 'PNG', 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
+    cardsRow.appendChild(makeCard('Moyenne générale', avg, updated));
+    cardsRow.appendChild(makeCard('Nombre de réponses', total, 'Nombre de lignes (réponses)'));
+    cardsRow.appendChild(makeCard('Taux de Recommandation', rate, rateSub));
 
-    // Page 2: list (portrait)
-    final.addPage();
-    const img2 = page2Canvas.toDataURL('image/png');
-    final.addImage(img2, 'PNG', 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
+    container.appendChild(cardsRow);
 
+    // Section title
+    const sectionTitle = document.createElement('h3');
+    sectionTitle.textContent = 'Répartition des Notes';
+    sectionTitle.style.fontSize = '16px';
+    sectionTitle.style.margin = '0 0 8px 0';
+    sectionTitle.style.fontWeight = '700';
+    container.appendChild(sectionTitle);
+
+    // Insert the cloned distribution (listEl)
+    const clonedList = listEl.cloneNode(true) as HTMLElement;
+    clonedList.style.width = '60%';
+    clonedList.style.display = 'inline-block';
+    clonedList.style.verticalAlign = 'top';
+    clonedList.querySelectorAll('.animate-pulse').forEach((el: any) => el.className = '');
+
+    // Right side: table generated from matrice moyenne sheet
+    const tableContainer = document.createElement('div');
+    tableContainer.style.display = 'inline-block';
+    tableContainer.style.width = '38%';
+    tableContainer.style.marginLeft = '2%';
+    tableContainer.style.verticalAlign = 'top';
+
+    container.appendChild(clonedList);
+    container.appendChild(tableContainer);
+
+    // Fetch matrice moyenne to build the table on the right
+    try {
+      const SHEET_ID = '1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os';
+      const GID = '1595451985';
+      const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}`;
+      const rr = await fetch(gurl);
+      const text = await rr.text();
+      const start = text.indexOf('(');
+      const end = text.lastIndexOf(')');
+      const json = JSON.parse(text.slice(start+1, end));
+      const cols = (json.table.cols || []).map((c: any) => (c.label||'').toString());
+      const rows = json.table.rows || [];
+
+      // Build a compact table: first 5 rows (or all if <=5) plus a footer 'Moyenne globale' if present as last row
+      const tbl = document.createElement('table');
+      tbl.style.width = '100%';
+      tbl.style.borderCollapse = 'collapse';
+      tbl.style.fontSize = '12px';
+
+      const thead = document.createElement('thead');
+      const thr = document.createElement('tr');
+      thr.style.background = '#f8fafc';
+      thr.style.borderBottom = '1px solid #e6edf3';
+      // Use first column as name and last as MOYENNE GÉNÉRALE
+      const headersToShow = [0, 1]; // name and first category
+      // But we want all categories; limit columns for compactness: show first 6 cols and last
+      const maxCols = Math.min(cols.length, 8);
+      for (let i=0;i<maxCols;i++){
+        const th = document.createElement('th');
+        th.style.padding = '6px 8px';
+        th.style.textAlign = 'left';
+        th.style.color = '#475569';
+        th.textContent = cols[i] || `Col ${i}`;
+        thr.appendChild(th);
+      }
+      thead.appendChild(thr);
+      tbl.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      const displayRows = rows.slice(0, Math.min(6, rows.length));
+      for (const r of displayRows) {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #eef2f6';
+        const cells = r.c || [];
+        for (let i=0;i<maxCols;i++){
+          const td = document.createElement('td');
+          td.style.padding = '6px 8px';
+          td.style.color = '#0f172a';
+          td.textContent = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      tbl.appendChild(tbody);
+      tableContainer.appendChild(tbl);
+    } catch (err) {
+      tableContainer.textContent = 'Impossible de charger la table détaillée.';
+    }
+
+    // render to canvas
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    document.body.appendChild(container);
+    const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    document.body.removeChild(container);
+
+    const final = new jsPDF({ unit: 'px', format: 'a4', orientation: 'landscape' });
+    const img = canvas.toDataURL('image/png');
+    final.addImage(img, 'PNG', 10, 10, final.internal.pageSize.getWidth() - 20, final.internal.pageSize.getHeight() - 20);
     final.save(filename);
     return;
   }
