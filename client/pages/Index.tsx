@@ -32,6 +32,26 @@ export default function Index() {
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
     queryKey: ["resort-averages"],
     queryFn: async () => {
+      const SHEET_ID = "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
+      const GID_MATRICE_MOYENNE = "1595451985";
+
+      function parseGvizText(text: string) {
+        const start = text.indexOf("(");
+        const end = text.lastIndexOf(")");
+        const json = text.slice(start + 1, end);
+        return JSON.parse(json);
+      }
+
+      function toNumber(val: any): number | null {
+        if (val == null) return null;
+        if (typeof val === "number") return val;
+        if (typeof val === "string") {
+          const n = Number(val.replace(",", "."));
+          return Number.isFinite(n) ? n : null;
+        }
+        return null;
+      }
+
       try {
         const url = new URL('/api/resort/vm-resort-albanie/averages', window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
@@ -41,8 +61,48 @@ export default function Index() {
         }
         return (await r.json()) as ResortAveragesResponse;
       } catch (err) {
-        console.error('Failed fetching averages:', err);
-        throw err;
+        console.warn('API fetch failed, attempting direct Google Sheets fallback:', err);
+        try {
+          const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
+          const rr = await fetch(gurl);
+          const text = await rr.text();
+          const data = parseGvizText(text);
+
+          const cols: string[] = data.table.cols.map((c: any) => c.label || "");
+          const rows: any[] = data.table.rows || [];
+
+          // Find last non-empty row
+          let lastRow = rows[rows.length - 1];
+          for (let i = rows.length - 1; i >= 0; i--) {
+            const rr2 = rows[i];
+            const hasValue = (rr2?.c ?? []).some((cell: any) => cell && cell.v != null && cell.v !== "");
+            if (hasValue) {
+              lastRow = rr2;
+              break;
+            }
+          }
+
+          const cells = (lastRow?.c ?? []) as any[];
+          const firstDataCol = 1;
+          const lastDataCol = cols.length - 2;
+          const categories = [] as any[];
+          for (let i = firstDataCol; i <= lastDataCol; i++) {
+            const label = cols[i] || `Col ${i}`;
+            const val = toNumber(cells[i]?.v);
+            if (val != null) categories.push({ name: label, average: val });
+          }
+          const overallCell = cells[cols.length - 1];
+          const overallAverage = toNumber(overallCell?.v) ?? 0;
+          return {
+            resort: 'VM Resort Albanie',
+            updatedAt: new Date().toISOString(),
+            overallAverage,
+            categories,
+          } as ResortAveragesResponse;
+        } catch (err2) {
+          console.error('Direct Google Sheets fallback failed:', err2);
+          throw err;
+        }
       }
     },
     enabled: serverAvailable !== false,
