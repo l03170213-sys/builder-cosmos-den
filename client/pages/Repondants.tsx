@@ -103,119 +103,127 @@ export default function Repondants() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["repondants"],
     queryFn: async () => {
-      // Try to fetch via internal API if available
       try {
-        const apiUrl = new URL('/api/resort/vm-resort-albanie/respondents', window.location.origin).toString();
-        const r = await fetch(apiUrl, { credentials: 'same-origin' });
-        if (r.ok) return (await r.json());
-      } catch (e) {
-        // ignore and fallback to direct gviz
-      }
+        // Try to fetch via internal API if available
+        try {
+          const apiUrl = new URL('/api/resort/vm-resort-albanie/respondents', window.location.origin).toString();
+          const r = await fetch(apiUrl, { credentials: 'same-origin' });
+          if (r.ok) return (await r.json());
+        } catch (e) {
+          // ignore and fallback to direct gviz
+        }
 
-      const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
-      const r = await fetch(gurl);
-      if (!r.ok) throw new Error('Unable to fetch sheet');
-      const text = await r.text();
-      const parsed = parseGviz(text);
-      const cols: string[] = (parsed.table.cols || []).map((c: any) => (c.label || '').toString().toLowerCase());
-      const rows: any[] = parsed.table.rows || [];
+        const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
+        const r = await fetch(gurl);
+        if (!r.ok) {
+          console.error('Unable to fetch sheet, status', r.status);
+          return [];
+        }
+        const text = await r.text();
+        const parsed = parseGviz(text);
+        const cols: string[] = (parsed.table.cols || []).map((c: any) => (c.label || '').toString().toLowerCase());
+        const rows: any[] = parsed.table.rows || [];
 
-      // Determine likely column indices
-      const idxName = cols.findIndex((c) => c.includes('nom') || c.includes('name'));
-      const idxEmail = cols.findIndex((c) => c.includes('mail') || c.includes('email'));
-      // Use column L (index 11) for Note if present in sheet1, but we'll overwrite using matrice moyenne when possible
-      const idxNote = (cols[11] != null && cols[11] !== '') ? 11 : cols.findIndex((c) => c.includes('note') || c.includes('rating'));
-      // Date: prefer 'submitted at' or 'timestamp' or any 'date'
-      let idxDate = cols.findIndex((c) => c.includes('submitted at') || c.includes('submitted') || c.includes('timestamp'));
-      if (idxDate === -1) idxDate = cols.findIndex((c) => c.includes('date'));
-      // Postal code, duration and feedback columns
-      const idxPostal = cols.findIndex((c) => c.includes('postal') || c.includes('code postal') || c.includes('zipcode') || c.includes('zip'));
-      const idxDuration = cols.findIndex((c) => c.includes('dur') || c.includes('duree') || c.includes('durée') || c.includes('duration'));
-      const idxFeedback = cols.findIndex((c) => c.includes('votre avis') || c.includes("votre avis compte") || c.includes('commentaire') || c.includes('feedback') || c.includes('votre avis'));
+        // Determine likely column indices
+        const idxName = cols.findIndex((c) => c.includes('nom') || c.includes('name'));
+        const idxEmail = cols.findIndex((c) => c.includes('mail') || c.includes('email'));
+        // Use column L (index 11) for Note if present in sheet1, but we'll overwrite using matrice moyenne when possible
+        const idxNote = (cols[11] != null && cols[11] !== '') ? 11 : cols.findIndex((c) => c.includes('note') || c.includes('rating'));
+        // Date: prefer 'submitted at' or 'timestamp' or any 'date'
+        let idxDate = cols.findIndex((c) => c.includes('submitted at') || c.includes('submitted') || c.includes('timestamp'));
+        if (idxDate === -1) idxDate = cols.findIndex((c) => c.includes('date'));
+        // Postal code, duration and feedback columns
+        const idxPostal = cols.findIndex((c) => c.includes('postal') || c.includes('code postal') || c.includes('zipcode') || c.includes('zip'));
+        const idxDuration = cols.findIndex((c) => c.includes('dur') || c.includes('duree') || c.includes('durée') || c.includes('duration'));
+        const idxFeedback = cols.findIndex((c) => c.includes('votre avis') || c.includes("votre avis compte") || c.includes('commentaire') || c.includes('feedback') || c.includes('votre avis'));
 
-      let items = rows
-        .map((rrow: any) => {
-          const c = rrow.c || [];
-          return {
-            name: cellToString(c[idxName]) || cellToString(c[0]) || '',
-            email: cellToString(c[idxEmail]) || '',
-            note: cellToString(c[idxNote]) || '',
-            date: cellToString(c[idxDate]) || '',
-            postal: cellToString(c[idxPostal]) || '',
-            duration: cellToString(c[idxDuration]) || '',
-            feedback: cellToString(c[idxFeedback]) || '',
-          };
-        })
-        .filter((it) => it.email || it.note || it.date || it.postal || it.duration || it.feedback);
+        let items = rows
+          .map((rrow: any) => {
+            const c = rrow.c || [];
+            return {
+              name: cellToString(c[idxName]) || cellToString(c[0]) || '',
+              email: cellToString(c[idxEmail]) || '',
+              note: cellToString(c[idxNote]) || '',
+              date: cellToString(c[idxDate]) || '',
+              postal: cellToString(c[idxPostal]) || '',
+              duration: cellToString(c[idxDuration]) || '',
+              feedback: cellToString(c[idxFeedback]) || '',
+            };
+          })
+          .filter((it) => it.email || it.note || it.date || it.postal || it.duration || it.feedback);
 
-      // Try to augment notes using matrice moyenne (prefer this source for the respondent's Note)
-      try {
-        const GID_MATRICE_MOYENNE = '1595451985';
-        const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
-        const mr = await fetch(mgurl);
-        if (mr.ok) {
-          const mtext = await mr.text();
-          const start = mtext.indexOf('(');
-          const end = mtext.lastIndexOf(')');
-          const mjson = JSON.parse(mtext.slice(start + 1, end));
-          const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || '').toString());
-          const mrows: any[] = mjson.table.rows || [];
+        // Try to augment notes using matrice moyenne (prefer this source for the respondent's Note)
+        try {
+          const GID_MATRICE_MOYENNE = '1595451985';
+          const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
+          const mr = await fetch(mgurl);
+          if (mr.ok) {
+            const mtext = await mr.text();
+            const start = mtext.indexOf('(');
+            const end = mtext.lastIndexOf(')');
+            const mjson = JSON.parse(mtext.slice(start + 1, end));
+            const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || '').toString());
+            const mrows: any[] = mjson.table.rows || [];
 
-          const lastRow = mrows[mrows.length - 1];
+            const lastRow = mrows[mrows.length - 1];
 
-          const getNoteFromMatrice = (resp: any) => {
-            if (!mrows || mrows.length === 0) return null;
-            // Scenario A: rows are respondents, first cell is identifier
-            const matchRowIdx = mrows.findIndex((r: any) => {
-              const c = r.c || [];
-              const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
-              const email = resp.email ? String(resp.email).trim().toLowerCase() : '';
-              const name = resp.name ? String(resp.name).trim().toLowerCase() : '';
-              return first && (first === name || first === email);
-            });
-            if (matchRowIdx !== -1) {
-              const row = mrows[matchRowIdx];
-              const cells = row.c || [];
-              const overallCell = cells[mcols.length - 1];
-              return cellToString(overallCell) || null;
-            }
+            const getNoteFromMatrice = (resp: any) => {
+              if (!mrows || mrows.length === 0) return null;
+              // Scenario A: rows are respondents, first cell is identifier
+              const matchRowIdx = mrows.findIndex((r: any) => {
+                const c = r.c || [];
+                const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
+                const email = resp.email ? String(resp.email).trim().toLowerCase() : '';
+                const name = resp.name ? String(resp.name).trim().toLowerCase() : '';
+                return first && (first === name || first === email);
+              });
+              if (matchRowIdx !== -1) {
+                const row = mrows[matchRowIdx];
+                const cells = row.c || [];
+                const overallCell = cells[mcols.length - 1];
+                return cellToString(overallCell) || null;
+              }
 
-            // Scenario B: cols are respondents. find column index matching respondent header
-            const targetLower = (resp.name || resp.email || '').toString().trim().toLowerCase();
-            let colIndex = -1;
-            for (let i = 0; i < mcols.length; i++) {
-              const lbl = (mcols[i] || '').toString().trim().toLowerCase();
-              if (!lbl) continue;
-              if (lbl === targetLower) { colIndex = i; break; }
-            }
-            if (colIndex === -1) {
+              // Scenario B: cols are respondents. find column index matching respondent header
+              const targetLower = (resp.name || resp.email || '').toString().trim().toLowerCase();
+              let colIndex = -1;
               for (let i = 0; i < mcols.length; i++) {
                 const lbl = (mcols[i] || '').toString().trim().toLowerCase();
                 if (!lbl) continue;
-                if (resp.email && lbl.includes(resp.email.toString().trim().toLowerCase())) { colIndex = i; break; }
-                if (resp.name && lbl.includes(resp.name.toString().trim().toLowerCase())) { colIndex = i; break; }
+                if (lbl === targetLower) { colIndex = i; break; }
               }
-            }
-            if (colIndex !== -1 && lastRow) {
-              const valCell = lastRow.c && lastRow.c[colIndex];
-              return cellToString(valCell) || null;
-            }
+              if (colIndex === -1) {
+                for (let i = 0; i < mcols.length; i++) {
+                  const lbl = (mcols[i] || '').toString().trim().toLowerCase();
+                  if (!lbl) continue;
+                  if (resp.email && lbl.includes(resp.email.toString().trim().toLowerCase())) { colIndex = i; break; }
+                  if (resp.name && lbl.includes(resp.name.toString().trim().toLowerCase())) { colIndex = i; break; }
+                }
+              }
+              if (colIndex !== -1 && lastRow) {
+                const valCell = lastRow.c && lastRow.c[colIndex];
+                return cellToString(valCell) || null;
+              }
 
-            return null;
-          };
+              return null;
+            };
 
-          items = items.map((it) => {
-            const fromM = getNoteFromMatrice(it);
-            if (fromM) return { ...it, note: fromM };
-            return it;
-          });
+            items = items.map((it) => {
+              const fromM = getNoteFromMatrice(it);
+              if (fromM) return { ...it, note: fromM };
+              return it;
+            });
+          }
+        } catch (err) {
+          // ignore matrice errors
+          console.error('Failed to augment notes from matrice:', err);
         }
-      } catch (err) {
-        // ignore matrice errors
-        console.error('Failed to augment notes from matrice:', err);
-      }
 
-      return items;
+        return items;
+      } catch (err) {
+        console.error('Failed to fetch respondents:', err);
+        return [];
+      }
     },
     refetchOnWindowFocus: false,
   });
