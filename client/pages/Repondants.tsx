@@ -164,6 +164,25 @@ export default function Repondants() {
   });
 
   // respondent details query (poll while dialog open)
+  // state to hold selected respondent and per-category values
+  const [selected, setSelected] = React.useState<any>(null);
+  const [categoriesByRespondent, setCategoriesByRespondent] = React.useState<{ name: string; value: string }[] | null>(null);
+  const [loadingRespondentData, setLoadingRespondentData] = React.useState(false);
+  const [respondentNoteGeneral, setRespondentNoteGeneral] = React.useState<string | null>(null);
+  const [respondentColumnLetter, setRespondentColumnLetter] = React.useState<string | null>(null);
+
+  // helper to convert 0-based index to column letter (A, B, ... Z, AA...)
+  const indexToColumn = (idx: number) => {
+    let col = '';
+    let n = idx + 1;
+    while (n > 0) {
+      const rem = (n - 1) % 26;
+      col = String.fromCharCode(65 + rem) + col;
+      n = Math.floor((n - 1) / 26);
+    }
+    return col;
+  };
+
   const respondentQuery = useQuery({
     queryKey: ['respondentDetails', selected?.email, selected?.name, selected?.date],
     queryFn: async () => {
@@ -199,24 +218,6 @@ export default function Repondants() {
   React.useEffect(() => { setLoadingRespondentData(Boolean(respondentQuery.isFetching)); }, [respondentQuery.isFetching]);
 
 
-  // state to hold selected respondent and per-category values
-  const [selected, setSelected] = React.useState<any>(null);
-  const [categoriesByRespondent, setCategoriesByRespondent] = React.useState<{ name: string; value: string }[] | null>(null);
-  const [loadingRespondentData, setLoadingRespondentData] = React.useState(false);
-  const [respondentNoteGeneral, setRespondentNoteGeneral] = React.useState<string | null>(null);
-  const [respondentColumnLetter, setRespondentColumnLetter] = React.useState<string | null>(null);
-
-  // helper to convert 0-based index to column letter (A, B, ... Z, AA...)
-  const indexToColumn = (idx: number) => {
-    let col = '';
-    let n = idx + 1;
-    while (n > 0) {
-      const rem = (n - 1) % 26;
-      col = String.fromCharCode(65 + rem) + col;
-      n = Math.floor((n - 1) / 26);
-    }
-    return col;
-  };
 
   // When dialog opens for a selected respondent, fetch matrice sheet and attempt to extract per-category values
   React.useEffect(() => {
