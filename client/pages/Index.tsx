@@ -1,4 +1,5 @@
 import Sidebar from "@/components/Sidebar";
+import * as React from "react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBars, CategoryDistribution, StatCard } from "@/components/dashboard";
