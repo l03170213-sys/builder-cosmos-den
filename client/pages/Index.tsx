@@ -273,18 +273,21 @@ export default function Index() {
 
                 <div>
                   <button
+                    id="export-officiel"
                     onClick={async () => {
                       try {
                         const exportFn = (await import("@/components/ExportButton")).default;
-                        await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", summaryId: "pdf-summary", filename: "vm-resort-report.pdf" });
+                        // Official export: uses the pdf-summary content and list-wrapper to build a 2-page PDF matching the provided template
+                        await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", summaryId: "pdf-summary", filename: "vm-resort-officiel.pdf" });
                       } catch (err) {
                         console.error(err);
-                        alert("Erreur lors de l'export PDF");
+                        alert("Erreur lors de l'export PDF (format officiel)");
                       }
                     }}
+                    aria-label="Exporter PDF officiel"
                     className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white text-sm"
                   >
-                    Exporter PDF
+                    Exporter (format officiel)
                   </button>
                 </div>
               </div>
