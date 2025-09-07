@@ -279,26 +279,36 @@ export default function Repondants() {
           </Card>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="max-w-2xl">
-              <div className="grid grid-cols-2 gap-4">
+            <DialogContent className="max-w-3xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
-                  <div className="text-xs text-muted-foreground">Note Moyenne Globale</div>
-                  <div className="mt-2 text-2xl font-extrabold">{loadingAverages ? '…' : averages ? `${(averages.overallAverage || 0).toFixed(1)}/5` : '—'}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{loadingAverages ? '' : averages ? `Mise à jour: ${new Date(averages.updatedAt).toLocaleDateString()}` : ''}</div>
+                  <div className="text-xs text-muted-foreground">Note Général</div>
+                  <div className="mt-2 text-2xl font-extrabold">{loadingRespondentData ? '…' : respondentNoteGeneral ? `${respondentNoteGeneral}/5` : '—'}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{respondentColumnLetter ? `Colonne ${respondentColumnLetter} de la fiche matrice (correspondant au répondant)` : 'Colonne L de la fiche matrice (correspondant au répondant) / 5'}</div>
                 </div>
 
                 <div className="rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
-                  <div className="text-xs text-muted-foreground">Taux de Recommandation</div>
-                  <div className="mt-2 text-2xl font-extrabold">{loadingSummary ? '…' : summary && summary.recommendationRate != null ? `${Math.round(summary.recommendationRate * 100)}%` : '—'}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{summary ? `Basé sur ${summary.respondents || 0} répondants` : ''}</div>
+                  <div className="text-xs text-muted-foreground">Moyennes par catégorie (répondant)</div>
+                  <div className="mt-2 text-sm">
+                    {loadingRespondentData && <div>Chargement…</div>}
+                    {!loadingRespondentData && categoriesByRespondent && categoriesByRespondent.length === 0 && <div className="text-sm text-muted-foreground">Aucune donnée de catégories trouvée pour ce répondant.</div>}
+                    {!loadingRespondentData && categoriesByRespondent && categoriesByRespondent.length > 0 && (
+                      <div className="space-y-2 max-h-72 overflow-auto">
+                        {categoriesByRespondent.map((c, idx) => (
+                          <div key={idx} className="flex justify-between items-center px-2 py-1 border-b last:border-b-0">
+                            <div className="text-sm text-gray-700">{c.name}</div>
+                            <div className="text-sm font-medium text-gray-900">{c.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!loadingRespondentData && categoriesByRespondent === null && (
+                      <div className="text-sm text-muted-foreground">Impossible de déterminer les moyennes par catégorie pour ce répondant.</div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3', width: '240px' }}>
-                <div className="text-xs text-muted-foreground">Réponses Totales</div>
-                <div className="mt-2 text-2xl font-extrabold">{loadingSummary ? '…' : summary ? `${summary.respondents || 0}` : '—'}</div>
-                <div className="mt-1 text-xs text-muted-foreground">Nombre total de lignes non vides (feuille 1)</div>
-              </div>
             </DialogContent>
           </Dialog>
 
