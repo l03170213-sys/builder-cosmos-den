@@ -232,9 +232,17 @@ export default function Repondants() {
   const { data: summary, isLoading: loadingSummary } = useQuery({
     queryKey: ['resortSummary'],
     queryFn: async () => {
-      const r = await fetch('/api/resort/vm-resort-albanie/summary');
-      if (!r.ok) throw new Error('Unable to load summary');
-      return r.json();
+      try {
+        const r = await fetch('/api/resort/vm-resort-albanie/summary');
+        if (!r.ok) {
+          console.error('Unable to load summary, status', r.status);
+          return null;
+        }
+        return r.json();
+      } catch (err) {
+        console.error('Failed to fetch summary:', err);
+        return null;
+      }
     },
     enabled: true,
     refetchOnWindowFocus: false,
@@ -244,9 +252,17 @@ export default function Repondants() {
   const { data: averages, isLoading: loadingAverages } = useQuery({
     queryKey: ['resortAverages'],
     queryFn: async () => {
-      const r = await fetch('/api/resort/vm-resort-albanie/averages');
-      if (!r.ok) throw new Error('Unable to load averages');
-      return r.json();
+      try {
+        const r = await fetch('/api/resort/vm-resort-albanie/averages');
+        if (!r.ok) {
+          console.error('Unable to load averages, status', r.status);
+          return null;
+        }
+        return r.json();
+      } catch (err) {
+        console.error('Failed to fetch averages:', err);
+        return null;
+      }
     },
     enabled: true,
     refetchOnWindowFocus: false,
