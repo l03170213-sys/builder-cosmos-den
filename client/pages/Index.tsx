@@ -34,7 +34,7 @@ export default function Index() {
     queryKey: ["resort-averages"],
     queryFn: async () => {
       const SHEET_ID = "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
-      const GID_MATRICE_MOYENNE = "1595451985";
+      const GID_MATRICE_MOYENNE = "1104314362";
 
       function parseGvizText(text: string) {
         const start = text.indexOf("(");
@@ -232,7 +232,7 @@ export default function Index() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-semibold">{loadingSummary ? "…" : summary?.recommendationRate != null ? `${Math.round((summary.recommendationRate || 0) * 100)}%` : "—"}</div>
-                <div className="mt-1 text-sm text-muted-foreground">{summary?.recommendationRate != null ? `Basé sur ${summary?.respondents || 0} répondants` : "Colonne 'recommand' introuvable"}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{summary?.recommendationRate != null ? `Bas�� sur ${summary?.respondents || 0} répondants` : "Colonne 'recommand' introuvable"}</div>
               </CardContent>
             </Card>
 
