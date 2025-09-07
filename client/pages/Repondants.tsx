@@ -283,7 +283,7 @@ export default function Repondants() {
       <div className="flex flex-col min-w-0">
         <Header />
         <main className="max-w-screen-2xl mx-auto w-full px-4 py-6">
-          <h2 className="text-2xl font-semibold mb-4">R��pondants</h2>
+          <h2 className="text-2xl font-semibold mb-4">Répondants</h2>
 
           <Card>
             <CardHeader>
