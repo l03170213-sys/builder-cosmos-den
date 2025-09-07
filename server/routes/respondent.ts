@@ -101,6 +101,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       if (matched) candidateRowIdxs.push(i);
     }
 
+    console.debug('[respondent] candidates rows count:', candidateRowIdxs.length, 'email:', qEmail, 'name:', qName, 'date:', targetDate);
     if (candidateRowIdxs.length >= 1) {
       let chosenIdx = -1;
       if (candidateRowIdxs.length === 1) chosenIdx = candidateRowIdxs[0];
