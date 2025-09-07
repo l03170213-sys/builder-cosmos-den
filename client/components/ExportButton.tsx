@@ -115,6 +115,13 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
     container.style.fontFamily = 'Inter, Arial, Helvetica, sans-serif';
     container.style.color = '#0f172a';
 
+    // Use provided PDF as background image to ensure pixel-perfect layout
+    const BG_URL = 'https://cdn.builder.io/o/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F8f063acd8d144a1c9fbdeeb239ed6649?alt=media&token=fb363196-8cf4-47b1-9cab-72e22aed133e&apiKey=a55e2b675d8b4a19887bfba4c19f448e';
+    container.style.backgroundImage = `url("${BG_URL}")`;
+    container.style.backgroundSize = 'cover';
+    container.style.backgroundPosition = 'center';
+    container.style.backgroundRepeat = 'no-repeat';
+
     // Header row with three cards
     const cardsRow = document.createElement('div');
     cardsRow.style.display = 'flex';
