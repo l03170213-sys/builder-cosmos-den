@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { getResortAverages } from "./routes/sheets";
+import { getResortSummary } from "./routes/summary";
 
 export function createServer() {
   const app = express();
@@ -22,6 +23,7 @@ export function createServer() {
 
   // Google Sheets-powered data for VM Resort Albanie
   app.get("/api/resort/vm-resort-albanie/averages", getResortAverages);
+  app.get("/api/resort/vm-resort-albanie/summary", getResortSummary);
 
   return app;
 }
