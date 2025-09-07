@@ -105,7 +105,7 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
           if (candidateRowIdxs.length === 1) {
             const row = mrows[candidateRowIdxs[0]];
             const cells = row.c || [];
-            const overallCell = cells[mcols.length - 1];
+            const overallCell = (cells[11] && cells[11].v != null) ? cells[11] : cells[mcols.length - 1];
             return cellToString(overallCell) || null;
           }
           if (candidateRowIdxs.length > 1) {
@@ -115,7 +115,8 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
               const cells = row.c || [];
               const foundDate = cells.some((cell: any) => formatDateToFR(cellToString(cell)) === targetDate && targetDate !== '');
               if (foundDate) {
-                const overallCell = row.c && row.c[mcols.length - 1];
+                const cells = row.c || [];
+                const overallCell = (cells[11] && cells[11].v != null) ? cells[11] : cells[mcols.length - 1];
                 return cellToString(overallCell) || null;
               }
             }
@@ -125,7 +126,8 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
             const chosenIdx = candidateRowIdxs[used] ?? candidateRowIdxs[0];
             usageCount.set(key, used + 1);
             const row = mrows[chosenIdx];
-            const overallCell = row.c && row.c[mcols.length - 1];
+            const cells = row.c || [];
+            const overallCell = (cells[11] && cells[11].v != null) ? cells[11] : cells[mcols.length - 1];
             return cellToString(overallCell) || null;
           }
 
