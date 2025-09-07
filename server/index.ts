@@ -5,6 +5,7 @@ import { handleDemo } from "./routes/demo";
 import { getResortAverages } from "./routes/sheets";
 import { getResortSummary } from "./routes/summary";
 import { getResortRespondents } from "./routes/respondents";
+import { getResortRespondentDetails } from "./routes/respondent";
 
 export function createServer() {
   const app = express();
