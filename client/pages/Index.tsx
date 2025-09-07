@@ -272,7 +272,39 @@ export default function Index() {
                   </select>
                 </div>
 
-                <div>
+                <div className="flex items-center gap-2">
+                  <button
+                    id="export-graphique"
+                    onClick={async () => {
+                      try {
+                        setShowValues(true);
+                        await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+                        // small delay to ensure labels render
+                        await new Promise((r) => setTimeout(r, 80));
+                        const html2canvas = (await import('html2canvas')).default;
+                        const el = document.getElementById('chart-wrapper');
+                        if (!el) throw new Error('Chart element not found');
+                        const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+                        const dataUrl = canvas.toDataURL('image/png');
+                        const a = document.createElement('a');
+                        a.href = dataUrl;
+                        a.download = 'vm-resort-chart.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                      } catch (err) {
+                        console.error(err);
+                        alert('Erreur lors de l\'export du graphique');
+                      } finally {
+                        setShowValues(false);
+                      }
+                    }}
+                    aria-label="Exporter graphique"
+                    className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                  >
+                    Exporter graphique
+                  </button>
+
                   <button
                     id="export-officiel"
                     onClick={async () => {
