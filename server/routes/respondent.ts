@@ -102,6 +102,20 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     }
 
     console.debug('[respondent] candidates rows count:', candidateRowIdxs.length, 'email:', qEmail, 'name:', qName, 'date:', targetDate);
+    // If no candidate rows were found but user did not provide a name, fallback to any 'Anonyme' row
+    if (candidateRowIdxs.length === 0 && !qName) {
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const c = r.c || [];
+        const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
+        if (first === 'anonyme' || first === 'anonymé' || first === 'anonym') {
+          console.debug('[respondent] fallback matched Anonyme row at index', i);
+          candidateRowIdxs.push(i);
+          break;
+        }
+      }
+    }
+
     if (candidateRowIdxs.length >= 1) {
       let chosenIdx = -1;
       if (candidateRowIdxs.length === 1) chosenIdx = candidateRowIdxs[0];
