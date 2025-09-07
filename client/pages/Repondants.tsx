@@ -27,6 +27,20 @@ function formatDateToFR(raw: string) {
   if (!raw) return '';
   const s = raw.toString().trim();
 
+  // Handle Google/Sheets style Date(YYYY,M,D,H,mm,ss)
+  const sheetsDate = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2})\)$/);
+  if (sheetsDate) {
+    const year = Number(sheetsDate[1]);
+    const monthIndex = Number(sheetsDate[2]); // already 0-based in this format
+    const day = Number(sheetsDate[3]);
+    // create Date using local timezone
+    const dt = new Date(year, monthIndex, day);
+    const d = String(dt.getDate()).padStart(2, '0');
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const y = dt.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
   // If string contains a clear date part with time (e.g. '09/07/2025 09:51:37'), extract date part first
   const dateWithTimeMatch = s.match(/^(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+/);
   if (dateWithTimeMatch) {
