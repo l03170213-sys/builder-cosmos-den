@@ -114,9 +114,10 @@ export default function Repondants() {
     // Date: prefer 'submitted at' or 'timestamp' or any 'date'
     let idxDate = cols.findIndex((c) => c.includes('submitted at') || c.includes('submitted') || c.includes('timestamp'));
     if (idxDate === -1) idxDate = cols.findIndex((c) => c.includes('date'));
-    // Postal code and duration columns
+    // Postal code, duration and feedback columns
     const idxPostal = cols.findIndex((c) => c.includes('postal') || c.includes('code postal') || c.includes('zipcode') || c.includes('zip'));
     const idxDuration = cols.findIndex((c) => c.includes('dur') || c.includes('duree') || c.includes('durée') || c.includes('duration'));
+    const idxFeedback = cols.findIndex((c) => c.includes('votre avis') || c.includes("votre avis compte") || c.includes('commentaire') || c.includes('feedback') || c.includes('votre avis'));
 
     const items = rows
       .map((rrow: any) => {
@@ -128,9 +129,10 @@ export default function Repondants() {
           date: cellToString(c[idxDate]) || '',
           postal: cellToString(c[idxPostal]) || '',
           duration: cellToString(c[idxDuration]) || '',
+          feedback: cellToString(c[idxFeedback]) || '',
         };
       })
-      .filter((it) => it.email || it.note || it.date || it.postal || it.duration);
+      .filter((it) => it.email || it.note || it.date || it.postal || it.duration || it.feedback);
 
     return items;
     },
