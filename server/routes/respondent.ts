@@ -52,8 +52,38 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     const cols: string[] = (json.table.cols || []).map((c: any) => (c.label || '').toString());
     const rows: any[] = json.table.rows || [];
 
-    // Try rows-as-respondents
+    // Try direct row param (for debugging / forced lookup)
+    const qRowNum = req.query.row ? parseInt(String(req.query.row), 10) : NaN;
     const targetDate = qDate ? formatDateToFR(qDate) : '';
+
+    const result = { categories: null as null | { name: string; value: string }[], overall: null as null | string, column: null as null | string };
+
+    if (!Number.isNaN(qRowNum) && qRowNum > 0 && qRowNum - 1 < rows.length) {
+      const chosenIdx = qRowNum - 1;
+      console.debug('[respondent] forced row param, using row', qRowNum, '-> idx', chosenIdx);
+      const row = rows[chosenIdx];
+      const cells = row.c || [];
+      const lastCellIdx = Math.max(0, cells.length - 1);
+      let overallIndex = 11;
+      if (!(cells[11] && cells[11].v != null)) {
+        overallIndex = Math.max(0, Math.min(cols.length - 1, lastCellIdx));
+      }
+      const cats: { name: string; value: string }[] = [];
+      for (let i = 1; i <= lastCellIdx; i++) {
+        if (i === overallIndex) continue;
+        const catName = (cols[i] && cols[i] !== '') ? cols[i] : `Col ${i + 1}`;
+        const val = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
+        cats.push({ name: catName, value: val });
+      }
+      const overallCell = (cells[overallIndex] && cells[overallIndex].v != null) ? cells[overallIndex] : null;
+      const overall = overallCell ? String(overallCell.v) : null;
+      result.categories = cats;
+      result.overall = overall;
+      result.column = null;
+      return res.status(200).json(result);
+    }
+
+    // Try rows-as-respondents
     const candidateRowIdxs: number[] = [];
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
@@ -70,8 +100,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       }
       if (matched) candidateRowIdxs.push(i);
     }
-
-    const result = { categories: null as null | { name: string; value: string }[], overall: null as null | string, column: null as null | string };
 
     if (candidateRowIdxs.length >= 1) {
       let chosenIdx = -1;
