@@ -265,7 +265,7 @@ export default function Repondants() {
                           <td className="px-4 py-3 text-sm text-gray-700">{row.note}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{row.date}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">
-                            <button onClick={() => setDialogOpen(true)} className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100">
+                            <button onClick={() => { setSelected(row); setDialogOpen(true); }} className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100">
                               <Eye className="h-4 w-4" />
                             </button>
                           </td>
