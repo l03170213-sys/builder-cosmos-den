@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import { getResortAverages } from "./routes/sheets";
 
 export function createServer() {
   const app = express();
@@ -18,6 +19,9 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // Google Sheets-powered data for VM Resort Albanie
+  app.get("/api/resort/vm-resort-albanie/averages", getResortAverages);
 
   return app;
 }
