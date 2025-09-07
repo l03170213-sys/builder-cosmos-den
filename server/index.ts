@@ -4,6 +4,7 @@ import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { getResortAverages } from "./routes/sheets";
 import { getResortSummary } from "./routes/summary";
+import { getResortRespondents } from "./routes/respondents";
 
 export function createServer() {
   const app = express();
