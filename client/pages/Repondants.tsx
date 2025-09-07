@@ -92,6 +92,143 @@ export default function Repondants() {
     refetchOnWindowFocus: false,
   });
 
+  // state to hold selected respondent and per-category values
+  const [selected, setSelected] = React.useState<any>(null);
+  const [categoriesByRespondent, setCategoriesByRespondent] = React.useState<{ name: string; value: string }[] | null>(null);
+  const [loadingRespondentData, setLoadingRespondentData] = React.useState(false);
+  const [respondentNoteGeneral, setRespondentNoteGeneral] = React.useState<string | null>(null);
+  const [respondentColumnLetter, setRespondentColumnLetter] = React.useState<string | null>(null);
+
+  // helper to convert 0-based index to column letter (A, B, ... Z, AA...)
+  const indexToColumn = (idx: number) => {
+    let col = '';
+    let n = idx + 1;
+    while (n > 0) {
+      const rem = (n - 1) % 26;
+      col = String.fromCharCode(65 + rem) + col;
+      n = Math.floor((n - 1) / 26);
+    }
+    return col;
+  };
+
+  // When dialog opens for a selected respondent, fetch matrice sheet and attempt to extract per-category values
+  React.useEffect(() => {
+    if (!dialogOpen || !selected) return;
+    let mounted = true;
+    (async () => {
+      setLoadingRespondentData(true);
+      setCategoriesByRespondent(null);
+      setRespondentNoteGeneral(null);
+      setRespondentColumnLetter(null);
+      try {
+        const GID_MATRICE_MOYENNE = '1595451985';
+        const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
+        const rr = await fetch(gurl);
+        if (!rr.ok) throw new Error('Unable to load matrice');
+        const text = await rr.text();
+        const start = text.indexOf('(');
+        const end = text.lastIndexOf(')');
+        const json = JSON.parse(text.slice(start + 1, end));
+        const cols: string[] = (json.table.cols || []).map((c: any) => (c.label || '').toString());
+        const rows: any[] = json.table.rows || [];
+
+        // Try scenario A: columns are categories and rows contain respondent entries (find row where first cell matches name/email)
+        const matchRowIndex = rows.findIndex((r) => {
+          const c = r.c || [];
+          const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
+          const email = selected.email ? String(selected.email).trim().toLowerCase() : '';
+          const name = selected.name ? String(selected.name).trim().toLowerCase() : '';
+          return first && (first === name || first === email);
+        });
+
+        if (matchRowIndex !== -1) {
+          // categories are cols[1..n-2], values in row.c[1..n-2]
+          const row = rows[matchRowIndex];
+          const cells = row.c || [];
+          const maxCols = Math.min(cols.length, cells.length);
+          const cats: { name: string; value: string }[] = [];
+          for (let i = 1; i < maxCols - 1; i++) {
+            const catName = cols[i] || `Col ${i}`;
+            const val = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
+            cats.push({ name: catName, value: val });
+          }
+          // overall note might be last cell
+          const overallCell = cells[cols.length - 1];
+          const overall = overallCell && overallCell.v != null ? String(overallCell.v) : null;
+          if (mounted) {
+            setCategoriesByRespondent(cats);
+            setRespondentNoteGeneral(overall);
+            // column unknown in this layout
+            setRespondentColumnLetter(null);
+          }
+        } else {
+          // Scenario B: rows are categories, cols are respondents. Try find a column index matching respondent name/email in cols labels
+          const targetLabelLower = (selected.name || selected.email || '').toString().trim().toLowerCase();
+          let colIndex = -1;
+          for (let i = 0; i < cols.length; i++) {
+            const lbl = (cols[i] || '').toString().trim().toLowerCase();
+            if (!lbl) continue;
+            if (lbl === targetLabelLower) {
+              colIndex = i;
+              break;
+            }
+          }
+
+          // fallback: try partial match
+          if (colIndex === -1) {
+            for (let i = 0; i < cols.length; i++) {
+              const lbl = (cols[i] || '').toString().trim().toLowerCase();
+              if (!lbl) continue;
+              if (selected.email && lbl.includes(selected.email.toString().trim().toLowerCase())) {
+                colIndex = i; break;
+              }
+              if (selected.name && lbl.includes(selected.name.toString().trim().toLowerCase())) {
+                colIndex = i; break;
+              }
+            }
+          }
+
+          if (colIndex !== -1) {
+            // build categories from rows using column index
+            const cats: { name: string; value: string }[] = [];
+            for (const r of rows) {
+              const cells = r.c || [];
+              const catName = cells[0] && cells[0].v != null ? String(cells[0].v) : '';
+              const val = cells[colIndex] && cells[colIndex].v != null ? String(cells[colIndex].v) : '';
+              if (catName) cats.push({ name: catName, value: val });
+            }
+            // compute overall as last row's value at colIndex if present
+            const lastRow = rows[rows.length - 1];
+            const overallCell = lastRow && lastRow.c && lastRow.c[colIndex];
+            const overall = overallCell && overallCell.v != null ? String(overallCell.v) : null;
+            if (mounted) {
+              setCategoriesByRespondent(cats);
+              setRespondentNoteGeneral(overall);
+              setRespondentColumnLetter(indexToColumn(colIndex));
+            }
+          } else {
+            // could not find any mapping
+            if (mounted) {
+              setCategoriesByRespondent(null);
+              setRespondentNoteGeneral(null);
+              setRespondentColumnLetter(null);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch respondent matrice:', err);
+        if (mounted) {
+          setCategoriesByRespondent(null);
+          setRespondentNoteGeneral(null);
+          setRespondentColumnLetter(null);
+        }
+      } finally {
+        if (mounted) setLoadingRespondentData(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [dialogOpen, selected]);
+
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
       <Sidebar />
