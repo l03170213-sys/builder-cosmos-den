@@ -23,6 +23,39 @@ function cellToString(c: any) {
   return "";
 }
 
+function formatDateToFR(raw: string) {
+  if (!raw) return '';
+  const s = raw.toString().trim();
+  // If already in DD/MM/YYYY, normalize
+  const dmY = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (dmY) {
+    const d = dmY[1].padStart(2, '0');
+    const m = dmY[2].padStart(2, '0');
+    let y = dmY[3];
+    if (y.length === 2) y = '20' + y;
+    return `${d}/${m}/${y}`;
+  }
+  // Try ISO parse
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) {
+    const d = String(dt.getDate()).padStart(2, '0');
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const y = dt.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+  // Try Excel serial number (days since 1899-12-30)
+  const num = Number(s);
+  if (!Number.isNaN(num) && num > 0) {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const dt2 = new Date(excelEpoch.getTime() + Math.round(num) * 24 * 60 * 60 * 1000);
+    const d = String(dt2.getUTCDate()).padStart(2, '0');
+    const m = String(dt2.getUTCMonth() + 1).padStart(2, '0');
+    const y = dt2.getUTCFullYear();
+    return `${d}/${m}/${y}`;
+  }
+  return s;
+}
+
 export default function Repondants() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { data, isLoading, isError } = useQuery({
