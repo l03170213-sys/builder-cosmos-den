@@ -71,7 +71,7 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
         age: cellToString(c[idxAge]) || '',
         feedback: cellToString(c[idxFeedback]) || '',
       };
-    }).filter((it) => it.email || it.note || it.date || it.postal || it.duration || it.feedback);
+    }).filter((it) => it.email || it.note || it.date || it.postal || it.duration || it.feedback || it.age);
 
     // Try to augment using matrice moyenne
     try {
