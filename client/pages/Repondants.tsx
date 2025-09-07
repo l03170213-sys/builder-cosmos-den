@@ -427,7 +427,7 @@ export default function Repondants() {
                     <thead className="bg-white">
                       <tr>
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Email</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Note</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Note Général</th>
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Date</th>
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Code postal</th>
                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Durée du voyage</th>
