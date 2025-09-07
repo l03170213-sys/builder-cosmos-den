@@ -18,10 +18,13 @@ export default function Index() {
     refetchInterval: 1000 * 60 * 10, // every 10 minutes
   });
 
-  const { data: summary, isLoading: loadingSummary } = useQuery(["resort-summary"], async () => {
-    const r = await fetch("/api/resort/vm-resort-albanie/summary");
-    if (!r.ok) throw new Error("Network error summary");
-    return (await r.json()) as import("@shared/api").ResortSummaryResponse;
+  const { data: summary, isLoading: loadingSummary } = useQuery<import("@shared/api").ResortSummaryResponse>({
+    queryKey: ["resort-summary"],
+    queryFn: async () => {
+      const r = await fetch("/api/resort/vm-resort-albanie/summary");
+      if (!r.ok) throw new Error("Network error summary");
+      return (await r.json()) as import("@shared/api").ResortSummaryResponse;
+    },
   });
 
   return (
