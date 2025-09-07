@@ -48,7 +48,9 @@ export function CategoryBars({ data, chartType = "bar", id = "chart-wrapper", sh
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} interval={0} angle={-20} height={60} textAnchor="end" />
                 <YAxis domain={[0, 5]} ticks={[0, 1, 2, 3, 4, 5]} />
                 <Tooltip />
-                <Line type="monotone" dataKey="Note" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="Note" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 3 }}>
+                  {showValues && <LabelList dataKey="Note" position="top" formatter={(val: any) => `${Number(val).toFixed(1)}`} />}
+                </Line>
               </LineChart>
             ) : chartType === "pie" ? (
               <PieChart>
