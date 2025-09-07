@@ -8,6 +8,26 @@ import { useChartType } from "@/hooks/useChartType";
 
 export default function Index() {
   const chartType = useChartType("bar");
+
+  const [serverAvailable, setServerAvailable] = React.useState<boolean | undefined>(undefined);
+
+  // Ping server availability before running heavier queries
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const url = new URL('/api/ping', window.location.origin).toString();
+        const r = await fetch(url, { credentials: 'same-origin' });
+        if (!mounted) return;
+        setServerAvailable(r.ok);
+      } catch (err) {
+        console.error('Ping failed:', err);
+        if (mounted) setServerAvailable(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
     queryKey: ["resort-averages"],
     queryFn: async () => {
@@ -24,6 +44,7 @@ export default function Index() {
         throw err;
       }
     },
+    enabled: serverAvailable !== false,
     refetchInterval: 1000 * 60 * 10, // every 10 minutes
     retry: false,
     refetchOnWindowFocus: false,
@@ -45,9 +66,11 @@ export default function Index() {
         throw err;
       }
     },
+    enabled: serverAvailable !== false,
     retry: false,
     refetchOnWindowFocus: false,
   });
+
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
