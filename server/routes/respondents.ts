@@ -68,9 +68,15 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
     const idxPostal = cols.findIndex((c) => c.includes('postal') || c.includes('code postal') || c.includes('zipcode') || c.includes('zip'));
     const idxDuration = cols.findIndex((c) => c.includes('dur') || c.includes('duree') || c.includes('durée') || c.includes('duration'));
     const idxFeedback = cols.findIndex((c) => c.includes('votre avis') || c.includes('votre avis compte') || c.includes('commentaire') || c.includes('feedback') || c.includes('votre avis'));
-    // normalize headers and search for age variants (handles "Âges :" exactly)
+    // Prefer explicit BK column (Excel BK -> 0-based index 62) for Âges; fallback to normalized header search
     const normCols = cols.map(normalizeLabel);
-    const idxAge = normCols.findIndex((c) => c === 'ages' || c === '��ge' || c === 'age' || c.includes('age'));
+    let idxAge = -1;
+    if (cols.length > 62) {
+      idxAge = 62; // BK (0-based)
+    }
+    if (idxAge === -1) {
+      idxAge = normCols.findIndex((c) => c === 'ages' || c === 'âge' || c === 'age' || c.includes('age'));
+    }
 
     let items = rows.map((rrow: any) => {
       const c = rrow.c || [];
