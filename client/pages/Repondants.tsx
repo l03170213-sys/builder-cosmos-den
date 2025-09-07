@@ -372,7 +372,7 @@ export default function Repondants() {
       <div className="flex flex-col min-w-0">
         <Header />
         <main className="max-w-screen-2xl mx-auto w-full px-4 py-6">
-          <h2 className="text-2xl font-semibold mb-4">Répondants</h2>
+          <h2 className="text-2xl font-semibold mb-4">R��pondants</h2>
 
           <Card>
             <CardHeader>
@@ -402,6 +402,7 @@ export default function Repondants() {
                           <td className="px-4 py-3 text-sm text-gray-600">{row.email}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{row.note}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{formatDateToFR(row.date)}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{row.age || '—'}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{row.postal}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{row.duration}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">
