@@ -27,6 +27,7 @@ export function createServer() {
   app.get("/api/resort/vm-resort-albanie/averages", getResortAverages);
   app.get("/api/resort/vm-resort-albanie/summary", getResortSummary);
   app.get("/api/resort/vm-resort-albanie/respondents", getResortRespondents);
+  app.get("/api/resort/vm-resort-albanie/respondent", getResortRespondentDetails);
 
   return app;
 }
