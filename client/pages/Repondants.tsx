@@ -304,7 +304,7 @@ export default function Repondants() {
                         <tr key={i} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm text-gray-600">{row.email}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{row.note}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{row.date}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{formatDateToFR(row.date)}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{row.postal}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{row.duration}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">
