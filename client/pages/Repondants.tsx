@@ -339,34 +339,64 @@ export default function Repondants() {
         const cols: string[] = (json.table.cols || []).map((c: any) => (c.label || '').toString());
         const rows: any[] = json.table.rows || [];
 
-        // Try scenario A: columns are categories and rows contain respondent entries (find row where first cell matches name/email)
-        const matchRowIndex = rows.findIndex((r) => {
+        // Try scenario A: columns are categories and rows contain respondent entries (find row(s) where first cell matches name/email)
+        const targetEmail = selected.email ? String(selected.email).trim().toLowerCase() : '';
+        const targetName = selected.name ? String(selected.name).trim().toLowerCase() : '';
+        const targetDate = formatDateToFR(selected.date || '');
+
+        const candidateRowIdxs: number[] = [];
+        for (let i = 0; i < rows.length; i++) {
+          const r = rows[i];
           const c = r.c || [];
           const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
-          const email = selected.email ? String(selected.email).trim().toLowerCase() : '';
-          const name = selected.name ? String(selected.name).trim().toLowerCase() : '';
-          return first && (first === name || first === email);
-        });
+          if (!first) continue;
+          if (first === targetEmail || first === targetName) candidateRowIdxs.push(i);
+        }
 
-        if (matchRowIndex !== -1) {
-          // categories are cols[1..n-2], values in row.c[1..n-2]
-          const row = rows[matchRowIndex];
-          const cells = row.c || [];
-          const maxCols = Math.min(cols.length, cells.length);
-          const cats: { name: string; value: string }[] = [];
-          for (let i = 1; i < maxCols - 1; i++) {
-            const catName = cols[i] || `Col ${i}`;
-            const val = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
-            cats.push({ name: catName, value: val });
+        if (candidateRowIdxs.length >= 1) {
+          // If multiple candidates, try to disambiguate by date
+          let chosenIdx = -1;
+          if (candidateRowIdxs.length === 1) chosenIdx = candidateRowIdxs[0];
+          else {
+            for (const idx of candidateRowIdxs) {
+              const row = rows[idx];
+              const cells = row.c || [];
+              const hasDateMatch = cells.some((cell: any) => formatDateToFR(cellToString(cell)) === targetDate && targetDate !== '');
+              if (hasDateMatch) { chosenIdx = idx; break; }
+            }
+
+            if (chosenIdx === -1) {
+              // fallback: use occurrence index among data (if multiple respondents with same key)
+              const key = targetEmail || targetName || '##';
+              const beforeCount = data ? data.slice(0, data.findIndex((d: any) => d === selected)).filter((d: any) => ((d.email||'').toString().trim().toLowerCase() === targetEmail) || ((d.name||'').toString().trim().toLowerCase() === targetName)).length : 0;
+              const occ = beforeCount || 0;
+              chosenIdx = candidateRowIdxs[occ] ?? candidateRowIdxs[0];
+            }
           }
-          // overall note might be last cell
-          const overallCell = cells[cols.length - 1];
-          const overall = overallCell && overallCell.v != null ? String(overallCell.v) : null;
-          if (mounted) {
-            setCategoriesByRespondent(cats);
-            setRespondentNoteGeneral(overall);
-            // column unknown in this layout
-            setRespondentColumnLetter(null);
+
+          if (chosenIdx !== -1) {
+            const row = rows[chosenIdx];
+            const cells = row.c || [];
+            const maxCols = Math.min(cols.length, cells.length);
+            const cats: { name: string; value: string }[] = [];
+            for (let i = 1; i < maxCols - 1; i++) {
+              const catName = cols[i] || `Col ${i}`;
+              const val = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
+              cats.push({ name: catName, value: val });
+            }
+            const overallCell = (cells[11] && cells[11].v != null) ? cells[11] : cells[cols.length - 1];
+            const overall = overallCell && overallCell.v != null ? String(overallCell.v) : null;
+            if (mounted) {
+              setCategoriesByRespondent(cats);
+              setRespondentNoteGeneral(overall);
+              setRespondentColumnLetter(null);
+            }
+          } else {
+            if (mounted) {
+              setCategoriesByRespondent(null);
+              setRespondentNoteGeneral(null);
+              setRespondentColumnLetter(null);
+            }
           }
         } else {
           // Scenario B: rows are categories, cols are respondents. Try find a column index matching respondent name/email in cols labels
