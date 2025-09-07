@@ -168,45 +168,76 @@ export default function Repondants() {
             const lastRow = mrows[mrows.length - 1];
 
             const getNoteFromMatrice = (resp: any) => {
-              if (!mrows || mrows.length === 0) return null;
-              // Scenario A: rows are respondents, first cell is identifier
-              const matchRowIdx = mrows.findIndex((r: any) => {
-                const c = r.c || [];
-                const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
-                const email = resp.email ? String(resp.email).trim().toLowerCase() : '';
-                const name = resp.name ? String(resp.name).trim().toLowerCase() : '';
-                return first && (first === name || first === email);
-              });
-              if (matchRowIdx !== -1) {
-                const row = mrows[matchRowIdx];
-                const cells = row.c || [];
-                const overallCell = cells[mcols.length - 1];
-                return cellToString(overallCell) || null;
-              }
+            if (!mrows || mrows.length === 0) return null;
+            const targetEmail = resp.email ? String(resp.email).trim().toLowerCase() : '';
+            const targetName = resp.name ? String(resp.name).trim().toLowerCase() : '';
+            const targetDate = formatDateToFR(resp.date || '');
 
-              // Scenario B: cols are respondents. find column index matching respondent header
-              const targetLower = (resp.name || resp.email || '').toString().trim().toLowerCase();
-              let colIndex = -1;
-              for (let i = 0; i < mcols.length; i++) {
-                const lbl = (mcols[i] || '').toString().trim().toLowerCase();
-                if (!lbl) continue;
-                if (lbl === targetLower) { colIndex = i; break; }
-              }
-              if (colIndex === -1) {
-                for (let i = 0; i < mcols.length; i++) {
-                  const lbl = (mcols[i] || '').toString().trim().toLowerCase();
-                  if (!lbl) continue;
-                  if (resp.email && lbl.includes(resp.email.toString().trim().toLowerCase())) { colIndex = i; break; }
-                  if (resp.name && lbl.includes(resp.name.toString().trim().toLowerCase())) { colIndex = i; break; }
+            // Scenario A: rows are respondents, first cell is identifier. There may be multiple matches; try to disambiguate by date.
+            const candidateRowIdxs: number[] = [];
+            for (let i = 0; i < mrows.length; i++) {
+              const r = mrows[i];
+              const c = r.c || [];
+              const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
+              if (!first) continue;
+              if (first === targetEmail || first === targetName) candidateRowIdxs.push(i);
+            }
+            if (candidateRowIdxs.length === 1) {
+              const row = mrows[candidateRowIdxs[0]];
+              const cells = row.c || [];
+              const overallCell = cells[mcols.length - 1];
+              return cellToString(overallCell) || null;
+            }
+            if (candidateRowIdxs.length > 1) {
+              // try to find matching date within the candidate rows (any cell matching date)
+              for (const idx of candidateRowIdxs) {
+                const row = mrows[idx];
+                const cells = row.c || [];
+                const foundDate = cells.some((cell: any) => formatDateToFR(cellToString(cell)) === targetDate && targetDate !== '');
+                if (foundDate) {
+                  const overallCell = row.c && row.c[mcols.length - 1];
+                  return cellToString(overallCell) || null;
                 }
               }
-              if (colIndex !== -1 && lastRow) {
-                const valCell = lastRow.c && lastRow.c[colIndex];
-                return cellToString(valCell) || null;
-              }
+              // fallback to first candidate
+              const row = mrows[candidateRowIdxs[0]];
+              const overallCell = row.c && row.c[mcols.length - 1];
+              return cellToString(overallCell) || null;
+            }
 
-              return null;
-            };
+            // Scenario B: cols are respondents. find column index matching respondent header
+            // collect candidate columns that match email/name
+            const candidateCols: number[] = [];
+            for (let i = 0; i < mcols.length; i++) {
+              const lbl = (mcols[i] || '').toString().trim().toLowerCase();
+              if (!lbl) continue;
+              if (lbl === targetEmail || lbl === targetName) { candidateCols.push(i); continue; }
+              if (targetEmail && lbl.includes(targetEmail)) { candidateCols.push(i); continue; }
+              if (targetName && lbl.includes(targetName)) { candidateCols.push(i); continue; }
+            }
+
+            let chosenCol = -1;
+            if (candidateCols.length === 1) chosenCol = candidateCols[0];
+            else if (candidateCols.length > 1) {
+              // try to disambiguate using date present in header
+              for (const ci of candidateCols) {
+                const lbl = (mcols[ci] || '').toString();
+                if (formatDateToFR(lbl).replace(/\s/g, '') === targetDate.replace(/\s/g, '')) { chosenCol = ci; break; }
+                if (lbl.includes(targetDate)) { chosenCol = ci; break; }
+              }
+              // if still not chosen, try prefer column L (index 11) if within candidates
+              if (chosenCol === -1 && candidateCols.includes(11)) chosenCol = 11;
+              // else pick first
+              if (chosenCol === -1) chosenCol = candidateCols[0];
+            }
+
+            if (chosenCol !== -1 && lastRow) {
+              const valCell = lastRow.c && lastRow.c[chosenCol];
+              return cellToString(valCell) || null;
+            }
+
+            return null;
+          };
 
             items = items.map((it) => {
               const fromM = getNoteFromMatrice(it);
