@@ -57,6 +57,7 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
     const idxPostal = cols.findIndex((c) => c.includes('postal') || c.includes('code postal') || c.includes('zipcode') || c.includes('zip'));
     const idxDuration = cols.findIndex((c) => c.includes('dur') || c.includes('duree') || c.includes('durée') || c.includes('duration'));
     const idxFeedback = cols.findIndex((c) => c.includes('votre avis') || c.includes('votre avis compte') || c.includes('commentaire') || c.includes('feedback') || c.includes('votre avis'));
+    const idxAge = cols.findIndex((c) => c.includes('âge') || c.includes('age') || c.includes('âges') || c.includes('ages'));
 
     let items = rows.map((rrow: any) => {
       const c = rrow.c || [];
