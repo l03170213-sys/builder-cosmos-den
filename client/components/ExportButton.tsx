@@ -94,49 +94,62 @@ function makeSummaryClone(summaryEl: HTMLElement) {
   return container;
 }
 
-export default async function exportToPdf(options: { chartId: string; listId: string; summaryId?: string; filename?: string }) {
+export default async function exportToPdf(options: { chartId?: string; listId: string; summaryId?: string; filename?: string }) {
   const { chartId, listId, summaryId, filename = "vm-resort-report.pdf" } = options;
-  const chartEl = document.getElementById(chartId);
+  const chartEl = chartId ? document.getElementById(chartId) : null;
   const listEl = document.getElementById(listId);
-  if (!chartEl || !listEl) throw new Error("Chart or list element not found");
+  if (!listEl) throw new Error("List element not found");
 
-  // Render chart as canvas
-  const chartCanvas = await html2canvas(chartEl, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-
-  // Create a styled clone for page 2 to better match the example PDF
-  const page2 = makePage2Clone(listEl);
-
-  // If a summary element exists, clone and insert at top
+  // If summaryId provided -> official mode: create page1 from summary, page2 from list (no chart)
   if (summaryId) {
     const summaryEl = document.getElementById(summaryId);
-    if (summaryEl) {
-      const clonedSummary = summaryEl.cloneNode(true) as HTMLElement;
-      // Ensure cloned summary is visible and styled appropriately
-      clonedSummary.style.marginBottom = "12px";
-      clonedSummary.style.width = "100%";
-      page2.insertBefore(clonedSummary, page2.children[page2.children.length - 1] || null);
-    }
+    if (!summaryEl) throw new Error('Summary element not found');
+
+    const page1 = makeSummaryClone(summaryEl);
+    const page2 = makePage2Clone(listEl);
+
+    page1.style.position = 'fixed';
+    page1.style.left = '-9999px';
+    document.body.appendChild(page1);
+    const page1Canvas = await html2canvas(page1, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    document.body.removeChild(page1);
+
+    page2.style.position = 'fixed';
+    page2.style.left = '-9999px';
+    document.body.appendChild(page2);
+    const page2Canvas = await html2canvas(page2, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+    document.body.removeChild(page2);
+
+    const final = new jsPDF({ unit: 'px', format: 'a4', orientation: 'portrait' });
+
+    // Page 1: summary (portrait)
+    const img1 = page1Canvas.toDataURL('image/png');
+    final.addImage(img1, 'PNG', 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
+
+    // Page 2: list (portrait)
+    final.addPage();
+    const img2 = page2Canvas.toDataURL('image/png');
+    final.addImage(img2, 'PNG', 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
+
+    final.save(filename);
+    return;
   }
 
-  page2.style.position = "fixed";
-  page2.style.left = "-9999px";
+  // default behavior: include chart first
+  if (!chartEl) throw new Error("Chart element not found");
+  const chartCanvas = await html2canvas(chartEl, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+  const page2 = makePage2Clone(listEl);
+  page2.style.position = 'fixed';
+  page2.style.left = '-9999px';
   document.body.appendChild(page2);
-
-  const listCanvas = await html2canvas(page2, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-
-  // remove clone
+  const listCanvas = await html2canvas(page2, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
   document.body.removeChild(page2);
 
-  const final = new jsPDF({ unit: "px", format: "a4", orientation: "landscape" });
-
-  // Page 1: chart in landscape
-  const chartImgData = chartCanvas.toDataURL("image/png");
-  final.addImage(chartImgData, "PNG", 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
-
-  // Page 2: add portrait page and draw list
-  final.addPage([final.internal.pageSize.getHeight(), final.internal.pageSize.getWidth()], "portrait");
-  const listImgData = listCanvas.toDataURL("image/png");
-  final.addImage(listImgData, "PNG", 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
-
+  const final = new jsPDF({ unit: 'px', format: 'a4', orientation: 'landscape' });
+  const chartImgData = chartCanvas.toDataURL('image/png');
+  final.addImage(chartImgData, 'PNG', 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
+  final.addPage([final.internal.pageSize.getHeight(), final.internal.pageSize.getWidth()], 'portrait');
+  const listImgData = listCanvas.toDataURL('image/png');
+  final.addImage(listImgData, 'PNG', 20, 20, final.internal.pageSize.getWidth() - 40, final.internal.pageSize.getHeight() - 40);
   final.save(filename);
 }
