@@ -1,61 +1,96 @@
-import { DemoResponse } from "@shared/api";
-import { useEffect, useState } from "react";
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CategoryBars, CategoryDistribution, StatCard } from "@/components/dashboard";
+import type { ResortAveragesResponse } from "@shared/api";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Index() {
-  const [exampleFromServer, setExampleFromServer] = useState("");
-  // Fetch users on component mount
-  useEffect(() => {
-    fetchDemo();
-  }, []);
-
-  // Example of how to fetch data from the server (if needed)
-  const fetchDemo = async () => {
-    try {
-      const response = await fetch("/api/demo");
-      const data = (await response.json()) as DemoResponse;
-      setExampleFromServer(data.message);
-    } catch (error) {
-      console.error("Error fetching hello:", error);
-    }
-  };
+  const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
+    queryKey: ["resort-averages"],
+    queryFn: async () => {
+      const r = await fetch("/api/resort/vm-resort-albanie/averages");
+      if (!r.ok) throw new Error("Network error");
+      return (await r.json()) as ResortAveragesResponse;
+    },
+    refetchInterval: 1000 * 60 * 10, // every 10 minutes
+  });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
-      <div className="text-center">
-        {/* TODO: FUSION_GENERATION_APP_PLACEHOLDER replace everything here with the actual app! */}
-        <h1 className="text-2xl font-semibold text-slate-800 flex items-center justify-center gap-3">
-          <svg
-            className="animate-spin h-8 w-8 text-slate-400"
-            viewBox="0 0 50 50"
-          >
-            <circle
-              className="opacity-30"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-            />
-            <circle
-              className="text-slate-600"
-              cx="25"
-              cy="25"
-              r="20"
-              stroke="currentColor"
-              strokeWidth="5"
-              fill="none"
-              strokeDasharray="100"
-              strokeDashoffset="75"
-            />
-          </svg>
-          Generating your app...
-        </h1>
-        <p className="mt-4 text-slate-600 max-w-md">
-          Watch the chat on the left for updates that might need your attention
-          to finish generating
-        </p>
-        <p className="mt-4 hidden max-w-md">{exampleFromServer}</p>
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
+      <Sidebar />
+      <div className="flex flex-col min-w-0">
+        <Header />
+        <main className="max-w-screen-2xl mx-auto w-full px-4 py-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold">Dashboard de VM Resort - Albanie</h2>
+          </div>
+
+          {isError && (
+            <div className="rounded-md border border-destructive/20 bg-red-50 p-4 text-sm">
+              Impossible de charger les données Google Sheets. Vérifiez le lien ou les permissions du document.
+            </div>
+          )}
+
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <StatCard title="Note Moyenne Globale" value={isLoading ? "…" : `${data?.overallAverage.toFixed(1)}/5`} subtitle={isLoading ? undefined : `Mise à jour: ${new Date(data!.updatedAt).toLocaleDateString()}`} />
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardDescription>Taux de Recommandation</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold">—</div>
+                <div className="mt-1 text-sm text-muted-foreground">À configurer si disponible dans la feuille</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardDescription>Réponses Mensuelles</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold">—</div>
+                <div className="mt-1 text-sm text-muted-foreground">Basé sur vos données</div>
+              </CardContent>
+            </Card>
+          </section>
+
+          <section className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              {isLoading || !data ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Notes par Catégorie</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[320px] animate-pulse rounded-md bg-gray-200" />
+                  </CardContent>
+                </Card>
+              ) : (
+                <CategoryBars data={data.categories} />
+              )}
+            </div>
+            <div>
+              {isLoading || !data ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Répartition des Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {Array.from({ length: 7 }).map((_, i) => (
+                      <div key={i} className="h-10 rounded bg-gray-200 animate-pulse" />
+                    ))}
+                  </CardContent>
+                </Card>
+              ) : (
+                <CategoryDistribution data={data.categories} />
+              )}
+            </div>
+          </section>
+        </main>
       </div>
     </div>
   );
