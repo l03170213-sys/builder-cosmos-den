@@ -42,6 +42,7 @@ export default function Index() {
 
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard title="Note Moyenne Globale" value={isLoading ? "…" : `${data?.overallAverage.toFixed(1)}/5`} subtitle={isLoading ? undefined : `Mise à jour: ${new Date(data!.updatedAt).toLocaleDateString()}`} />
+
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -49,19 +50,20 @@ export default function Index() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-semibold">—</div>
-                <div className="mt-1 text-sm text-muted-foreground">À configurer si disponible dans la feuille</div>
+                <div className="text-3xl font-semibold">{loadingSummary ? "…" : summary?.recommendationRate != null ? `${Math.round((summary.recommendationRate || 0) * 100)}%` : "—"}</div>
+                <div className="mt-1 text-sm text-muted-foreground">{summary?.recommendationRate != null ? `Basé sur ${summary?.respondents || 0} répondants` : "Colonne 'recommand' introuvable"}</div>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardDescription>Réponses Mensuelles</CardDescription>
+                  <CardDescription>Réponses Totales</CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-semibold">—</div>
-                <div className="mt-1 text-sm text-muted-foreground">Basé sur vos données</div>
+                <div className="text-3xl font-semibold">{loadingSummary ? "…" : summary?.respondents ?? "—"}</div>
+                <div className="mt-1 text-sm text-muted-foreground">Nombre total de lignes non vides (feuille 1)</div>
               </CardContent>
             </Card>
           </section>
