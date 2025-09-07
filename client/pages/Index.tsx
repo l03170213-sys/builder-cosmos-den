@@ -276,7 +276,7 @@ export default function Index() {
                     onClick={async () => {
                       try {
                         const exportFn = (await import("@/components/ExportButton")).default;
-                        await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", filename: "vm-resort-report.pdf" });
+                        await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", summaryId: "pdf-summary", filename: "vm-resort-report.pdf" });
                       } catch (err) {
                         console.error(err);
                         alert("Erreur lors de l'export PDF");
