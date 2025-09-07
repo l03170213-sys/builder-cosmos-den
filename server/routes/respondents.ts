@@ -84,6 +84,9 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
         const mrows: any[] = mjson.table.rows || [];
         const lastRow = mrows[mrows.length - 1];
 
+        // usage map to disambiguate multiple matches per respondent (email/name)
+        const usageCount = new Map<string, number>();
+
         const getNoteFromMatrice = (resp: any) => {
           if (!mrows || mrows.length === 0) return null;
           const targetEmail = resp.email ? String(resp.email).trim().toLowerCase() : '';
@@ -106,6 +109,7 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
             return cellToString(overallCell) || null;
           }
           if (candidateRowIdxs.length > 1) {
+            // try disambiguate by date
             for (const idx of candidateRowIdxs) {
               const row = mrows[idx];
               const cells = row.c || [];
@@ -115,7 +119,12 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
                 return cellToString(overallCell) || null;
               }
             }
-            const row = mrows[candidateRowIdxs[0]];
+            // if still multiple, assign per-occurrence using usageCount
+            const key = targetEmail || targetName || '##';
+            const used = usageCount.get(key) || 0;
+            const chosenIdx = candidateRowIdxs[used] ?? candidateRowIdxs[0];
+            usageCount.set(key, used + 1);
+            const row = mrows[chosenIdx];
             const overallCell = row.c && row.c[mcols.length - 1];
             return cellToString(overallCell) || null;
           }
@@ -150,6 +159,7 @@ export const getResortRespondents: RequestHandler = async (_req, res) => {
           return null;
         };
 
+        // map items sequentially so usageCount assignment works
         items = items.map((it) => {
           const fromM = getNoteFromMatrice(it);
           if (fromM) return { ...it, note: fromM };
