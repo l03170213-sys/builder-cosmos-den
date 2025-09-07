@@ -55,8 +55,8 @@ function makePage2Clone(original: HTMLElement) {
   return container;
 }
 
-export default async function exportToPdf(options: { chartId: string; listId: string; filename?: string }) {
-  const { chartId, listId, filename = "vm-resort-report.pdf" } = options;
+export default async function exportToPdf(options: { chartId: string; listId: string; summaryId?: string; filename?: string }) {
+  const { chartId, listId, summaryId, filename = "vm-resort-report.pdf" } = options;
   const chartEl = document.getElementById(chartId);
   const listEl = document.getElementById(listId);
   if (!chartEl || !listEl) throw new Error("Chart or list element not found");
@@ -66,6 +66,19 @@ export default async function exportToPdf(options: { chartId: string; listId: st
 
   // Create a styled clone for page 2 to better match the example PDF
   const page2 = makePage2Clone(listEl);
+
+  // If a summary element exists, clone and insert at top
+  if (summaryId) {
+    const summaryEl = document.getElementById(summaryId);
+    if (summaryEl) {
+      const clonedSummary = summaryEl.cloneNode(true) as HTMLElement;
+      // Ensure cloned summary is visible and styled appropriately
+      clonedSummary.style.marginBottom = "12px";
+      clonedSummary.style.width = "100%";
+      page2.insertBefore(clonedSummary, page2.children[page2.children.length - 1] || null);
+    }
+  }
+
   page2.style.position = "fixed";
   page2.style.left = "-9999px";
   document.body.appendChild(page2);
