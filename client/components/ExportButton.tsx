@@ -139,13 +139,31 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
       return c;
     };
 
-    // fill cards from summaryEl content
-    const avg = summaryEl.querySelectorAll('div')[0]?.querySelectorAll('div')[1]?.textContent || '';
-    const updated = summaryEl.querySelectorAll('div')[0]?.querySelectorAll('div')[2]?.textContent || '';
-    const respondents = summaryEl.querySelectorAll('div')[1]?.querySelectorAll('div')[1]?.textContent || '';
-    const respondentsSub = summaryEl.querySelectorAll('div')[1]?.querySelectorAll('div')[2]?.textContent || '';
-    const rate = summaryEl.querySelectorAll('div')[2]?.querySelectorAll('div')[1]?.textContent || '';
-    const rateSub = summaryEl.querySelectorAll('div')[2]?.querySelectorAll('div')[2]?.textContent || '';
+    // fill cards from summaryEl content (be robust by selecting the grid and its direct children)
+    let avg = '';
+    let updated = '';
+    let respondents = '';
+    let respondentsSub = '';
+    let rate = '';
+    let rateSub = '';
+
+    const grid = summaryEl.querySelector('.grid');
+    if (grid && grid.children.length >= 1) {
+      const cards = Array.from(grid.children).filter((c) => c instanceof HTMLElement) as HTMLElement[];
+      const readFromCard = (card: HTMLElement, idx: number) => card.querySelectorAll('div')[idx]?.textContent?.trim() || '';
+      if (cards[0]) {
+        avg = readFromCard(cards[0], 1);
+        updated = readFromCard(cards[0], 2);
+      }
+      if (cards[1]) {
+        respondents = readFromCard(cards[1], 1);
+        respondentsSub = readFromCard(cards[1], 2);
+      }
+      if (cards[2]) {
+        rate = readFromCard(cards[2], 1);
+        rateSub = readFromCard(cards[2], 2);
+      }
+    }
 
     cardsRow.appendChild(makeCard('Moyenne générale', avg, updated));
     cardsRow.appendChild(makeCard('Nombre de réponses', respondents, respondentsSub || 'Nombre de lignes (réponses)'));
