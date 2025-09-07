@@ -67,6 +67,30 @@ export default function Repondants() {
     refetchOnWindowFocus: false,
   });
 
+  // fetch global summary (respondents + recommendation rate)
+  const { data: summary, isLoading: loadingSummary } = useQuery({
+    queryKey: ['resortSummary'],
+    queryFn: async () => {
+      const r = await fetch('/api/resort/vm-resort-albanie/summary');
+      if (!r.ok) throw new Error('Unable to load summary');
+      return r.json();
+    },
+    enabled: true,
+    refetchOnWindowFocus: false,
+  });
+
+  // fetch averages (overallAverage)
+  const { data: averages, isLoading: loadingAverages } = useQuery({
+    queryKey: ['resortAverages'],
+    queryFn: async () => {
+      const r = await fetch('/api/resort/vm-resort-albanie/averages');
+      if (!r.ok) throw new Error('Unable to load averages');
+      return r.json();
+    },
+    enabled: true,
+    refetchOnWindowFocus: false,
+  });
+
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
       <Sidebar />
@@ -115,6 +139,30 @@ export default function Repondants() {
               )}
             </CardContent>
           </Card>
+
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
+                  <div className="text-xs text-muted-foreground">Note Moyenne Globale</div>
+                  <div className="mt-2 text-2xl font-extrabold">{loadingAverages ? '…' : averages ? `${(averages.overallAverage || 0).toFixed(1)}/5` : '—'}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{loadingAverages ? '' : averages ? `Mise à jour: ${new Date(averages.updatedAt).toLocaleDateString()}` : ''}</div>
+                </div>
+
+                <div className="rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
+                  <div className="text-xs text-muted-foreground">Taux de Recommandation</div>
+                  <div className="mt-2 text-2xl font-extrabold">{loadingSummary ? '…' : summary && summary.recommendationRate != null ? `${Math.round(summary.recommendationRate * 100)}%` : '—'}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{summary ? `Basé sur ${summary.respondents || 0} répondants` : ''}</div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3', width: '240px' }}>
+                <div className="text-xs text-muted-foreground">Réponses Totales</div>
+                <div className="mt-2 text-2xl font-extrabold">{loadingSummary ? '…' : summary ? `${summary.respondents || 0}` : '—'}</div>
+                <div className="mt-1 text-xs text-muted-foreground">Nombre total de lignes non vides (feuille 1)</div>
+              </div>
+            </DialogContent>
+          </Dialog>
 
         </main>
       </div>
