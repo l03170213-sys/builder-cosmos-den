@@ -1,5 +1,6 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { RESORTS } from '@/lib/resorts';
 
 function makePage2Clone(original: HTMLElement) {
   // Create a clean container that mimics the example PDF layout
