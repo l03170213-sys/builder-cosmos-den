@@ -110,12 +110,13 @@ function formatAverage(raw: any) {
 
 export default function Repondants() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const { resort: selectedResortKey } = useSelectedResort();
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["repondants"],
+    queryKey: ["repondants", selectedResortKey],
     queryFn: async () => {
       try {
         // Fetch from internal server endpoint only (avoid client-side Google fetch/CORS)
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const selected = selectedResortKey;
         const apiUrl = new URL(`/api/resort/${selected}/respondents`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
