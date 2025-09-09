@@ -119,7 +119,7 @@ export default function Index() {
   });
 
   const { data: summary, isLoading: loadingSummary } = useQuery<import("@shared/api").ResortSummaryResponse>({
-    queryKey: ["resort-summary"],
+    queryKey: ["resort-summary", selectedResortKey],
     queryFn: async () => {
       function parseGvizText(text: string) {
         const start = text.indexOf("(");
