@@ -115,7 +115,7 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         // Fetch from internal server endpoint only (avoid client-side Google fetch/CORS)
-        const selected = 'vm-resort-albanie';
+        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
         const apiUrl = new URL(`/api/resort/${selected}/respondents`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
@@ -137,7 +137,7 @@ export default function Repondants() {
     queryKey: ['resortSummary'],
     queryFn: async () => {
       try {
-        const selected = 'vm-resort-albanie';
+        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
         const apiUrl = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
@@ -160,7 +160,7 @@ export default function Repondants() {
     queryKey: ['resortAverages'],
     queryFn: async () => {
       try {
-        const selected = 'vm-resort-albanie';
+        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
         const apiUrl = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
