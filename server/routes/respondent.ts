@@ -86,7 +86,9 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       const overallCell = (cells[overallIndex] && cells[overallIndex].v != null) ? cells[overallIndex] : null;
       const overall = overallCell ? String(overallCell.v) : null;
       // extract exact feedback column value if present
-      const feedbackCell = (feedbackColExact !== -1 && cells[feedbackColExact] && cells[feedbackColExact].v != null) ? cells[feedbackColExact] : null;
+      let feedbackCell: any = null;
+      if (feedbackColExact !== -1 && cells[feedbackColExact] && cells[feedbackColExact].v != null) feedbackCell = cells[feedbackColExact];
+      else if (cells[71] && cells[71].v != null) feedbackCell = cells[71];
       const feedback = feedbackCell ? String(feedbackCell.v) : null;
       result.categories = cats;
       result.overall = overall;
@@ -249,7 +251,9 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       const overallCell = (cells[overallIndex] && cells[overallIndex].v != null) ? cells[overallIndex] : null;
       const overall = overallCell ? String(overallCell.v) : null;
       // extract exact feedback column value if present
-      const feedbackCell = (feedbackColExact !== -1 && cells[feedbackColExact] && cells[feedbackColExact].v != null) ? cells[feedbackColExact] : null;
+      let feedbackCell: any = null;
+      if (feedbackColExact !== -1 && cells[feedbackColExact] && cells[feedbackColExact].v != null) feedbackCell = cells[feedbackColExact];
+      else if (cells[71] && cells[71].v != null) feedbackCell = cells[71];
       const feedback = feedbackCell ? String(feedbackCell.v) : null;
       result.categories = cats;
       result.overall = overall;
