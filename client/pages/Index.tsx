@@ -101,7 +101,7 @@ export default function Index() {
           const overallCell = cells[cols.length - 1];
           const overallAverage = toNumber(overallCell?.v) ?? 0;
           return {
-            resort: 'VM Resort Albanie',
+            resort: cfg.name,
             updatedAt: new Date().toISOString(),
             overallAverage,
             categories,
