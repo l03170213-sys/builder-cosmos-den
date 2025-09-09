@@ -78,7 +78,14 @@ function makeSummaryClone(summaryEl: HTMLElement) {
   header.style.alignItems = 'center';
 
   const left = document.createElement('div');
-  left.innerHTML = `<h1 style="margin:0;font-size:22px;font-weight:800">VM Resort - Albanie</h1><div style="margin-top:6px;color:#475569">Rapport de satisfaction</div>`;
+  try {
+    const selectedKey = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+    const resorts = (await import('@/lib/resorts')).RESORTS;
+    const cfg = resorts.find((r:any) => r.key === selectedKey) || resorts[0];
+    left.innerHTML = `<h1 style="margin:0;font-size:22px;font-weight:800">${cfg.name}</h1><div style="margin-top:6px;color:#475569">Rapport de satisfaction</div>`;
+  } catch (e) {
+    left.innerHTML = `<h1 style="margin:0;font-size:22px;font-weight:800">VM Resort - Albanie</h1><div style="margin-top:6px;color:#475569">Rapport de satisfaction</div>`;
+  }
   const right = document.createElement('div');
   right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
   header.appendChild(left);
