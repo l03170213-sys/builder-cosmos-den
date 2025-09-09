@@ -173,7 +173,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 3, name: '🚐 Car navette' },
         { colIndex: 4, name: '🏨 HÉBERGEMENT' },
         { colIndex: 5, name: '🛏️ CHAMBRES' },
-        { colIndex: 6, name: '🏊 PISCINE' },
+        { colIndex: 6, name: '���� PISCINE' },
         { colIndex: 7, name: '🎉 ANIMATION' },
         { colIndex: 8, name: '👥 ÉQUIPES' },
         { colIndex: 9, name: '🤝 Représentant Top of Travel' },
@@ -222,34 +222,22 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           for (let ci = 0; ci < mcols.length; ci++) {
             const lbl = (mcols[ci] || '').toString().trim().toLowerCase();
             if (!lbl) continue;
-            if (emailVal && lbl.includes(emailVal)) {
-              respColIndex = ci;
-              const lastRow = mrows[mrows.length - 1];
-              const cell = lastRow && lastRow.c && lastRow.c[ci];
-              overallVal = cell && cell.v != null ? String(cell.v) : overallVal;
-              break;
-            }
-            if (nameVal && lbl.includes(nameVal)) {
-              respColIndex = ci;
-              const lastRow = mrows[mrows.length - 1];
-              const cell = lastRow && lastRow.c && lastRow.c[ci];
-              overallVal = cell && cell.v != null ? String(cell.v) : overallVal;
-              break;
-            }
+            if (emailVal && lbl.includes(emailVal)) { respColIndex = ci; break; }
+            if (nameVal && lbl.includes(nameVal)) { respColIndex = ci; break; }
           }
 
-          // if not found, use the last row of the matrice (global averages) and pick column L (11)
-          let lastRow: any = mrows[mrows.length - 1];
-          let lastRowCells: any[] = lastRow ? (lastRow.c || []) : [];
+          // Find last non-empty row in matrice (for Pestana this is the global averages row)
+          let lastRow: any = null;
+          for (let ri = mrows.length - 1; ri >= 0; ri--) {
+            const rr = mrows[ri];
+            const hasValue = (rr?.c ?? []).some((cell: any) => cell && cell.v != null && cell.v !== '');
+            if (hasValue) { lastRow = rr; break; }
+          }
+          if (!lastRow) lastRow = mrows[mrows.length - 1];
+          const lastRowCells: any[] = lastRow?.c || [];
           const overallIdx = lastRow ? (11 < lastRowCells.length ? 11 : Math.max(0, lastRowCells.length - 1)) : 11;
-          if (!overallVal) {
-            if (lastRow) {
-              const c = lastRowCells[overallIdx];
-              overallVal = c && c.v != null ? String(c.v) : null;
-            }
-          }
 
-          // Rebuild categories using matrice values when possible, otherwise fall back to sheet1 scells
+          // If respColIndex found, build categories from rows B..K (indices 1..10) reading that column
           const fixedCategoryMapping = [
             { colIndex: 0, name: 'Nom' },
             { colIndex: 1, name: '🌟 APPRÉCIATION GLOBALE' },
@@ -266,39 +254,61 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           ];
 
           const newCats: { name: string; value: string }[] = [];
-          for (const m of fixedCategoryMapping) {
-            let val = '';
-            // Nom comes from sheet1 first column if present
-            if (m.colIndex === 0) {
-              // Nom may be located in sheet1 column E (index 4)
-              val = scells[4] && scells[4].v != null ? String(scells[4].v) : (scells[0] && scells[0].v != null ? String(scells[0].v) : '');
-            } else if (m.colIndex === 11) {
-              // MOYENNE GLOBALE: prefer per-respondent value from last row if respColIndex known
-              if (respColIndex !== -1 && lastRow && lastRow.c && lastRow.c[respColIndex] && lastRow.c[respColIndex].v != null) {
-                val = String(lastRow.c[respColIndex].v);
-              } else if (lastRow && lastRow.c && lastRow.c[overallIdx] && lastRow.c[overallIdx].v != null) {
-                val = String(lastRow.c[overallIdx].v);
-              } else {
-                val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : '';
-              }
-            } else {
-              // Other categories: row in matrice corresponding to (colIndex - 1)
-              const rowIndex = m.colIndex - 1;
-              const mrow = mrows[rowIndex];
-              if (mrow && respColIndex !== -1 && mrow.c && mrow.c[respColIndex] && mrow.c[respColIndex].v != null) {
-                val = String(mrow.c[respColIndex].v);
-              } else if (mrow && mrow.c && mrow.c[overallIdx] && mrow.c[overallIdx].v != null) {
-                // fallback: take the value from the overall column if present in that row
-                val = String(mrow.c[overallIdx].v);
-              } else {
-                // final fallback: use sheet1 raw value if available
-                val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : '';
-              }
-            }
-            newCats.push({ name: m.name, value: val });
-          }
 
-          result.categories = newCats;
+          if (respColIndex !== -1) {
+            // For each category B..K (colIndex 1..10), find the row in mrows whose first cell matches the category name when possible
+            for (let i = 1; i <= 10; i++) {
+              const catName = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+              // try to find row by matching first cell text
+              let foundRow = -1;
+              for (let ri = 0; ri < mrows.length; ri++) {
+                const first = (mrows[ri] && mrows[ri].c && mrows[ri].c[0] && String(mrows[ri].c[0].v).toString()) || '';
+                if (first && first.toString().trim().toLowerCase() === (catName || '').toString().trim().toLowerCase()) { foundRow = ri; break; }
+              }
+              // fallback to index-based row (i-1)
+              if (foundRow === -1) foundRow = i - 1;
+              const mrow = mrows[foundRow];
+              const val = (mrow && mrow.c && mrow.c[respColIndex] && mrow.c[respColIndex].v != null) ? String(mrow.c[respColIndex].v) : '';
+              newCats.push({ name: catName, value: val });
+            }
+
+            // For Pestana, overall should be taken from last non-empty row column L (index 11)
+            let overallValFromMatrice: string | null = null;
+            if (isPestana) {
+              const c = lastRowCells[11];
+              overallValFromMatrice = c && c.v != null ? String(c.v) : null;
+            } else {
+              // for other resorts prefer respondent column at last row
+              const c = lastRow && lastRow.c && lastRow.c[respColIndex];
+              overallValFromMatrice = c && c.v != null ? String(c.v) : null;
+            }
+
+            result.categories = [{ name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
+            result.overall = overallValFromMatrice || null;
+
+          } else {
+            // respColIndex not found: keep previous fallback logic (use overallIdx and row indexing)
+            for (const m of fixedCategoryMapping) {
+              let val = '';
+              if (m.colIndex === 0) {
+                val = scells[4] && scells[4].v != null ? String(scells[4].v) : (scells[0] && scells[0].v != null ? String(scells[0].v) : '');
+              } else if (m.colIndex === 11) {
+                const c = lastRowCells[overallIdx];
+                val = c && c.v != null ? String(c.v) : (scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : '');
+              } else {
+                const rowIndex = m.colIndex - 1;
+                const mrow = mrows[rowIndex];
+                if (mrow && mrow.c && mrow.c[overallIdx] && mrow.c[overallIdx].v != null) {
+                  val = String(mrow.c[overallIdx].v);
+                } else {
+                  val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : '';
+                }
+              }
+              newCats.push({ name: m.name, value: val });
+            }
+            result.categories = newCats;
+            result.overall = (lastRowCells[overallIdx] && lastRowCells[overallIdx].v != null) ? String(lastRowCells[overallIdx].v) : null;
+          }
           result.overall = overallVal;
         }
       } catch (e) {
