@@ -171,6 +171,7 @@ export default function Repondants() {
     enabled: true,
     refetchOnWindowFocus: false,
     refetchInterval: 30000,
+    refetchIntervalInBackground: true,
   });
 
   // fetch averages (overallAverage)
