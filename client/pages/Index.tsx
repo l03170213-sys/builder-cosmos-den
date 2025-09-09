@@ -137,7 +137,8 @@ export default function Index() {
       }
 
       try {
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const selected = selectedResortKey;
+        const cfg = currentResort;
         const url = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
