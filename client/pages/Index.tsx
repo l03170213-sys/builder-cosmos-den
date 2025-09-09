@@ -122,11 +122,12 @@ export default function Index() {
 
             const categories = pestanaLabels.map((name, idx) => {
               const colIdx = idx + 1; // labels correspond to columns 1..10
-              const val = toNumber(cells[colIdx]?.v) ?? 0;
+              const raw = toNumber(cells[colIdx]?.v);
+              const val = normalizeAverage(raw) ?? 0;
               return { name, average: val };
             });
 
-            const overallAverage = toNumber(cells[11]?.v) ?? 0;
+            const overallAverage = normalizeAverage(toNumber(cells[11]?.v)) ?? 0;
 
             return {
               resort: cfg.name,
