@@ -158,10 +158,10 @@ export default function Repondants() {
 
   // fetch averages (overallAverage)
   const { data: averages, isLoading: loadingAverages } = useQuery({
-    queryKey: ['resortAverages'],
+    queryKey: ['resortAverages', selectedResortKey],
     queryFn: async () => {
       try {
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const selected = selectedResortKey;
         const apiUrl = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
@@ -200,14 +200,14 @@ export default function Repondants() {
   };
 
   const respondentQuery = useQuery({
-    queryKey: ['respondentDetails', selected?.email, selected?.name, selected?.date],
+    queryKey: ['respondentDetails', selectedResortKey, selected?.email, selected?.name, selected?.date],
     queryFn: async () => {
       if (!selected) return null;
       const params = new URLSearchParams();
       if (selected?.email) params.set('email', selected.email);
       if (selected?.name) params.set('name', selected.name);
       if (selected?.date) params.set('date', selected.date);
-      const apiUrl = new URL('/api/resort/' + (window.localStorage.getItem('selectedResort') || 'vm-resort-albanie') + '/respondent?' + params.toString(), window.location.origin).toString();
+      const apiUrl = new URL('/api/resort/' + selectedResortKey + '/respondent?' + params.toString(), window.location.origin).toString();
       const r = await fetch(apiUrl, { credentials: 'same-origin' });
       if (!r.ok) {
         if (r.status === 404) return null;
