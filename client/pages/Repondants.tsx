@@ -211,6 +211,7 @@ export default function Repondants() {
   const [loadingRespondentData, setLoadingRespondentData] = React.useState(false);
   const [respondentNoteGeneral, setRespondentNoteGeneral] = React.useState<string | null>(null);
   const [respondentColumnLetter, setRespondentColumnLetter] = React.useState<string | null>(null);
+  const [respondentFeedback, setRespondentFeedback] = React.useState<string | null>(null);
 
   // helper to convert 0-based index to column letter (A, B, ... Z, AA...)
   const indexToColumn = (idx: number) => {
