@@ -302,6 +302,7 @@ export default function Repondants() {
           setCategoriesByRespondent(dataResp.categories || null);
           setRespondentNoteGeneral(dataResp.overall || null);
           setRespondentColumnLetter(dataResp.column || null);
+          setRespondentFeedback(dataResp.feedback || null);
         }
       } catch (err) {
         console.error('Failed to fetch respondent matrice via server:', err);
