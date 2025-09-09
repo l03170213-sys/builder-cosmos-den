@@ -49,6 +49,153 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     const qName = (req.query.name || '').toString().trim().toLowerCase();
     const qDate = (req.query.date || '').toString().trim();
 
+    // First, fetch sheet1 (respondents raw sheet) to extract per-respondent category values and feedback
+    const sheet1Url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
+    const sr = await fetch(sheet1Url);
+    if (!sr.ok) return res.status(502).json({ error: 'Unable to fetch sheet1 (respondents)' });
+    const stext = await sr.text();
+    const sjson = parseGviz(stext);
+    const scols: string[] = (sjson.table.cols || []).map((c: any) => (c.label || '').toString());
+    const srows: any[] = sjson.table.rows || [];
+
+    // Helper to normalize headers
+    const normalize = (s: string) => (s || '').toString().replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+    const TARGET_FEEDBACK_TITLE = 'Votre avis compte pour nous ! :)';
+    const feedbackColExactInSheet1 = scols.findIndex(c => normalize(c) === normalize(TARGET_FEEDBACK_TITLE));
+
+    // Try to find respondent row in sheet1 by email/name/date
+    const findRespondentRowInSheet1 = () => {
+      const qEmail = (req.query.email || '').toString().trim().toLowerCase();
+      const qName = (req.query.name || '').toString().trim().toLowerCase();
+      const qDate = (req.query.date || '').toString().trim();
+      const targetDate = qDate ? formatDateToFR(qDate) : '';
+
+      const candidates: number[] = [];
+      for (let i = 0; i < srows.length; i++) {
+        const r = srows[i];
+        const c = r.c || [];
+        let matched = false;
+        for (let ci = 0; ci < c.length; ci++) {
+          const cellVal = c[ci] && c[ci].v != null ? String(c[ci].v).trim().toLowerCase() : '';
+          if (!cellVal) continue;
+          if (qEmail && (cellVal === qEmail || cellVal.includes(qEmail))) { matched = true; break; }
+          if (qName && (cellVal === qName || cellVal.includes(qName))) { matched = true; break; }
+        }
+        if (matched) candidates.push(i);
+      }
+
+      if (candidates.length === 0 && !req.query.name) {
+        for (let i = 0; i < srows.length; i++) {
+          const first = srows[i].c && srows[i].c[0] && srows[i].c[0].v != null ? String(srows[i].c[0].v).trim().toLowerCase() : '';
+          if (first === 'anonyme' || first === 'anonymé' || first === 'anonym') { candidates.push(i); break; }
+        }
+      }
+
+      if (candidates.length === 0) return -1;
+      if (candidates.length === 1) return candidates[0];
+
+      // Disambiguate by date if provided
+      if (targetDate) {
+        for (const idx of candidates) {
+          const cells = srows[idx].c || [];
+          const matchesDate = cells.some((cell: any) => formatDateToFR(cellToString(cell)) === targetDate && targetDate !== '');
+          if (matchesDate) return idx;
+        }
+      }
+      return candidates[0];
+    };
+
+    const sheet1RowIdx = findRespondentRowInSheet1();
+
+    // Extract per-category values from sheet1 row if found
+    if (sheet1RowIdx !== -1) {
+      const srow = srows[sheet1RowIdx];
+      const scells = srow.c || [];
+      const lastIdx = Math.max(0, scells.length - 1);
+      // determine metadata columns to exclude (name/email/date/age/postal/duration)
+      const metaKeywords = ['email', 'courriel', '@', 'date', 'nom', 'name', 'âge', 'age', 'postal', 'code postal', 'postcode', 'zip', 'durée', 'duree', 'duration', 'séjour', 'sejour'];
+      const metaIdxs = new Set<number>();
+      for (let i = 0; i < scols.length; i++) {
+        const h = normalize(scols[i] || '');
+        for (const k of metaKeywords) if (h.includes(k)) { metaIdxs.add(i); break; }
+      }
+      // mark feedback column as meta too
+      if (feedbackColExactInSheet1 !== -1) metaIdxs.add(feedbackColExactInSheet1);
+      if (71 < scells.length) metaIdxs.add(71);
+
+      const cats: { name: string; value: string }[] = [];
+      for (let i = 0; i <= lastIdx; i++) {
+        if (metaIdxs.has(i)) continue;
+        const name = scols[i] && scols[i] !== '' ? scols[i] : `Col ${i + 1}`;
+        const val = scells[i] && scells[i].v != null ? String(scells[i].v) : '';
+        cats.push({ name, value: val });
+      }
+
+      // prepare a result skeleton; overall & feedback to be resolved below
+      const result = { categories: cats, overall: null as null | string, column: null as null | string, feedback: null as null | string };
+
+      // feedback from sheet1: prefer exact header, else BT
+      let fcell: any = null;
+      if (feedbackColExactInSheet1 !== -1 && scells[feedbackColExactInSheet1] && scells[feedbackColExactInSheet1].v != null) fcell = scells[feedbackColExactInSheet1];
+      else if (scells[71] && scells[71].v != null) fcell = scells[71];
+      result.feedback = fcell ? String(fcell.v) : null;
+
+      // Now fetch matrice to determine 'overall' (Note général) from column L (index 11) mapped to this respondent
+      try {
+        const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
+        const mr = await fetch(mgurl);
+        if (mr.ok) {
+          const mtext = await mr.text();
+          const mjson = parseGviz(mtext);
+          const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || '').toString());
+          const mrows: any[] = mjson.table.rows || [];
+
+          // attempt cols-as-respondents: find column whose header matches email or name
+          const emailCellVal = (srow.c || []).find((c: any) => c && c.v && String(c.v).toString().includes('@'));
+          const emailVal = emailCellVal ? String(emailCellVal.v).trim().toLowerCase() : '';
+          const nameVal = (srow.c && srow.c[0] && srow.c[0].v != null) ? String(srow.c[0].v).trim().toLowerCase() : '';
+
+          let overallVal: string | null = null;
+
+          // try to find col label in matrice matching email or name
+          for (let ci = 0; ci < mcols.length; ci++) {
+            const lbl = (mcols[ci] || '').toString().trim().toLowerCase();
+            if (!lbl) continue;
+            if (emailVal && lbl.includes(emailVal)) {
+              const lastRow = mrows[mrows.length - 1];
+              const cell = lastRow && lastRow.c && lastRow.c[ci];
+              overallVal = cell && cell.v != null ? String(cell.v) : overallVal;
+              break;
+            }
+            if (nameVal && lbl.includes(nameVal)) {
+              const lastRow = mrows[mrows.length - 1];
+              const cell = lastRow && lastRow.c && lastRow.c[ci];
+              overallVal = cell && cell.v != null ? String(cell.v) : overallVal;
+              break;
+            }
+          }
+
+          // if not found, map by row-index: use sheet1RowIdx to pick matrice row and column L (11)
+          if (!overallVal) {
+            const mappedRow = mrows[sheet1RowIdx];
+            if (mappedRow) {
+              const mcells = mappedRow.c || [];
+              const overallIdx = 11 < mcells.length ? 11 : Math.max(0, mcells.length - 1);
+              const c = mcells[overallIdx];
+              overallVal = c && c.v != null ? String(c.v) : null;
+            }
+          }
+
+          result.overall = overallVal;
+        }
+      } catch (e) {
+        console.error('Failed to fetch matrice for overall:', e);
+      }
+
+      return res.status(200).json(result);
+    }
+
+    // If respondent not found in sheet1, fall back to previous matrice-first logic
     const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
     const rr = await fetch(gurl);
     if (!rr.ok) return res.status(502).json({ error: 'Unable to fetch matrice' });
