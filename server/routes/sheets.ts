@@ -93,7 +93,8 @@ export const getResortAverages: RequestHandler = async (req, res) => {
       // Always include columns 1..10 as categories (keep labels even if values are empty)
       for (let idx = 1; idx <= 10; idx++) {
         const name = fixedCategoryMapping.find(m => m.colIndex === idx)?.name || `Col ${idx}`;
-        const val = toNumber(cells[idx]?.v) ?? 0;
+        const raw = toNumber(cells[idx]?.v);
+        const val = normalizeAverage(raw) ?? 0;
         categories.push({ name, average: val });
       }
 
