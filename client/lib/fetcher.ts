@@ -4,42 +4,47 @@ export async function safeFetch(u: string, opts?: RequestInit) {
     return r;
   };
 
-  // If this looks like an internal API call, try the Netlify function path first in the browser
+  const tryUrls: string[] = [];
   try {
-    try {
-      const urlObj = new URL(u);
-      if (urlObj.pathname.startsWith('/api/')) {
-        const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
-        const alt = new URL(altPath, urlObj.origin).toString();
-        // First try the Netlify function endpoint — this can avoid CORS/server proxy issues when deployed as functions
-        try {
-          const rAlt = await doFetch(alt);
-          if (rAlt) return rAlt;
-        } catch (e) {
-          // fallthrough to primary
-        }
-      }
-    } catch (e) {
-      // ignore URL parsing issues and fall back to primary fetch
+    const urlObj = new URL(u);
+    tryUrls.push(u);
+    if (urlObj.pathname.startsWith('/api/')) {
+      // add Netlify functions alternative
+      const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
+      const alt = new URL(altPath, urlObj.origin).toString();
+      tryUrls.unshift(alt); // prefer alt first
     }
-
-    return await doFetch(u);
-  } catch (err: any) {
-    const msg = (err && err.message) ? String(err.message).toLowerCase() : '';
-    if (msg.includes('failed to fetch') || msg.includes('networkerror')) {
-      try {
-        const urlObj = new URL(u);
-        if (urlObj.pathname.startsWith('/api/')) {
-          const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
-          const alt = new URL(altPath, urlObj.origin).toString();
-          return await doFetch(alt);
-        }
-      } catch (e) {
-        // ignore
-      }
-    }
-    throw err;
+  } catch (e) {
+    // fallback to original url only
+    tryUrls.push(u);
   }
+
+  // retry sequence with small backoff
+  let lastErr: any = null;
+  for (let attempt = 0; attempt < tryUrls.length; attempt++) {
+    const url = tryUrls[attempt];
+    try {
+      const r = await doFetch(url);
+      return r;
+    } catch (err: any) {
+      lastErr = err;
+      // small delay before next attempt
+      await new Promise((res) => setTimeout(res, 150 * (attempt + 1)));
+    }
+  }
+
+  // If all attempts failed, try a couple of simple retries on the original URL
+  for (let retry = 0; retry < 2; retry++) {
+    try {
+      const r = await doFetch(u);
+      return r;
+    } catch (err: any) {
+      lastErr = err;
+      await new Promise((res) => setTimeout(res, 200 * (retry + 1)));
+    }
+  }
+
+  throw lastErr || new Error('Failed to fetch');
 }
 
 export async function fetchJsonSafe(url: string, opts?: RequestInit) {
