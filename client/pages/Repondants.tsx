@@ -248,12 +248,14 @@ export default function Repondants() {
       setCategoriesByRespondent(d?.categories || null);
       setRespondentNoteGeneral(d?.overall || null);
       setRespondentColumnLetter(d?.column || null);
+      setRespondentFeedback(d?.feedback || null);
     },
     onError: (err) => {
       console.error('Failed to fetch respondent details:', err);
       setCategoriesByRespondent(null);
       setRespondentNoteGeneral(null);
       setRespondentColumnLetter(null);
+      setRespondentFeedback(null);
     }
   });
   // keep loading state in sync
