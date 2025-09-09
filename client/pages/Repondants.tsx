@@ -134,11 +134,12 @@ export default function Repondants() {
   });
 
   // fetch global summary (respondents + recommendation rate)
+  const { resort: selectedResortKey } = useSelectedResort();
   const { data: summary, isLoading: loadingSummary } = useQuery({
-    queryKey: ['resortSummary'],
+    queryKey: ['resortSummary', selectedResortKey],
     queryFn: async () => {
       try {
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const selected = selectedResortKey;
         const apiUrl = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
