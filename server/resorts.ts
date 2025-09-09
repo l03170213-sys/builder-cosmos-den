@@ -49,4 +49,29 @@ export const RESORTS: Record<string, { sheetId: string; gidMatrice?: string; nam
     gidMatrice: "1752837685",
     name: "Hôtel Pestana Royal Océan - Madère",
   },
+  "monchique-portugal": {
+    sheetId: "1LyUJwlEfSEsNkeBOdUOhmXPkY70dkcKkcCF19--y2Dk",
+    gidMatrice: "373485969",
+    name: "Hôtel Monchique - Portugal",
+  },
+  "dom-pedro-madeira": {
+    sheetId: "127fqvrErex8BDwkaE2VUugD4WHMn47SPENhrIQCYo-U",
+    gidMatrice: "862214363",
+    name: "Hôtel Dom Pedro Madeira - Madère",
+  },
+  "gabbiano-italie": {
+    sheetId: "1E4vOTv3m7uUuCZ889rvwTXduFThcrRGGsbaJu4aJYks",
+    gidMatrice: "358504289",
+    name: "Hôtel Gabbiano - Italie",
+  },
+  "albatros-croatie": {
+    sheetId: "1iOXnFYJrr5v6XD7Upu9wsoJlPnBeMQJgcRq0HQVmcto",
+    gidMatrice: "524730423",
+    name: "Hôtel Albatros - Croatie",
+  },
+  "delphin-montenegro": {
+    sheetId: "1ToPI9UtLbTwZrY8pX_4vT71dOPn35ZvOGKlKCNWWctU",
+    gidMatrice: "831268452",
+    name: "Hôtel Delphin - Monténégro",
+  },
 };
