@@ -125,7 +125,7 @@ export const getResortAverages: RequestHandler = async (req, res) => {
     // Determine overallAverage from fixed column L (index 11) if present, otherwise fall back to last column
     const overallIdx = Math.min(11, Math.max(0, cells.length - 1));
     const overallCell = cells[overallIdx];
-    const overallAverage = toNumber(overallCell?.v) ?? 0;
+    const overallAverage = normalizeAverage(toNumber(overallCell?.v)) ?? 0;
 
     const response: ResortAveragesResponse = {
       resort: cfg.name,
