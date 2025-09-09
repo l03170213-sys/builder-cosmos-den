@@ -61,11 +61,11 @@ export default function Index() {
         const cfg = currentResort;
         const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
+        const text = await r.text().catch(() => '');
         if (!r.ok) {
-          const text = await r.text().catch(() => r.statusText);
           throw new Error(`Server error: ${r.status} ${text}`);
         }
-        return (await r.json()) as ResortAveragesResponse;
+        try { return JSON.parse(text) as ResortAveragesResponse; } catch (e) { throw new Error(`Invalid JSON response: ${text}`); }
       } catch (err) {
         console.warn('API fetch failed, attempting direct Google Sheets fallback:', err);
         try {
@@ -141,11 +141,11 @@ export default function Index() {
         const cfg = currentResort;
         const url = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
+        const text = await r.text().catch(() => '');
         if (!r.ok) {
-          const text = await r.text().catch(() => r.statusText);
           throw new Error(`Server error: ${r.status} ${text}`);
         }
-        return (await r.json()) as import("@shared/api").ResortSummaryResponse;
+        try { return JSON.parse(text) as import("@shared/api").ResortSummaryResponse; } catch (e) { throw new Error(`Invalid JSON response: ${text}`); }
       } catch (err) {
         console.warn('API summary fetch failed, trying direct Google Sheets fallback:', err);
         try {
