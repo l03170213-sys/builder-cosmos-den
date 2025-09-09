@@ -160,7 +160,7 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const apiUrl = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
+        const apiUrl = new URL(`/.netlify/functions/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
           console.error('Unable to load summary, status', r.status);
