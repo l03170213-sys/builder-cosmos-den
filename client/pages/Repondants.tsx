@@ -122,7 +122,8 @@ function formatDateToFR(raw: string) {
 // Format average numbers to one decimal and use comma as decimal separator (e.g. "3,7")
 async function fetchJsonSafe(url: string, opts?: RequestInit) {
   const r = await fetch(url, opts);
-  const text = await r.text();
+  // clone response to avoid "body stream already read" errors when other code uses the original response
+  const text = await r.clone().text();
   if (!r.ok) {
     const err: any = new Error(`Server error: ${r.status} ${text}`);
     err.status = r.status;
