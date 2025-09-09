@@ -191,8 +191,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       const lastRow = rows[rows.length - 1];
       const overallCell = lastRow && lastRow.c && lastRow.c[colIndex];
       const overall = overallCell && overallCell.v != null ? String(overallCell.v) : null;
+      // get feedback from exact feedback column if present (in last row)
+      const feedbackCell = (feedbackColExact !== -1 && lastRow && lastRow.c && lastRow.c[feedbackColExact] && lastRow.c[feedbackColExact].v != null) ? lastRow.c[feedbackColExact] : null;
+      const feedback = feedbackCell ? String(feedbackCell.v) : null;
       result.categories = cats;
       result.overall = overall;
+      result.feedback = feedback;
       result.column = (function(i){
         let col=''; let n=i+1; while(n>0){ const rem=(n-1)%26; col=String.fromCharCode(65+rem)+col; n=Math.floor((n-1)/26);} return col;
       })(colIndex);
