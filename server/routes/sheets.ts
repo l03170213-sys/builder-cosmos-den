@@ -81,20 +81,19 @@ export const getResortAverages: RequestHandler = async (req, res) => {
     const isPestana = resortKey === 'pestana-royal-ocean-madeira';
 
     if (isPestana) {
-      // For Pestana, use the last physical row (not the last non-empty row) as the source of averages
-      const lastPhysicalRow = rows[rows.length - 1];
-      const lastCells = (lastPhysicalRow?.c ?? []) as any[];
+      // For Pestana, use the last non-empty row (last row present on the table) as the source of averages
+      const cells = (lastRow?.c ?? []) as any[];
 
       // Always include columns 1..10 as categories (keep labels even if values are empty)
       for (let idx = 1; idx <= 10; idx++) {
         const name = fixedCategoryMapping.find(m => m.colIndex === idx)?.name || `Col ${idx}`;
-        const val = toNumber(lastCells[idx]?.v) ?? 0;
+        const val = toNumber(cells[idx]?.v) ?? 0;
         categories.push({ name, average: val });
       }
 
-      // overall from column L (index 11) of the last physical row
+      // overall from column L (index 11) of the last non-empty row
       const overallIdx = 11;
-      const overallAverage = toNumber(lastCells[overallIdx]?.v) ?? 0;
+      const overallAverage = toNumber(cells[overallIdx]?.v) ?? 0;
 
       const response: ResortAveragesResponse = {
         resort: cfg.name,
