@@ -10,9 +10,38 @@ function parseGviz(text: string) {
 
 function cellToString(c: any) {
   if (!c) return '';
-  if (typeof c === 'string') return c;
+  // primitive types
+  if (typeof c === 'string') {
+    // handle Google gviz date string like Date(2025,6,1)
+    const m = c.match && c.match(/^Date\((\d+),\s*(\d+),\s*(\d+)/);
+    if (m) return formatDateToFR(`${m[3]}/${Number(m[2]) + 1}/${m[1]}`);
+    return c;
+  }
   if (typeof c === 'number') return String(c);
-  if (c && typeof c === 'object' && c.v != null) return String(c.v);
+
+  // object returned by gviz {v: ..., f: ...}
+  if (c && typeof c === 'object') {
+    if (c.f != null) return String(c.f);
+    if (c.v == null) return '';
+    const v = c.v;
+    if (typeof v === 'string') {
+      // Date string like Date(2025,6,1) sometimes appears
+      const dm = v.match(/^Date\((\d+),\s*(\d+),\s*(\d+)/);
+      if (dm) return formatDateToFR(`${dm[3]}/${Number(dm[2]) + 1}/${dm[1]}`);
+      return v;
+    }
+    if (typeof v === 'number') {
+      // Could be excel serial representing a date — try convert if large (>30000)
+      if (v > 30000) {
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        const dt2 = new Date(excelEpoch.getTime() + Math.round(v) * 24 * 60 * 60 * 1000);
+        return `${String(dt2.getUTCDate()).padStart(2,'0')}/${String(dt2.getUTCMonth()+1).padStart(2,'0')}/${dt2.getUTCFullYear()}`;
+      }
+      return String(v);
+    }
+    // fallback
+    return String(v);
+  }
   return '';
 }
 
@@ -176,7 +205,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 6, name: '🏊 PISCINE' },
         { colIndex: 7, name: '🎉 ANIMATION' },
         { colIndex: 8, name: '👥 ÉQUIPES' },
-        { colIndex: 9, name: '🤝 Représentant Top of Travel' },
+        { colIndex: 9, name: '�� Représentant Top of Travel' },
         { colIndex: 10, name: '🌍 EXCURSIONS' },
         { colIndex: 11, name: 'MOYENNE GÉNÉRALE' },
       ];
