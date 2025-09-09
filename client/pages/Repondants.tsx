@@ -284,6 +284,7 @@ export default function Repondants() {
             setCategoriesByRespondent(dataResp.categories || null);
             setRespondentNoteGeneral(dataResp.overall || null);
             setRespondentColumnLetter(dataResp.column || null);
+            setRespondentFeedback(dataResp.feedback || null);
           }
         } catch (err: any) {
           if (err && err.status === 404) {
@@ -385,7 +386,7 @@ export default function Repondants() {
                   <div className="text-xs text-muted-foreground">Moyennes par catégorie (répondant)</div>
                   <div className="mt-2 text-sm">
                     {loadingRespondentData && <div>Chargement…</div>}
-                    {!loadingRespondentData && categoriesByRespondent && categoriesByRespondent.length === 0 && <div className="text-sm text-muted-foreground">Aucune donnée de catégories trouvée pour ce répondant.</div>}
+                    {!loadingRespondentData && categoriesByRespondent && categoriesByRespondent.length === 0 && <div className="text-sm text-muted-foreground">Aucune donnée de catégories trouv��e pour ce répondant.</div>}
                     {!loadingRespondentData && categoriesByRespondent && categoriesByRespondent.length > 0 && (
                       <div className="space-y-2 max-h-72 overflow-auto">
                         {categoriesByRespondent.map((c, idx) => (
