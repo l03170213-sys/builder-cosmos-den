@@ -121,21 +121,43 @@ function formatDateToFR(raw: string) {
 
 // Format average numbers to one decimal and use comma as decimal separator (e.g. "3,7")
 async function fetchJsonSafe(url: string, opts?: RequestInit) {
-  const r = await fetch(url, opts);
-  // clone response to avoid "body stream already read" errors when other code uses the original response
-  const text = await r.clone().text();
-  if (!r.ok) {
-    const err: any = new Error(`Server error: ${r.status} ${text}`);
-    err.status = r.status;
-    err.body = text;
-    throw err;
-  }
+  // Try primary fetch, but be resilient to network errors and try Netlify function path as fallback
+  const doFetch = async (u: string) => {
+    const r = await fetch(u, opts);
+    const text = await r.clone().text();
+    if (!r.ok) {
+      const err: any = new Error(`Server error: ${r.status} ${text}`);
+      err.status = r.status;
+      err.body = text;
+      throw err;
+    }
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      const err: any = new Error(`Invalid JSON response: ${text.slice(0, 500)}`);
+      err.status = r.status;
+      err.body = text;
+      throw err;
+    }
+  };
+
   try {
-    return JSON.parse(text);
-  } catch (e) {
-    const err: any = new Error(`Invalid JSON response: ${text.slice(0, 500)}`);
-    err.status = r.status;
-    err.body = text;
+    return await doFetch(url);
+  } catch (err) {
+    // If primary failed due to network (TypeError: Failed to fetch), try Netlify function path fallback
+    const msg = (err && err.message) ? String(err.message).toLowerCase() : '';
+    if (msg.includes('failed to fetch') || msg.includes('networkerror') || msg.includes('networkerror')) {
+      try {
+        // Replace '/api/' with '/.netlify/functions/api/' if applicable
+        const u = new URL(url);
+        if (u.pathname.startsWith('/api/')) {
+          const alt = new URL(u.pathname.replace(/^\/api\//, '/.netlify/functions/api/'), u.origin).toString();
+          return await doFetch(alt);
+        }
+      } catch (e) {
+        // ignore and fallthrough
+      }
+    }
     throw err;
   }
 }
