@@ -89,9 +89,17 @@ export default function Index() {
           const selectedKey = selected;
 
           if (selectedKey === 'pestana-royal-ocean-madeira') {
-            // For Pestana, use the last physical row and fixed columns: 1..10 categories, column 11 (L) overall
-            const lastPhysicalRow = rows[rows.length - 1];
-            const lastCells = (lastPhysicalRow?.c ?? []) as any[];
+            // For Pestana, use the last non-empty row and fixed columns: 1..10 categories, column 11 (L) overall
+            let lastRow = rows[rows.length - 1];
+            for (let i = rows.length - 1; i >= 0; i--) {
+              const rr2 = rows[i];
+              const hasValue = (rr2?.c ?? []).some((cell: any) => cell && cell.v != null && cell.v !== "");
+              if (hasValue) {
+                lastRow = rr2;
+                break;
+              }
+            }
+            const cells = (lastRow?.c ?? []) as any[];
 
             const pestanaLabels = [
               '🌟 APPRÉCIATION GLOBALE',
@@ -108,11 +116,11 @@ export default function Index() {
 
             const categories = pestanaLabels.map((name, idx) => {
               const colIdx = idx + 1; // labels correspond to columns 1..10
-              const val = toNumber(lastCells[colIdx]?.v) ?? 0;
+              const val = toNumber(cells[colIdx]?.v) ?? 0;
               return { name, average: val };
             });
 
-            const overallAverage = toNumber(lastCells[11]?.v) ?? 0;
+            const overallAverage = toNumber(cells[11]?.v) ?? 0;
 
             return {
               resort: cfg.name,
