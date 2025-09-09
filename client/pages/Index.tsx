@@ -35,7 +35,7 @@ export default function Index() {
   }, []);
 
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
-    queryKey: ["resort-averages"],
+    queryKey: ["resort-averages", selectedResortKey],
     queryFn: async () => {
       // sheet IDs are selected dynamically via the resort selector; use the client-selected resort when calling APIs
 
