@@ -177,7 +177,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 7, name: '🎉 ANIMATION' },
         { colIndex: 8, name: '👥 ÉQUIPES' },
         { colIndex: 9, name: '🤝 Représentant Top of Travel' },
-        { colIndex: 10, name: '���� EXCURSIONS' },
+        { colIndex: 10, name: '🌍 EXCURSIONS' },
         { colIndex: 11, name: 'MOYENNE GÉNÉRALE' },
       ];
 
