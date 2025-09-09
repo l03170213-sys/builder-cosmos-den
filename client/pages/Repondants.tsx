@@ -152,6 +152,7 @@ export default function Repondants() {
     },
     refetchOnWindowFocus: false,
     refetchInterval: 30000,
+    refetchIntervalInBackground: true,
   });
 
   // fetch global summary (respondents + recommendation rate)
