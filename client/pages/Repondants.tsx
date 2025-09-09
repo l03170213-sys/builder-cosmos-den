@@ -115,7 +115,7 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         // Fetch from internal server endpoint only (avoid client-side Google fetch/CORS)
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const selected = 'vm-resort-albanie';
         const apiUrl = new URL(`/api/resort/${selected}/respondents`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
@@ -137,7 +137,7 @@ export default function Repondants() {
     queryKey: ['resortSummary'],
     queryFn: async () => {
       try {
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const selected = 'vm-resort-albanie';
         const apiUrl = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
@@ -160,7 +160,7 @@ export default function Repondants() {
     queryKey: ['resortAverages'],
     queryFn: async () => {
       try {
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const selected = 'vm-resort-albanie';
         const apiUrl = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
@@ -206,7 +206,7 @@ export default function Repondants() {
       if (selected?.email) params.set('email', selected.email);
       if (selected?.name) params.set('name', selected.name);
       if (selected?.date) params.set('date', selected.date);
-      const apiUrl = new URL('/api/resort/' + (window.localStorage.getItem('selectedResort') || 'vm-resort-albanie') + '/respondent?' + params.toString(), window.location.origin).toString();
+      const apiUrl = new URL('/api/resort/vm-resort-albanie/respondent?' + params.toString(), window.location.origin).toString();
       const r = await fetch(apiUrl, { credentials: 'same-origin' });
       if (!r.ok) {
         if (r.status === 404) return null;
@@ -248,7 +248,7 @@ export default function Repondants() {
         if (selected?.email) params.set('email', selected.email);
         if (selected?.name) params.set('name', selected.name);
         if (selected?.date) params.set('date', selected.date);
-        const apiUrl = new URL('/api/resort/' + (window.localStorage.getItem('selectedResort') || 'vm-resort-albanie') + '/respondent?' + params.toString(), window.location.origin).toString();
+        const apiUrl = new URL('/api/resort/vm-resort-albanie/respondent?' + params.toString(), window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
           if (r.status === 404) {
@@ -357,7 +357,7 @@ export default function Repondants() {
                         {categoriesByRespondent.map((c, idx) => (
                           <div key={idx} className="flex justify-between items-center px-2 py-1 border-b last:border-b-0">
                             <div className="text-sm text-gray-700">{c.name}</div>
-                            <div className="text-sm font-medium text-gray-900">{c.value ? formatAverage(c.value) : '��'}</div>
+                            <div className="text-sm font-medium text-gray-900">{c.value ? formatAverage(c.value) : '—'}</div>
                           </div>
                         ))}
                       </div>
