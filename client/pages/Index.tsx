@@ -17,13 +17,40 @@ export default function Index() {
 
   const [serverAvailable, setServerAvailable] = React.useState<boolean | undefined>(undefined);
 
+  // Helper: resilient fetch that retries via Netlify functions fallback on network failures
+  async function safeFetch(u: string, opts?: RequestInit) {
+    const doFetch = async (url: string) => {
+      const r = await fetch(url, opts);
+      return r;
+    };
+
+    try {
+      return await doFetch(u);
+    } catch (err: any) {
+      const msg = (err && err.message) ? String(err.message).toLowerCase() : '';
+      if (msg.includes('failed to fetch') || msg.includes('networkerror')) {
+        try {
+          const urlObj = new URL(u);
+          if (urlObj.pathname.startsWith('/api/')) {
+            const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
+            const alt = new URL(altPath, urlObj.origin).toString();
+            return await doFetch(alt);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      throw err;
+    }
+  }
+
   // Ping server availability before running heavier queries
   React.useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const url = new URL('/api/ping', window.location.origin).toString();
-        const r = await fetch(url, { credentials: 'same-origin' });
+        const r = await safeFetch(url, { credentials: 'same-origin' });
         if (!mounted) return;
         setServerAvailable(r.ok);
       } catch (err) {
