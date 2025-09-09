@@ -22,7 +22,7 @@ export default function Index() {
     let mounted = true;
     (async () => {
       try {
-        const url = new URL('/.netlify/functions/api/ping', window.location.origin).toString();
+        const url = new URL('/api/ping', window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!mounted) return;
         setServerAvailable(r.ok);
