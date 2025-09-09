@@ -193,8 +193,10 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       const lastRow = rows[rows.length - 1];
       const overallCell = lastRow && lastRow.c && lastRow.c[colIndex];
       const overall = overallCell && overallCell.v != null ? String(overallCell.v) : null;
-      // get feedback from exact feedback column if present (in last row)
-      const feedbackCell = (feedbackColExact !== -1 && lastRow && lastRow.c && lastRow.c[feedbackColExact] && lastRow.c[feedbackColExact].v != null) ? lastRow.c[feedbackColExact] : null;
+      // get feedback from exact feedback column if present (in last row) or fallback to BT (index 71)
+      let feedbackCell: any = null;
+      if (feedbackColExact !== -1 && lastRow && lastRow.c && lastRow.c[feedbackColExact] && lastRow.c[feedbackColExact].v != null) feedbackCell = lastRow.c[feedbackColExact];
+      else if (lastRow && lastRow.c && lastRow.c[71] && lastRow.c[71].v != null) feedbackCell = lastRow.c[71];
       const feedback = feedbackCell ? String(feedbackCell.v) : null;
       result.categories = cats;
       result.overall = overall;
