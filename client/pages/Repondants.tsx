@@ -137,7 +137,8 @@ export default function Repondants() {
     queryKey: ['resortSummary'],
     queryFn: async () => {
       try {
-        const apiUrl = new URL('/api/resort/vm-resort-albanie/summary', window.location.origin).toString();
+        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const apiUrl = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
           console.error('Unable to load summary, status', r.status);
