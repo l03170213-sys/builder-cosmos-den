@@ -114,7 +114,8 @@ export default function Index() {
       }
     },
     enabled: serverAvailable !== false,
-    refetchInterval: 1000 * 60 * 10, // every 10 minutes
+    refetchInterval: 30000, // every 30 seconds
+    refetchIntervalInBackground: true,
     retry: false,
     refetchOnWindowFocus: false,
   });
