@@ -136,7 +136,7 @@ export default function Repondants() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { resort: selectedResortKey } = useSelectedResort();
   const [page, setPage] = React.useState(1);
-  const [pageSize] = React.useState(100);
+  const [pageSize] = React.useState(10);
   const { data, isLoading, isError } = useQuery({
     queryKey: ["repondants", selectedResortKey, page, pageSize],
     queryFn: async () => {
