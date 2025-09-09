@@ -13,8 +13,18 @@ function toNumber(val: unknown): number | null {
   if (val == null) return null;
   if (typeof val === "number") return val;
   if (typeof val === "string") {
-    const n = Number(val.replace(",", "."));
+    // extract first numeric token like 4,42 or 4.42 or 45%
+    const m = val.replace("\u00A0", "").match(/-?\d+[.,]?\d*/);
+    if (!m) return null;
+    const n = Number(m[0].replace(",", "."));
     return Number.isFinite(n) ? n : null;
+  }
+  // Sometimes Google returns objects like {v: '4,42', f: '4,42'} as cell value
+  if (typeof val === 'object' && val !== null) {
+    // try to extract .v or .f
+    const anyVal: any = val;
+    if (anyVal.v != null) return toNumber(anyVal.v);
+    if (anyVal.f != null) return toNumber(anyVal.f);
   }
   return null;
 }
@@ -60,7 +70,7 @@ export const getResortAverages: RequestHandler = async (req, res) => {
       { colIndex: 5, name: '🛏️ CHAMBRES' },
       { colIndex: 6, name: '🏊 PISCINE' },
       { colIndex: 7, name: '🎉 ANIMATION' },
-      { colIndex: 8, name: '�� ÉQUIPES' },
+      { colIndex: 8, name: '👥 ÉQUIPES' },
       { colIndex: 9, name: '🤝 Représentant Top of Travel' },
       { colIndex: 10, name: '🌍 EXCURSIONS' },
       { colIndex: 11, name: 'MOYENNE GÉNÉRALE' },
