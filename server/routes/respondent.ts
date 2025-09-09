@@ -123,12 +123,26 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       if (feedbackColExactInSheet1 !== -1) metaIdxs.add(feedbackColExactInSheet1);
       if (71 < scells.length) metaIdxs.add(71);
 
+      const fixedCategoryMapping = [
+        { colIndex: 0, name: 'Nom' },
+        { colIndex: 1, name: '🌟 APPRÉCIATION GLOBALE' },
+        { colIndex: 2, name: '✈️ TRANSPORTS Aérien' },
+        { colIndex: 3, name: '🚐 Car navette' },
+        { colIndex: 4, name: '🏨 HÉBERGEMENT' },
+        { colIndex: 5, name: '🛏️ CHAMBRES' },
+        { colIndex: 6, name: '🏊 PISCINE' },
+        { colIndex: 7, name: '🎉 ANIMATION' },
+        { colIndex: 8, name: '👥 ÉQUIPES' },
+        { colIndex: 9, name: '🤝 Représentant Top of Travel' },
+        { colIndex: 10, name: '🌍 EXCURSIONS' },
+        { colIndex: 11, name: 'MOYENNE GÉNÉRALE' },
+      ];
+
       const cats: { name: string; value: string }[] = [];
-      for (let i = 0; i <= lastIdx; i++) {
-        if (metaIdxs.has(i)) continue;
-        const name = scols[i] && scols[i] !== '' ? scols[i] : `Col ${i + 1}`;
-        const val = scells[i] && scells[i].v != null ? String(scells[i].v) : '';
-        cats.push({ name, value: val });
+      for (const m of fixedCategoryMapping) {
+        const cell = scells[m.colIndex];
+        const val = cellToString(cell);
+        cats.push({ name: m.name, value: val });
       }
 
       // prepare a result skeleton; overall & feedback to be resolved below
