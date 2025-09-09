@@ -173,7 +173,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 3, name: '🚐 Car navette' },
         { colIndex: 4, name: '🏨 HÉBERGEMENT' },
         { colIndex: 5, name: '🛏️ CHAMBRES' },
-        { colIndex: 6, name: '���� PISCINE' },
+        { colIndex: 6, name: '🏊 PISCINE' },
         { colIndex: 7, name: '🎉 ANIMATION' },
         { colIndex: 8, name: '👥 ÉQUIPES' },
         { colIndex: 9, name: '🤝 Représentant Top of Travel' },
@@ -259,11 +259,11 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             // For each category B..K (colIndex 1..10), find the row in mrows whose first cell matches the category name when possible
             for (let i = 1; i <= 10; i++) {
               const catName = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-              // try to find row by matching first cell text
+              // try to find row by matching first cell text using normalize()
               let foundRow = -1;
               for (let ri = 0; ri < mrows.length; ri++) {
-                const first = (mrows[ri] && mrows[ri].c && mrows[ri].c[0] && String(mrows[ri].c[0].v).toString()) || '';
-                if (first && first.toString().trim().toLowerCase() === (catName || '').toString().trim().toLowerCase()) { foundRow = ri; break; }
+                const first = (mrows[ri] && mrows[ri].c && mrows[ri].c[0]) ? cellToString(mrows[ri].c[0]) : '';
+                if (first && normalize(first) === normalize(catName || '')) { foundRow = ri; break; }
               }
               // fallback to index-based row (i-1)
               if (foundRow === -1) foundRow = i - 1;
