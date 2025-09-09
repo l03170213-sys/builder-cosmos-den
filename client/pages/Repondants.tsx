@@ -134,7 +134,6 @@ export default function Repondants() {
   });
 
   // fetch global summary (respondents + recommendation rate)
-  const { resort: selectedResortKey } = useSelectedResort();
   const { data: summary, isLoading: loadingSummary } = useQuery({
     queryKey: ['resortSummary', selectedResortKey],
     queryFn: async () => {
