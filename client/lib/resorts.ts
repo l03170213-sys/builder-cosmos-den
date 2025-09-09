@@ -13,4 +13,6 @@ export const RESORTS = [
   { key: 'gabbiano-italie', name: "Hôtel Gabbiano - Italie", sheetId: '1E4vOTv3m7uUuCZ889rvwTXduFThcrRGGsbaJu4aJYks', gidMatrice: '358504289' },
   { key: 'albatros-croatie', name: "Hôtel Albatros - Croatie", sheetId: '1iOXnFYJrr5v6XD7Upu9wsoJlPnBeMQJgcRq0HQVmcto', gidMatrice: '524730423' },
   { key: 'delphin-montenegro', name: "Hôtel Delphin - Monténégro", sheetId: '1ToPI9UtLbTwZrY8pX_4vT71dOPn35ZvOGKlKCNWWctU', gidMatrice: '831268452' },
+  { key: 'pestana-royal-ocean-madeira', name: "Hôtel Pestana Royal Océan - Madère", sheetId: '1e47IUWqQv-8Oh5-JJADgu9rfNW_6Iuw_OXzAIdLnBic', gidMatrice: '1752837685' },
+  { key: 'ariel-cala-dor-majorque', name: "Hôtel Ariel Cala d'Or - Majorque", sheetId: '12bWFjpJ449YIUMHtV7-W7oggIL78hxjUGiFjGSO8NoA', gidMatrice: '578780649' },
 ];

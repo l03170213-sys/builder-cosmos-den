@@ -69,4 +69,14 @@ export const RESORTS: Record<string, { sheetId: string; gidMatrice?: string; nam
     gidMatrice: "831268452",
     name: "Hôtel Delphin - Monténégro",
   },
+  "pestana-royal-ocean-madeira": {
+    sheetId: "1e47IUWqQv-8Oh5-JJADgu9rfNW_6Iuw_OXzAIdLnBic",
+    gidMatrice: "1752837685",
+    name: "Hôtel Pestana Royal Océan - Madère",
+  },
+  "ariel-cala-dor-majorque": {
+    sheetId: "12bWFjpJ449YIUMHtV7-W7oggIL78hxjUGiFjGSO8NoA",
+    gidMatrice: "578780649",
+    name: "Hôtel Ariel Cala d'Or - Majorque",
+  },
 };
