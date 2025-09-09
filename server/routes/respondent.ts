@@ -49,6 +49,10 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     const qName = (req.query.name || '').toString().trim().toLowerCase();
     const qDate = (req.query.date || '').toString().trim();
 
+    const PESTANA_CATEGORY_NAMES = ['🌟 APPRÉCIATION GLOBALE','✈️ TRANSPORTS Aérien','🚐 Car navette','🏨 HÉBERGEMENT','🛏️ CHAMBRES','🏊 PISCINE','🎉 ANIMATION','👥 ÉQUIPES','🤝 Représentant Top of Travel','🌍 EXCURSIONS'];
+    const normalizeName = (s: string) => (s||'').toString().replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim().toLowerCase();
+    const isPestana = resortKey === 'pestana-royal-ocean-madeira';
+
     // First, fetch sheet1 (respondents raw sheet) to extract per-respondent category values and feedback
     const sheet1Url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
     const sr = await fetch(sheet1Url);
