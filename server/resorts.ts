@@ -9,4 +9,14 @@ export const RESORTS: Record<string, { sheetId: string; gidMatrice?: string; nam
     gidMatrice: "1471177261",
     name: "Hôtel Pestana Royal Océan - Madère",
   },
+  "alvor-baia-portugal": {
+    sheetId: "1mm2VGYefOx37T7_h6VZGN6Gt4mtF9njVOS344FaeyR0",
+    gidMatrice: "2128033065",
+    name: "Hôtel Alvor Baia - Portugal",
+  },
+  "sineva-park-bulgarie": {
+    sheetId: "1-AgcmIZD1_1fGHnhyuzIrsAIXcMMMuQ1VefX4JUfdJk",
+    gidMatrice: "23222471",
+    name: "Hôtel Sineva Park - Bulgarie",
+  },
 };
