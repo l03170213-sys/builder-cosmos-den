@@ -214,7 +214,7 @@ export default function Index() {
         <Header />
         <main className="max-w-screen-2xl mx-auto w-full px-4 py-6 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Dashboard — {(function(){try{const selected=window.localStorage.getItem('selectedResort')||'vm-resort-albanie';const resorts=(window as any).__RESORTS__ || null; if(!resorts){ /* dynamic import fallback */ } }catch(e){} return ''})()}</h2>
+            <h2 className="text-2xl font-semibold">Dashboard — {currentResort.name}</h2>
           </div>
 
           {serverAvailable === false && (
