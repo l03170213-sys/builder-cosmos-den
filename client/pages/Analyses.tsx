@@ -33,11 +33,11 @@ export default function Analyses() {
         const selected = selectedResortKey;
         const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
+        const text = await r.text().catch(() => '');
         if (!r.ok) {
-          const text = await r.text().catch(() => r.statusText);
           throw new Error(`Server error: ${r.status} ${text}`);
         }
-        return (await r.json()) as ResortAveragesResponse;
+        try { return JSON.parse(text) as ResortAveragesResponse; } catch (e) { throw new Error(`Invalid JSON response: ${text}`); }
       } catch (err) {
         try {
           const cfg = currentResort;
