@@ -210,9 +210,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
     const result = { categories: null as null | { name: string; value: string }[], overall: null as null | string, column: null as null | string, feedback: null as null | string };
 
-    const TARGET_FEEDBACK_TITLE = 'Votre avis compte pour nous ! :)';
-    const normalizeHeader = (s: string) => (s || '').toString().replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
-    const feedbackColExact = cols.findIndex(c => normalizeHeader(c) === normalizeHeader(TARGET_FEEDBACK_TITLE));
 
     if (!Number.isNaN(qRowNum) && qRowNum > 0 && qRowNum - 1 < rows.length) {
       const chosenIdx = qRowNum - 1;
