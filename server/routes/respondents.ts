@@ -184,6 +184,30 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       console.error('Failed to enrich respondents from matrice:', e);
     }
 
+    // Fallback: if some respondents still have no note, try to map by row index to matrice (column L = index 11)
+    try {
+      if (cfg.gidMatrice) {
+        const mgurl2 = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${cfg.gidMatrice}`;
+        const mr2 = await fetch(mgurl2);
+        if (mr2.ok) {
+          const mtext2 = await mr2.text();
+          const mjson2 = parseGviz(mtext2);
+          const mrows2: any[] = mjson2.table.rows || [];
+          for (let i = 0; i < respondents.length; i++) {
+            if (respondents[i].note && respondents[i].note !== '') continue;
+            const mrow = mrows2[i];
+            if (!mrow) continue;
+            const mcells = mrow.c || [];
+            const overallIdx = 11 < mcells.length ? 11 : Math.max(0, mcells.length - 1);
+            const overallCell = mcells[overallIdx];
+            if (overallCell && overallCell.v != null) respondents[i].note = String(overallCell.v);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Fallback row-index mapping failed:', e);
+    }
+
     res.status(200).json(respondents);
   } catch (err) {
     console.error('Failed to fetch respondents:', err);
