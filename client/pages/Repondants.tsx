@@ -147,7 +147,7 @@ export default function Repondants() {
         // server returns { items, total, page, pageSize }
         return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' });
       } catch (err) {
-        console.error('Failed to fetch respondents, attempting direct Google Sheets fallback:', err);
+        console.debug('Failed to fetch respondents, attempting direct Google Sheets fallback:', err);
         try {
           // fallback: fetch sheet1 and build a simple respondents list
           const cfg = RESORTS.find(r => r.key === selectedResortKey);
