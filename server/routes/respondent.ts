@@ -225,7 +225,8 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             let val = '';
             // Nom comes from sheet1 first column if present
             if (m.colIndex === 0) {
-              val = scells[0] && scells[0].v != null ? String(scells[0].v) : '';
+              // Nom may be located in sheet1 column E (index 4)
+              val = scells[4] && scells[4].v != null ? String(scells[4].v) : (scells[0] && scells[0].v != null ? String(scells[0].v) : '');
             } else if (m.colIndex === 11) {
               // MOYENNE GLOBALE: prefer per-respondent value from last row if respColIndex known
               if (respColIndex !== -1 && lastRow && lastRow.c && lastRow.c[respColIndex] && lastRow.c[respColIndex].v != null) {
