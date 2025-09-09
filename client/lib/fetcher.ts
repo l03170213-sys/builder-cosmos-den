@@ -4,7 +4,25 @@ export async function safeFetch(u: string, opts?: RequestInit) {
     return r;
   };
 
+  // If this looks like an internal API call, try the Netlify function path first in the browser
   try {
+    try {
+      const urlObj = new URL(u);
+      if (urlObj.pathname.startsWith('/api/')) {
+        const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
+        const alt = new URL(altPath, urlObj.origin).toString();
+        // First try the Netlify function endpoint — this can avoid CORS/server proxy issues when deployed as functions
+        try {
+          const rAlt = await doFetch(alt);
+          if (rAlt) return rAlt;
+        } catch (e) {
+          // fallthrough to primary
+        }
+      }
+    } catch (e) {
+      // ignore URL parsing issues and fall back to primary fetch
+    }
+
     return await doFetch(u);
   } catch (err: any) {
     const msg = (err && err.message) ? String(err.message).toLowerCase() : '';
