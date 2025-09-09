@@ -81,7 +81,7 @@ function makeSummaryClone(summaryEl: HTMLElement) {
   const left = document.createElement('div');
   try {
     const selectedKey = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
-    const resorts = (await import('@/lib/resorts')).RESORTS;
+    const resorts = RESORTS;
     const cfg = resorts.find((r:any) => r.key === selectedKey) || resorts[0];
     left.innerHTML = `<h1 style="margin:0;font-size:22px;font-weight:800">${cfg.name}</h1><div style="margin-top:6px;color:#475569">Rapport de satisfaction</div>`;
   } catch (e) {
