@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useChartType } from "@/hooks/useChartType";
 import { RESORTS } from '@/lib/resorts';
 import { useSelectedResort } from '@/hooks/use-selected-resort';
+import { safeFetch } from '@/lib/fetcher';
 
 export default function Index() {
   const chartType = useChartType("bar");
