@@ -174,17 +174,19 @@ function formatAverage(raw: any) {
 export default function Repondants() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { resort: selectedResortKey } = useSelectedResort();
+  const [page, setPage] = React.useState(1);
+  const [pageSize] = React.useState(100);
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["repondants", selectedResortKey],
+    queryKey: ["repondants", selectedResortKey, page, pageSize],
     queryFn: async () => {
       try {
-        // Fetch from internal server endpoint only (avoid client-side Google fetch/CORS)
         const selected = selectedResortKey;
-        const apiUrl = new URL(`/api/resort/${selected}/respondents`, window.location.origin).toString();
+        const apiUrl = new URL(`/api/resort/${selected}/respondents?page=${page}&pageSize=${pageSize}`, window.location.origin).toString();
+        // server returns { items, total, page, pageSize }
         return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' });
       } catch (err) {
         console.error('Failed to fetch respondents:', err);
-        return [];
+        return { items: [], total: 0, page: 1, pageSize };
       }
     },
     refetchOnWindowFocus: false,
