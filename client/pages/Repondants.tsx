@@ -231,6 +231,7 @@ export default function Repondants() {
     },
     enabled: !!selected && dialogOpen,
     refetchInterval: 30000,
+    refetchIntervalInBackground: true,
     refetchOnWindowFocus: false,
     onSuccess: (d: any) => {
       setCategoriesByRespondent(d?.categories || null);
