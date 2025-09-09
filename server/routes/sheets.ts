@@ -67,6 +67,32 @@ export const getResortAverages: RequestHandler = async (req, res) => {
     ];
 
     const categories = [] as { name: string; average: number }[];
+
+    const isPestana = resortKey === 'pestana-royal-ocean-madeira';
+
+    if (isPestana) {
+      // For Pestana, strictly use columns 1..10 as categories and column 11 (L) as overall (from the last non-empty row)
+      for (let idx = 1; idx <= 10; idx++) {
+        const name = fixedCategoryMapping.find(m => m.colIndex === idx)?.name || `Col ${idx}`;
+        const val = toNumber(cells[idx]?.v);
+        if (val != null) categories.push({ name, average: val });
+      }
+      // overall from column L (index 11) of lastRow, or fallback to last cell
+      const overallIdx = 11;
+      const overallCell = (lastRow && lastRow.c && lastRow.c[overallIdx]) ? lastRow.c[overallIdx] : (cells.length ? cells[cells.length - 1] : null);
+      const overallAverage = toNumber(overallCell?.v) ?? 0;
+
+      const response: ResortAveragesResponse = {
+        resort: cfg.name,
+        updatedAt: new Date().toISOString(),
+        overallAverage,
+        categories,
+      };
+
+      return res.status(200).json(response);
+    }
+
+    // Default behavior for other resorts
     // Build categories from fixed mapping, skipping 'Nom' and 'MOYENNE GÉNÉRALE' for category list
     for (const m of fixedCategoryMapping) {
       if (m.colIndex === 0) continue; // skip name
