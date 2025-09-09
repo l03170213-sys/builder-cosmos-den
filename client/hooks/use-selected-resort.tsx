@@ -6,7 +6,9 @@ const STORAGE_KEY = 'selectedResort';
 export function getDefaultResort() {
   const stored = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
   if (stored) return stored;
-  return RESORTS[0].key;
+  // Default to Pestana if present, otherwise first resort
+  const pestana = RESORTS.find(r => r.key === 'pestana-royal-ocean-madeira');
+  return pestana ? pestana.key : RESORTS[0].key;
 }
 
 export function useSelectedResort() {
