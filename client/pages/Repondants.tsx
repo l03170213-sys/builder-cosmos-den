@@ -385,6 +385,11 @@ export default function Repondants() {
                   <div className="mt-1 text-xs text-muted-foreground">{respondentColumnLetter ? `Colonne ${respondentColumnLetter} de la fiche matrice (correspondant au répondant)` : 'Colonne L de la fiche matrice (correspondant au répondant) / 5'}</div>
                 </div>
 
+                <div className="md:col-span-2 rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
+                  <div className="text-xs text-muted-foreground">Votre avis</div>
+                  <div className="mt-2 text-sm whitespace-pre-line">{loadingRespondentData ? '…' : respondentFeedback ? respondentFeedback : '—'}</div>
+                </div>
+
                 <div className="rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
                   <div className="text-xs text-muted-foreground">Moyennes par catégorie (répondant)</div>
                   <div className="mt-2 text-sm">
