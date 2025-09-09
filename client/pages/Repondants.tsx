@@ -120,6 +120,25 @@ function formatDateToFR(raw: string) {
 }
 
 // Format average numbers to one decimal and use comma as decimal separator (e.g. "3,7")
+async function fetchJsonSafe(url: string, opts?: RequestInit) {
+  const r = await fetch(url, opts);
+  const text = await r.text();
+  if (!r.ok) {
+    const err: any = new Error(`Server error: ${r.status} ${text}`);
+    err.status = r.status;
+    err.body = text;
+    throw err;
+  }
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    const err: any = new Error(`Invalid JSON response: ${text.slice(0, 500)}`);
+    err.status = r.status;
+    err.body = text;
+    throw err;
+  }
+}
+
 function formatAverage(raw: any) {
   if (raw == null || raw === '') return '';
   const n = Number(String(raw).replace(',', '.'));
@@ -138,13 +157,8 @@ export default function Repondants() {
       try {
         // Fetch from internal server endpoint only (avoid client-side Google fetch/CORS)
         const selected = selectedResortKey;
-        const apiUrl = new URL(`/.netlify/functions/api/resort/${selected}/respondents`, window.location.origin).toString();
-        const r = await fetch(apiUrl, { credentials: 'same-origin' });
-        if (!r.ok) {
-          console.error('Unable to load respondents from server, status', r.status);
-          return [];
-        }
-        return await r.json();
+        const apiUrl = new URL(`/api/resort/${selected}/respondents`, window.location.origin).toString();
+        return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' });
       } catch (err) {
         console.error('Failed to fetch respondents:', err);
         return [];
@@ -160,13 +174,8 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const apiUrl = new URL(`/.netlify/functions/api/resort/${selected}/summary`, window.location.origin).toString();
-        const r = await fetch(apiUrl, { credentials: 'same-origin' });
-        if (!r.ok) {
-          console.error('Unable to load summary, status', r.status);
-          return null;
-        }
-        return r.json();
+        const apiUrl = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
+        try { return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }); } catch (err) { console.error('Unable to load summary:', err); return null; }
       } catch (err) {
         console.error('Failed to fetch summary:', err);
         return null;
@@ -183,13 +192,8 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const apiUrl = new URL(`/.netlify/functions/api/resort/${selected}/averages`, window.location.origin).toString();
-        const r = await fetch(apiUrl, { credentials: 'same-origin' });
-        if (!r.ok) {
-          console.error('Unable to load averages, status', r.status);
-          return null;
-        }
-        return r.json();
+        const apiUrl = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
+        try { return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }); } catch (err) { console.error('Unable to load averages:', err); return null; }
       } catch (err) {
         console.error('Failed to fetch averages:', err);
         return null;
@@ -228,13 +232,13 @@ export default function Repondants() {
       if (selected?.email) params.set('email', selected.email);
       if (selected?.name) params.set('name', selected.name);
       if (selected?.date) params.set('date', selected.date);
-      const apiUrl = new URL('/.netlify/functions/api/resort/' + selectedResortKey + '/respondent?' + params.toString(), window.location.origin).toString();
-      const r = await fetch(apiUrl, { credentials: 'same-origin' });
-      if (!r.ok) {
-        if (r.status === 404) return null;
-        throw new Error('Unable to load respondent details');
+      const apiUrl = new URL('/api/resort/' + selectedResortKey + '/respondent?' + params.toString(), window.location.origin).toString();
+      try {
+        return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' });
+      } catch (err: any) {
+        if (err && err.status === 404) return null;
+        throw new Error('Unable to load respondent details: ' + (err && err.message));
       }
-      return await r.json();
     },
     enabled: !!selected && dialogOpen,
     refetchInterval: 30000,
@@ -270,10 +274,16 @@ export default function Repondants() {
         if (selected?.email) params.set('email', selected.email);
         if (selected?.name) params.set('name', selected.name);
         if (selected?.date) params.set('date', selected.date);
-        const apiUrl = new URL('/.netlify/functions/api/resort/' + selectedResortKey + '/respondent?' + params.toString(), window.location.origin).toString();
-        const r = await fetch(apiUrl, { credentials: 'same-origin' });
-        if (!r.ok) {
-          if (r.status === 404) {
+        const apiUrl = new URL('/api/resort/' + selectedResortKey + '/respondent?' + params.toString(), window.location.origin).toString();
+        try {
+          const dataResp = await fetchJsonSafe(apiUrl, { credentials: 'same-origin' });
+          if (mounted) {
+            setCategoriesByRespondent(dataResp.categories || null);
+            setRespondentNoteGeneral(dataResp.overall || null);
+            setRespondentColumnLetter(dataResp.column || null);
+          }
+        } catch (err: any) {
+          if (err && err.status === 404) {
             if (mounted) {
               setCategoriesByRespondent(null);
               setRespondentNoteGeneral(null);
@@ -282,9 +292,8 @@ export default function Repondants() {
             setLoadingRespondentData(false);
             return;
           }
-          throw new Error('Unable to load respondent details');
+          throw new Error('Unable to load respondent details: ' + (err && err.message));
         }
-        const dataResp = await r.json();
         if (mounted) {
           setCategoriesByRespondent(dataResp.categories || null);
           setRespondentNoteGeneral(dataResp.overall || null);
