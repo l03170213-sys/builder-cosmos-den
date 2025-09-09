@@ -51,8 +51,15 @@ export default function Index() {
         if (val == null) return null;
         if (typeof val === "number") return val;
         if (typeof val === "string") {
-          const n = Number(val.replace(",", "."));
+          const s = val.replace(/\u00A0/g, '').trim();
+          const m = s.match(/-?\d+[.,]?\d*/);
+          if (!m) return null;
+          const n = Number(m[0].replace(',', '.'));
           return Number.isFinite(n) ? n : null;
+        }
+        if (typeof val === 'object') {
+          if (val.v != null) return toNumber(val.v);
+          if (val.f != null) return toNumber(val.f);
         }
         return null;
       }
