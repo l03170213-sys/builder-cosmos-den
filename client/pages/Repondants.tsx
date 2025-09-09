@@ -402,7 +402,7 @@ export default function Repondants() {
           </Card>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent className="max-w-3xl" aria-describedby="respondent-dialog-desc">
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto" aria-describedby="respondent-dialog-desc">
               <DialogTitle>{selected?.name ? selected.name : 'Anonyme'}</DialogTitle>
               <DialogDescription id="respondent-dialog-desc">Détails et moyennes pour le répondant sélectionné</DialogDescription>
 
