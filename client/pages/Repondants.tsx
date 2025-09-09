@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
+import { useSelectedResort } from '@/hooks/use-selected-resort';
 import Sidebar from "@/components/Sidebar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Eye } from "lucide-react";
@@ -343,7 +344,7 @@ export default function Repondants() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-lg border p-4 bg-white" style={{ borderColor: '#e6edf3' }}>
                   <div className="text-xs text-muted-foreground">Note Général</div>
-                  <div className="mt-2 text-2xl font-extrabold">{loadingRespondentData ? '…' : respondentNoteGeneral ? `${formatAverage(respondentNoteGeneral)}/5` : '—'}</div>
+                  <div className="mt-2 text-2xl font-extrabold">{loadingRespondentData ? '…' : respondentNoteGeneral ? `${formatAverage(respondentNoteGeneral)}/5` : '���'}</div>
                   <div className="mt-1 text-xs text-muted-foreground">{respondentColumnLetter ? `Colonne ${respondentColumnLetter} de la fiche matrice (correspondant au répondant)` : 'Colonne L de la fiche matrice (correspondant au répondant) / 5'}</div>
                 </div>
 
