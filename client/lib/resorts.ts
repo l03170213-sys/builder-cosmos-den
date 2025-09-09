@@ -8,7 +8,6 @@ export const RESORTS = [
   { key: 'top-club-cocoon-salini', name: "Hôtel Top club cocoon Salini", sheetId: '1CLrIFVirQ8YxBCiLJneK_KqSpM-qsHkmKdbwHXCPABQ', gidMatrice: '1170488316' },
   { key: 'aquasun-village-crete', name: "Hôtel Aquasun Village - Crête", sheetId: '1Df7h7P7TRwomlx2RKHPxPNWzsO5INjqGnUfF1BpWA8w', gidMatrice: '1085505154' },
   { key: 'atlantica-oasis-chypre', name: "Hôtel Atlantica Oasis - Chypre", sheetId: '1GQ6UJXL7eiRU9pDbyzHWC-lQpASUgiJtm52nNqI8KNE', gidMatrice: '879100003' },
-  { key: 'pestana-royal-ocean-madeira', name: "Hôtel Pestana Royal Océan - Madère", sheetId: '1e47IUWqQv-8Oh5-JJADgu9rfNW_6Iuw_OXzAIdLnBic', gidMatrice: '1752837685' },
   { key: 'monchique-portugal', name: "Hôtel Monchique - Portugal", sheetId: '1LyUJwlEfSEsNkeBOdUOhmXPkY70dkcKkcCF19--y2Dk', gidMatrice: '373485969' },
   { key: 'dom-pedro-madeira', name: "Hôtel Dom Pedro Madeira - Madère", sheetId: '127fqvrErex8BDwkaE2VUugD4WHMn47SPENhrIQCYo-U', gidMatrice: '862214363' },
   { key: 'gabbiano-italie', name: "Hôtel Gabbiano - Italie", sheetId: '1E4vOTv3m7uUuCZ889rvwTXduFThcrRGGsbaJu4aJYks', gidMatrice: '358504289' },
