@@ -57,9 +57,9 @@ export default function Index() {
         return null;
       }
 
+      const cfg = currentResort;
       try {
         const selected = selectedResortKey;
-        const cfg = currentResort;
         const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await safeFetch(url, { credentials: 'same-origin' });
         const text = await r.clone().text().catch(() => '');
@@ -210,6 +210,9 @@ export default function Index() {
   });
 
 
+  const overallDisplay = isLoading ? "…" : (data ? `${data.overallAverage.toFixed(1)}/5` : "—");
+  const updatedSubtitle = isLoading ? undefined : (data && data.updatedAt) ? `Mise à jour: ${new Date(data.updatedAt).toLocaleDateString()}` : undefined;
+
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
       <Sidebar />
@@ -233,7 +236,7 @@ export default function Index() {
           )}
 
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <StatCard title="Note Moyenne Globale" value={isLoading ? "…" : `${data?.overallAverage.toFixed(1)}/5`} subtitle={isLoading ? undefined : `Mise à jour: ${new Date(data!.updatedAt).toLocaleDateString()}`} />
+            <StatCard title="Note Moyenne Globale" value={overallDisplay} subtitle={updatedSubtitle} />
 
             <Card>
               <CardHeader className="pb-2">
