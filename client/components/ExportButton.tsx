@@ -213,7 +213,7 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
     // Fetch matrice moyenne to build the table on the right
     try {
       const selectedKey = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
-      const resorts = (await import('@/lib/resorts')).RESORTS;
+      const resorts = RESORTS;
       const cfg = resorts.find((r:any) => r.key === selectedKey) || resorts[0];
       const SHEET_ID = cfg.sheetId || '1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os';
       const GID = cfg.gidMatrice || '0';
