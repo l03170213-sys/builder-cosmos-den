@@ -100,7 +100,7 @@ export const getResortAverages: RequestHandler = async (req, res) => {
 
       // overall from column L (index 11) of the last non-empty row
       const overallIdx = 11;
-      const overallAverage = toNumber(cells[overallIdx]?.v) ?? 0;
+      const overallAverage = normalizeAverage(toNumber(cells[overallIdx]?.v)) ?? 0;
 
       const response: ResortAveragesResponse = {
         resort: cfg.name,
