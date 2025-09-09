@@ -2,10 +2,15 @@ import React from "react";
 import ChartOnly from "@/components/ChartOnly";
 import { useQuery } from "@tanstack/react-query";
 import type { ResortAveragesResponse } from "@shared/api";
+import { useSelectedResort } from '@/hooks/use-selected-resort';
+import { RESORTS } from '@/lib/resorts';
 
 export default function Analyses() {
+  const { resort: selectedResortKey } = useSelectedResort();
+  const currentResort = RESORTS.find(r => r.key === selectedResortKey) || RESORTS[0];
+
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
-    queryKey: ["resort-averages-analyses"],
+    queryKey: ["resort-averages-analyses", selectedResortKey],
     queryFn: async () => {
       function parseGvizText(text: string) {
         const start = text.indexOf("(");
@@ -25,7 +30,7 @@ export default function Analyses() {
       }
 
       try {
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const selected = selectedResortKey;
         const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
@@ -35,9 +40,7 @@ export default function Analyses() {
         return (await r.json()) as ResortAveragesResponse;
       } catch (err) {
         try {
-          const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
-          const resorts = (await import('@/lib/resorts')).RESORTS;
-          const cfg = resorts.find((r:any) => r.key === selected) || resorts[0];
+          const cfg = currentResort;
           const gurl = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?gid=${cfg.gidMatrice || '0'}`;
           const rr = await fetch(gurl);
           const text = await rr.text();
