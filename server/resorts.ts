@@ -19,11 +19,6 @@ export const RESORTS: Record<string, { sheetId: string; gidMatrice?: string; nam
     gidMatrice: "656611228",
     name: "Hôtel Morenia - Croatie",
   },
-  "pestana-royal-ocean-madeira": {
-    sheetId: "1e47IUWqQv-8Oh5-JJADgu9rfNW_6Iuw_OXzAIdLnBic",
-    gidMatrice: "1752837685",
-    name: "Hôtel Pestana Royal Océan - Madère",
-  },
   "medena-croatie": {
     sheetId: "11HlpPYdVpsT0NeG8nqwHjcgfsEfTlT5MuOTKOviKXgM",
     gidMatrice: "244674372",
