@@ -66,7 +66,8 @@ export default function Index() {
       } catch (err) {
         console.warn('API fetch failed, attempting direct Google Sheets fallback:', err);
         try {
-          const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
+          const cfg2 = cfg || (await import('@/lib/resorts')).RESORTS[0];
+          const gurl = `https://docs.google.com/spreadsheets/d/${cfg2.sheetId}/gviz/tq?gid=${cfg2.gidMatrice || '0'}`;
           const rr = await fetch(gurl);
           const text = await rr.text();
           const data = parseGvizText(text);
