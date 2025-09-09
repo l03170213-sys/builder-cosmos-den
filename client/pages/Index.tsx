@@ -141,7 +141,7 @@ export default function Index() {
         const cfg = currentResort;
         const url = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
-        const text = await r.text().catch(() => '');
+        const text = await r.clone().text().catch(() => '');
         if (!r.ok) {
           throw new Error(`Server error: ${r.status} ${text}`);
         }
