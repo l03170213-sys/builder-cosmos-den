@@ -358,7 +358,7 @@ export default function Repondants() {
                     <table className="min-w-full divide-y divide-gray-200 table-auto">
                       <thead className="bg-white">
                         <tr>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Email</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Nom</th>
                           <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Note Général</th>
                           <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Date</th>
                           <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Âges</th>
