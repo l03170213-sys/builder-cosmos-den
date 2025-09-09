@@ -219,8 +219,8 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
       const SHEET_ID = cfg.sheetId || '1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os';
       const GID = cfg.gidMatrice || '0';
       const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}`;
-      const rr = await fetch(gurl);
-      const text = await rr.text();
+      const rr = await safeFetch(gurl);
+      const text = await rr.clone().text().catch(() => '');
       const start = text.indexOf('(');
       const end = text.lastIndexOf(')');
       const json = JSON.parse(text.slice(start+1, end));
