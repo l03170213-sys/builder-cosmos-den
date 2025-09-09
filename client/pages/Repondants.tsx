@@ -292,6 +292,7 @@ export default function Repondants() {
               setCategoriesByRespondent(null);
               setRespondentNoteGeneral(null);
               setRespondentColumnLetter(null);
+              setRespondentFeedback(null);
             }
             setLoadingRespondentData(false);
             return;
@@ -307,10 +308,11 @@ export default function Repondants() {
       } catch (err) {
         console.error('Failed to fetch respondent matrice via server:', err);
         if (mounted) {
-          setCategoriesByRespondent(null);
-          setRespondentNoteGeneral(null);
-          setRespondentColumnLetter(null);
-        }
+              setCategoriesByRespondent(null);
+              setRespondentNoteGeneral(null);
+              setRespondentColumnLetter(null);
+              setRespondentFeedback(null);
+            }
       } finally {
         if (mounted) setLoadingRespondentData(false);
       }
