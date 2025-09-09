@@ -79,7 +79,43 @@ export default function Index() {
           const cols: string[] = data.table.cols.map((c: any) => c.label || "");
           const rows: any[] = data.table.rows || [];
 
-          // Find last non-empty row
+          const selectedKey = selected;
+
+          if (selectedKey === 'pestana-royal-ocean-madeira') {
+            // For Pestana, use the last physical row and fixed columns: 1..10 categories, column 11 (L) overall
+            const lastPhysicalRow = rows[rows.length - 1];
+            const lastCells = (lastPhysicalRow?.c ?? []) as any[];
+
+            const pestanaLabels = [
+              '🌟 APPRÉCIATION GLOBALE',
+              '✈️ TRANSPORTS Aérien',
+              '🚐 Car navette',
+              '🏨 HÉBERGEMENT',
+              '🛏️ CHAMBRES',
+              '🏊 PISCINE',
+              '🎉 ANIMATION',
+              '👥 ÉQUIPES',
+              '🤝 Représentant Top of Travel',
+              '🌍 EXCURSIONS',
+            ];
+
+            const categories = pestanaLabels.map((name, idx) => {
+              const colIdx = idx + 1; // labels correspond to columns 1..10
+              const val = toNumber(lastCells[colIdx]?.v) ?? 0;
+              return { name, average: val };
+            });
+
+            const overallAverage = toNumber(lastCells[11]?.v) ?? 0;
+
+            return {
+              resort: cfg.name,
+              updatedAt: new Date().toISOString(),
+              overallAverage,
+              categories,
+            } as ResortAveragesResponse;
+          }
+
+          // Default behavior for other resorts: find last non-empty row
           let lastRow = rows[rows.length - 1];
           for (let i = rows.length - 1; i >= 0; i--) {
             const rr2 = rows[i];
