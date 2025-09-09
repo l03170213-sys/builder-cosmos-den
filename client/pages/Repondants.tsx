@@ -200,7 +200,7 @@ export default function Repondants() {
       try {
         const selected = selectedResortKey;
         const apiUrl = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
-        try { return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }); } catch (err) { console.error('Unable to load summary:', err); return null; }
+        try { return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }); } catch (err) { console.debug('Unable to load summary (will fallback):', err); return null; }
       } catch (err) {
         console.error('Failed to fetch summary:', err);
         return null;
