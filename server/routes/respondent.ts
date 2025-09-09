@@ -85,9 +85,13 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       }
       const overallCell = (cells[overallIndex] && cells[overallIndex].v != null) ? cells[overallIndex] : null;
       const overall = overallCell ? String(overallCell.v) : null;
+      // extract exact feedback column value if present
+      const feedbackCell = (feedbackColExact !== -1 && cells[feedbackColExact] && cells[feedbackColExact].v != null) ? cells[feedbackColExact] : null;
+      const feedback = feedbackCell ? String(feedbackCell.v) : null;
       result.categories = cats;
       result.overall = overall;
       result.column = null;
+      result.feedback = feedback;
       return res.status(200).json(result);
     }
 
@@ -232,18 +236,22 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             overallIndex = Math.max(0, Math.min(cols.length - 1, lastCellIdx));
           }
           const cats: { name: string; value: string }[] = [];
-          for (let i = 1; i <= lastCellIdx; i++) {
-            if (i === overallIndex) continue;
-            const catName = (cols[i] && cols[i] !== '') ? cols[i] : `Col ${i + 1}`;
-            const val = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
-            cats.push({ name: catName, value: val });
-          }
-          const overallCell = (cells[overallIndex] && cells[overallIndex].v != null) ? cells[overallIndex] : null;
-          const overall = overallCell ? String(overallCell.v) : null;
-          result.categories = cats;
-          result.overall = overall;
-          result.column = null;
-          return res.status(200).json(result);
+      for (let i = 1; i <= lastCellIdx; i++) {
+        if (i === overallIndex) continue;
+        const catName = (cols[i] && cols[i] !== '') ? cols[i] : `Col ${i + 1}`;
+        const val = cells[i] && cells[i].v != null ? String(cells[i].v) : '';
+        cats.push({ name: catName, value: val });
+      }
+      const overallCell = (cells[overallIndex] && cells[overallIndex].v != null) ? cells[overallIndex] : null;
+      const overall = overallCell ? String(overallCell.v) : null;
+      // extract exact feedback column value if present
+      const feedbackCell = (feedbackColExact !== -1 && cells[feedbackColExact] && cells[feedbackColExact].v != null) ? cells[feedbackColExact] : null;
+      const feedback = feedbackCell ? String(feedbackCell.v) : null;
+      result.categories = cats;
+      result.overall = overall;
+      result.column = null;
+      result.feedback = feedback;
+      return res.status(200).json(result);
         }
       }
     } catch (e) {
