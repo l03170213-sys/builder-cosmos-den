@@ -32,7 +32,7 @@ export default function Analyses() {
       try {
         const selected = selectedResortKey;
         const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
-        const r = await fetch(url, { credentials: 'same-origin' });
+        const r = await safeFetch(url, { credentials: 'same-origin' });
         const text = await r.clone().text().catch(() => '');
         if (!r.ok) {
           throw new Error(`Server error: ${r.status} ${text}`);
