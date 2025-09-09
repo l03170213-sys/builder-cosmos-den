@@ -60,7 +60,7 @@ export const getResortAverages: RequestHandler = async (req, res) => {
       { colIndex: 5, name: '🛏️ CHAMBRES' },
       { colIndex: 6, name: '🏊 PISCINE' },
       { colIndex: 7, name: '🎉 ANIMATION' },
-      { colIndex: 8, name: '👥 ÉQUIPES' },
+      { colIndex: 8, name: '�� ÉQUIPES' },
       { colIndex: 9, name: '🤝 Représentant Top of Travel' },
       { colIndex: 10, name: '🌍 EXCURSIONS' },
       { colIndex: 11, name: 'MOYENNE GÉNÉRALE' },
@@ -71,16 +71,20 @@ export const getResortAverages: RequestHandler = async (req, res) => {
     const isPestana = resortKey === 'pestana-royal-ocean-madeira';
 
     if (isPestana) {
-      // For Pestana, strictly use columns 1..10 as categories and column 11 (L) as overall (from the last non-empty row)
+      // For Pestana, use the last physical row (not the last non-empty row) as the source of averages
+      const lastPhysicalRow = rows[rows.length - 1];
+      const lastCells = (lastPhysicalRow?.c ?? []) as any[];
+
+      // Always include columns 1..10 as categories (keep labels even if values are empty)
       for (let idx = 1; idx <= 10; idx++) {
         const name = fixedCategoryMapping.find(m => m.colIndex === idx)?.name || `Col ${idx}`;
-        const val = toNumber(cells[idx]?.v);
-        if (val != null) categories.push({ name, average: val });
+        const val = toNumber(lastCells[idx]?.v) ?? 0;
+        categories.push({ name, average: val });
       }
-      // overall from column L (index 11) of lastRow, or fallback to last cell
+
+      // overall from column L (index 11) of the last physical row
       const overallIdx = 11;
-      const overallCell = (lastRow && lastRow.c && lastRow.c[overallIdx]) ? lastRow.c[overallIdx] : (cells.length ? cells[cells.length - 1] : null);
-      const overallAverage = toNumber(overallCell?.v) ?? 0;
+      const overallAverage = toNumber(lastCells[overallIdx]?.v) ?? 0;
 
       const response: ResortAveragesResponse = {
         resort: cfg.name,
