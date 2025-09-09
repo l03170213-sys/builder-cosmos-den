@@ -69,20 +69,21 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
 
       const obj: any = {};
       obj.id = r + 1;
-      obj.label = cellToString(c[0]);
-      obj.email = emailCol !== -1 ? cellToString(c[emailCol]) : '';
+      // Use fixed sheet1 columns: name in E (index 4), email in B (1), postal in I (8)
+      obj.label = cellToString(c[4]);
+      obj.email = cellToString(c[1]);
       obj.note = '';
       obj.date = dateCol !== -1 ? cellToString(c[dateCol]) : '';
       obj.age = ageCol !== -1 ? cellToString(c[ageCol]) : '';
-      obj.postal = postalCol !== -1 ? cellToString(c[postalCol]) : '';
+      obj.postal = cellToString(c[8]);
       obj.duration = durationCol !== -1 ? cellToString(c[durationCol]) : '';
-      // Prefer exact header match ("Votre avis compte pour nous ! :)") or known feedback column; else fallback to BT (index 71) if present
+      // Prefer exact header match ("Votre avis compte pour nous ! :)") or BT (index 71) specifically; else fallback to known feedback column
       if (feedbackColExact !== -1) {
         obj.feedback = cellToString(c[feedbackColExact]);
-      } else if (feedbackCol !== -1) {
-        obj.feedback = cellToString(c[feedbackCol]);
       } else if (c[71] && c[71].v != null) {
         obj.feedback = cellToString(c[71]);
+      } else if (feedbackCol !== -1) {
+        obj.feedback = cellToString(c[feedbackCol]);
       } else {
         obj.feedback = '';
       }
