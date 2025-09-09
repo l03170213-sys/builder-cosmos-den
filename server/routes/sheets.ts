@@ -11,22 +11,28 @@ function parseGviz(text: string) {
 
 function toNumber(val: unknown): number | null {
   if (val == null) return null;
-  if (typeof val === "number") return val;
+  if (typeof val === "number") return Number.isFinite(val) ? val as number : null;
   if (typeof val === "string") {
     // extract first numeric token like 4,42 or 4.42 or 45%
-    const m = val.replace("\u00A0", "").match(/-?\d+[.,]?\d*/);
+    const m = (val as string).replace("\u00A0", "").match(/-?\d+[.,]?\d*/);
     if (!m) return null;
     const n = Number(m[0].replace(",", "."));
     return Number.isFinite(n) ? n : null;
   }
   // Sometimes Google returns objects like {v: '4,42', f: '4,42'} as cell value
   if (typeof val === 'object' && val !== null) {
-    // try to extract .v or .f
     const anyVal: any = val;
     if (anyVal.v != null) return toNumber(anyVal.v);
     if (anyVal.f != null) return toNumber(anyVal.f);
   }
   return null;
+}
+
+function normalizeAverage(n: number | null): number | null {
+  if (n == null) return null;
+  // valid survey scores are between 0 and 5; anything outside is likely parsing error
+  if (n < 0 || n > 5) return null;
+  return n;
 }
 
 export const getResortAverages: RequestHandler = async (req, res) => {
