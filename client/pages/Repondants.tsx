@@ -370,7 +370,7 @@ export default function Repondants() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-100">
-                      {data.map((row: any, i: number) => (
+                      {(data.items || []).map((row: any, i: number) => (
                         <tr key={i} className="hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm text-gray-600">{row.email}</td>
                           <td className="px-4 py-3 text-sm text-gray-700">{row.note ? formatAverage(row.note) : '—'}</td>
@@ -387,6 +387,15 @@ export default function Repondants() {
                       ))}
                     </tbody>
                   </table>
+
+                  <div className="flex items-center justify-between mt-3">
+                    <div className="text-sm text-muted-foreground">Affichage {((data.page-1)*data.pageSize)+1} - {Math.min(data.total, data.page*data.pageSize)} sur {data.total}</div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setPage(Math.max(1, page-1))} disabled={page<=1} className="px-3 py-1 border rounded">Préc</button>
+                      <div className="text-sm">Page {data.page} / {Math.max(1, Math.ceil(data.total / data.pageSize))}</div>
+                      <button onClick={() => setPage(Math.min(Math.max(1, Math.ceil(data.total/data.pageSize)), page+1))} disabled={page>=Math.ceil(data.total/data.pageSize)} className="px-3 py-1 border rounded">Suiv</button>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
