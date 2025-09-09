@@ -50,20 +50,34 @@ export const getResortAverages: RequestHandler = async (req, res) => {
 
     const cells = (lastRow?.c ?? []) as any[];
 
-    // Build response: ignore first column (person name) and last column (overall average)
-    const firstDataCol = 1;
-    const lastDataCol = cols.length - 2; // exclusive of last (overall)
+    // Use fixed category mapping (columns A-L => indices 0-11), categories start at index 1
+    const fixedCategoryMapping = [
+      { colIndex: 0, name: 'Nom' },
+      { colIndex: 1, name: '🌟 APPRÉCIATION GLOBALE' },
+      { colIndex: 2, name: '✈️ TRANSPORTS Aérien' },
+      { colIndex: 3, name: '🚐 Car navette' },
+      { colIndex: 4, name: '🏨 HÉBERGEMENT' },
+      { colIndex: 5, name: '🛏️ CHAMBRES' },
+      { colIndex: 6, name: '🏊 PISCINE' },
+      { colIndex: 7, name: '🎉 ANIMATION' },
+      { colIndex: 8, name: '👥 ÉQUIPES' },
+      { colIndex: 9, name: '🤝 Représentant Top of Travel' },
+      { colIndex: 10, name: '🌍 EXCURSIONS' },
+      { colIndex: 11, name: 'MOYENNE GÉNÉRALE' },
+    ];
 
     const categories = [] as { name: string; average: number }[];
-    for (let i = firstDataCol; i <= lastDataCol; i++) {
-      const label = cols[i] || `Col ${i}`;
-      const val = toNumber(cells[i]?.v);
-      if (val != null) {
-        categories.push({ name: label, average: val });
-      }
+    // Build categories from fixed mapping, skipping 'Nom' and 'MOYENNE GÉNÉRALE' for category list
+    for (const m of fixedCategoryMapping) {
+      if (m.colIndex === 0) continue; // skip name
+      if (m.colIndex === 11) continue; // skip overall in category list
+      const val = toNumber(cells[m.colIndex]?.v);
+      if (val != null) categories.push({ name: m.name, average: val });
     }
 
-    const overallCell = cells[cols.length - 1];
+    // Determine overallAverage from fixed column L (index 11) if present, otherwise fall back to last column
+    const overallIdx = Math.min(11, Math.max(0, cells.length - 1));
+    const overallCell = cells[overallIdx];
     const overallAverage = toNumber(overallCell?.v) ?? 0;
 
     const response: ResortAveragesResponse = {
