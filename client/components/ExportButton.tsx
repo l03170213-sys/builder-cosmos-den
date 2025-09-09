@@ -19,7 +19,14 @@ function makePage2Clone(original: HTMLElement) {
   header.style.alignItems = "center";
 
   const left = document.createElement("div");
-  left.innerHTML = `<h2 style="margin:0;font-size:20px;font-weight:700">VM Resort - Albanie</h2><div style="margin-top:8px;color:#475569">Rapport de satisfaction</div>`;
+  try {
+    const selectedKey = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+    const resorts = (await import('@/lib/resorts')).RESORTS;
+    const cfg = resorts.find((r:any) => r.key === selectedKey) || resorts[0];
+    left.innerHTML = `<h2 style="margin:0;font-size:20px;font-weight:700">${cfg.name}</h2><div style="margin-top:8px;color:#475569">Rapport de satisfaction</div>`;
+  } catch (e) {
+    left.innerHTML = `<h2 style="margin:0;font-size:20px;font-weight:700">VM Resort - Albanie</h2><div style="margin-top:8px;color:#475569">Rapport de satisfaction</div>`;
+  }
 
   const right = document.createElement("div");
   right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
