@@ -154,7 +154,8 @@ export default function Index() {
           const categories = [] as any[];
           for (let i = firstDataCol; i <= lastDataCol; i++) {
             const label = cols[i] || `Col ${i}`;
-            const val = toNumber(cells[i]?.v);
+            const raw = toNumber(cells[i]?.v);
+            const val = normalizeAverage(raw);
             if (val != null) categories.push({ name: label, average: val });
           }
           const overallCell = cells[cols.length - 1];
