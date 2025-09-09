@@ -71,7 +71,8 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       obj.id = r + 1;
       // Use fixed sheet1 columns: name in E (index 4), email in B (1), postal in I (8)
       obj.label = cellToString(c[4]);
-      obj.email = cellToString(c[1]);
+      // Email is in sheet1 column D (index 3)
+      obj.email = cellToString(c[3]);
       obj.note = '';
       obj.date = dateCol !== -1 ? cellToString(c[dateCol]) : '';
       obj.age = ageCol !== -1 ? cellToString(c[ageCol]) : '';
