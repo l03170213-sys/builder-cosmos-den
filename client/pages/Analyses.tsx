@@ -28,7 +28,8 @@ export default function Analyses() {
       }
 
       try {
-        const url = new URL('/api/resort/vm-resort-albanie/averages', window.location.origin).toString();
+        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
           const text = await r.text().catch(() => r.statusText);
