@@ -211,8 +211,11 @@ export default async function exportToPdf(options: { chartId?: string; listId: s
 
     // Fetch matrice moyenne to build the table on the right
     try {
-      const SHEET_ID = '1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os';
-      const GID = '1595451985';
+      const selectedKey = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+      const resorts = (await import('@/lib/resorts')).RESORTS;
+      const cfg = resorts.find((r:any) => r.key === selectedKey) || resorts[0];
+      const SHEET_ID = cfg.sheetId || '1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os';
+      const GID = cfg.gidMatrice || '0';
       const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}`;
       const rr = await fetch(gurl);
       const text = await rr.text();
