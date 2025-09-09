@@ -76,7 +76,16 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       obj.age = ageCol !== -1 ? cellToString(c[ageCol]) : '';
       obj.postal = postalCol !== -1 ? cellToString(c[postalCol]) : '';
       obj.duration = durationCol !== -1 ? cellToString(c[durationCol]) : '';
-      obj.feedback = feedbackCol !== -1 ? cellToString(c[feedbackCol]) : '';
+      // Prefer exact header match ("Votre avis compte pour nous ! :)") or known feedback column; else fallback to BT (index 71) if present
+      if (feedbackColExact !== -1) {
+        obj.feedback = cellToString(c[feedbackColExact]);
+      } else if (feedbackCol !== -1) {
+        obj.feedback = cellToString(c[feedbackCol]);
+      } else if (c[71] && c[71].v != null) {
+        obj.feedback = cellToString(c[71]);
+      } else {
+        obj.feedback = '';
+      }
 
       // If email empty, try to infer from label
       if (!obj.email && obj.label && obj.label.includes('@')) obj.email = obj.label;
