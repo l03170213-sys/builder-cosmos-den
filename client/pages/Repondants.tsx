@@ -73,7 +73,7 @@ function formatDateToFR(raw: string) {
     mai: 5, jun: 6, juin: 6, jul: 7, juil: 7, juillet: 7, aout: 8, août: 8, sep: 9, sept: 9, septembre: 9,
     oct: 10, octobre: 10, nov: 11, novembre: 11, dec: 12, déc: 12, decembre: 12
   };
-  const monthNameMatch = s.match(/^(\d{1,2})\s+([A-Za-zÀ-ÿ\-]+)\s+(\d{4})$/);
+  const monthNameMatch = s.match(/^(\d{1,2})\s+([A-Za-z��-ÿ\-]+)\s+(\d{4})$/);
   if (monthNameMatch) {
     const d = String(Number(monthNameMatch[1])).padStart(2, '0');
     const rawMonth = monthNameMatch[2].toLowerCase();
@@ -137,8 +137,6 @@ export default function Repondants() {
   const { resort: selectedResortKey } = useSelectedResort();
   const [page, setPage] = React.useState(1);
   const [pageSize] = React.useState(10);
-  import { RESORTS } from '@/lib/resorts';
-
   const { data, isLoading, isError } = useQuery({
     queryKey: ["repondants", selectedResortKey, page, pageSize],
     queryFn: async () => {
