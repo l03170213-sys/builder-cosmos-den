@@ -43,6 +43,10 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       return -1;
     };
 
+    const normalizeHeader = (s: string) => (s || '').toString().replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+    const TARGET_FEEDBACK_TITLE = 'Votre avis compte pour nous ! :)';
+    const feedbackColExact = cols.findIndex(c => normalizeHeader(c) === normalizeHeader(TARGET_FEEDBACK_TITLE));
+
     const emailCol = findCol(['email', 'courriel', '@']);
     const noteCol = findCol(['note', 'moyenne', 'overall', 'note général', 'note generale', 'note générale']);
     const dateCol = findCol(['date']);
