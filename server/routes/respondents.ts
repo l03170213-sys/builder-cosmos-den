@@ -91,6 +91,8 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       // If email empty, try to infer from label
       if (!obj.email && obj.label && obj.label.includes('@')) obj.email = obj.label;
 
+      // alias for compatibility with client which expects 'name'
+      obj.name = obj.label;
       respondents.push(obj);
     }
 
