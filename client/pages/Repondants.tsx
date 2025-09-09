@@ -138,7 +138,7 @@ export default function Repondants() {
       try {
         // Fetch from internal server endpoint only (avoid client-side Google fetch/CORS)
         const selected = selectedResortKey;
-        const apiUrl = new URL(`/api/resort/${selected}/respondents`, window.location.origin).toString();
+        const apiUrl = new URL(`/.netlify/functions/api/resort/${selected}/respondents`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
           console.error('Unable to load respondents from server, status', r.status);
