@@ -12,7 +12,7 @@ export async function safeFetch(u: string, opts?: RequestInit) {
       // add Netlify functions alternative
       const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
       const alt = new URL(altPath, urlObj.origin).toString();
-      tryUrls.unshift(alt); // prefer alt first
+      tryUrls.push(alt); // try original first, alt second
     }
   } catch (e) {
     // fallback to original url only
