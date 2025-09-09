@@ -6,7 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-
+import { RESORTS } from '@/lib/resorts';
 
 function parseGviz(text: string) {
   const start = text.indexOf("(");
