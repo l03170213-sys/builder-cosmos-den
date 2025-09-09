@@ -203,6 +203,8 @@ export default function Index() {
       }
     },
     enabled: serverAvailable !== false,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: true,
     retry: false,
     refetchOnWindowFocus: false,
   });
