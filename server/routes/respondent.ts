@@ -134,7 +134,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 7, name: '🎉 ANIMATION' },
         { colIndex: 8, name: '👥 ÉQUIPES' },
         { colIndex: 9, name: '🤝 Représentant Top of Travel' },
-        { colIndex: 10, name: '🌍 EXCURSIONS' },
+        { colIndex: 10, name: '���� EXCURSIONS' },
         { colIndex: 11, name: 'MOYENNE GÉNÉRALE' },
       ];
 
@@ -167,7 +167,8 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           // attempt cols-as-respondents: find column whose header matches email or name
           const emailCellVal = (srow.c || []).find((c: any) => c && c.v && String(c.v).toString().includes('@'));
           const emailVal = emailCellVal ? String(emailCellVal.v).trim().toLowerCase() : '';
-          const nameVal = (srow.c && srow.c[0] && srow.c[0].v != null) ? String(srow.c[0].v).trim().toLowerCase() : '';
+          // The respondent name is in sheet1 column E (index 4)
+          const nameVal = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
 
           let overallVal: string | null = null;
 
