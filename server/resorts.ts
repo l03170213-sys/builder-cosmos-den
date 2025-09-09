@@ -19,4 +19,9 @@ export const RESORTS: Record<string, { sheetId: string; gidMatrice?: string; nam
     gidMatrice: "23222471",
     name: "Hôtel Sineva Park - Bulgarie",
   },
+  "morenia-croatie": {
+    sheetId: "1YxoVkCX1ArQRO03VR3xhWnXaF8wfWbmfnWVtybUmuNA",
+    gidMatrice: "656611228",
+    name: "Hôtel Morenia - Croatie",
+  },
 };
