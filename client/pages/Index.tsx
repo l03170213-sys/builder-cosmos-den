@@ -49,7 +49,7 @@ export default function Index() {
 
       function toNumber(val: any): number | null {
         if (val == null) return null;
-        if (typeof val === "number") return val;
+        if (typeof val === "number") return Number.isFinite(val) ? val : null;
         if (typeof val === "string") {
           const s = val.replace(/\u00A0/g, '').trim();
           const m = s.match(/-?\d+[.,]?\d*/);
@@ -62,6 +62,12 @@ export default function Index() {
           if (val.f != null) return toNumber(val.f);
         }
         return null;
+      }
+
+      function normalizeAverage(n: number | null): number | null {
+        if (n == null) return null;
+        if (n < 0 || n > 5) return null;
+        return n;
       }
 
       const cfg = currentResort;
