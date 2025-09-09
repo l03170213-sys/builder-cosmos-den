@@ -12,6 +12,8 @@ import { useSelectedResort } from '@/hooks/use-selected-resort';
 export default function Index() {
   const chartType = useChartType("bar");
   const [showValues, setShowValues] = React.useState(false);
+  const { resort: selectedResortKey } = useSelectedResort();
+  const currentResort = RESORTS.find(r => r.key === selectedResortKey) || RESORTS[0];
 
   const [serverAvailable, setServerAvailable] = React.useState<boolean | undefined>(undefined);
 
