@@ -221,7 +221,15 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       console.error('Fallback row-index mapping failed:', e);
     }
 
-    res.status(200).json(respondents);
+    // Support pagination via query params: page (1-based) and pageSize
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+    const pageSize = Math.max(1, Math.min(500, parseInt(String(req.query.pageSize || '50'), 10) || 50));
+    const total = respondents.length;
+    const start = (page - 1) * pageSize;
+    const end = Math.min(total, start + pageSize);
+    const pageItems = respondents.slice(start, end);
+
+    res.status(200).json({ items: pageItems, total, page, pageSize });
   } catch (err) {
     console.error('Failed to fetch respondents:', err);
     res.status(500).json({ error: 'Unable to load respondents' });
