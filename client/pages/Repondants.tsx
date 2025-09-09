@@ -115,7 +115,8 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         // Fetch from internal server endpoint only (avoid client-side Google fetch/CORS)
-        const apiUrl = new URL('/api/resort/vm-resort-albanie/respondents', window.location.origin).toString();
+        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const apiUrl = new URL(`/api/resort/${selected}/respondents`, window.location.origin).toString();
         const r = await fetch(apiUrl, { credentials: 'same-origin' });
         if (!r.ok) {
           console.error('Unable to load respondents from server, status', r.status);
