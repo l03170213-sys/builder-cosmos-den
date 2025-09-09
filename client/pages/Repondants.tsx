@@ -25,7 +25,10 @@ function cellToString(c: any) {
 
 function formatDateToFR(raw: string) {
   if (!raw) return '';
-  const s = raw.toString().trim();
+  let s = raw.toString().trim();
+
+  // Normalize common non-breaking spaces and multiple spaces
+  s = s.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
 
   // Handle Google/Sheets style Date(YYYY,M,D,H,mm,ss)
   const sheetsDate = s.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2})\)$/);
@@ -33,7 +36,6 @@ function formatDateToFR(raw: string) {
     const year = Number(sheetsDate[1]);
     const monthIndex = Number(sheetsDate[2]); // already 0-based in this format
     const day = Number(sheetsDate[3]);
-    // create Date using local timezone
     const dt = new Date(year, monthIndex, day);
     const d = String(dt.getDate()).padStart(2, '0');
     const m = String(dt.getMonth() + 1).padStart(2, '0');
@@ -41,12 +43,11 @@ function formatDateToFR(raw: string) {
     return `${d}/${m}/${y}`;
   }
 
-  // If string contains a clear date part with time (e.g. '09/07/2025 09:51:37'), extract date part first
-  const dateWithTimeMatch = s.match(/^(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})\s+/);
+  // If string contains a clear date part with time (e.g. '09/07/2025 09:51:37' or '09.07.2025 09:51'), extract date part first
+  const dateWithTimeMatch = s.match(/^(\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4})\s+/);
   if (dateWithTimeMatch) {
     const datePart = dateWithTimeMatch[1];
-    // normalize day/month/year
-    const dmY = datePart.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    const dmY = datePart.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})$/);
     if (dmY) {
       const d = dmY[1].padStart(2, '0');
       const m = dmY[2].padStart(2, '0');
@@ -56,14 +57,33 @@ function formatDateToFR(raw: string) {
     }
   }
 
-  // If already in DD/MM/YYYY (no time) normalize
-  const dmY = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  // If already in DD/MM/YYYY or DD.MM.YYYY (no time) normalize
+  const dmY = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})$/);
   if (dmY) {
     const d = dmY[1].padStart(2, '0');
     const m = dmY[2].padStart(2, '0');
     let y = dmY[3];
     if (y.length === 2) y = '20' + y;
     return `${d}/${m}/${y}`;
+  }
+
+  // Handle French month names like '9 juillet 2025' or '9 Jul 2025'
+  const months: Record<string, number> = {
+    janv: 1, janvier: 1, feb: 2, févr: 2, fev: 2, fevrier: 2, mars: 3, apr: 4, avril: 4,
+    mai: 5, jun: 6, juin: 6, jul: 7, juil: 7, juillet: 7, aout: 8, août: 8, sep: 9, sept: 9, septembre: 9,
+    oct: 10, octobre: 10, nov: 11, novembre: 11, dec: 12, déc: 12, decembre: 12
+  };
+  const monthNameMatch = s.match(/^(\d{1,2})\s+([A-Za-zÀ-ÿ\-]+)\s+(\d{4})$/);
+  if (monthNameMatch) {
+    const d = String(Number(monthNameMatch[1])).padStart(2, '0');
+    const rawMonth = monthNameMatch[2].toLowerCase();
+    const y = monthNameMatch[3];
+    // try to find a month by prefix
+    let mNum = 0;
+    for (const [k, v] of Object.entries(months)) {
+      if (rawMonth.startsWith(k)) { mNum = v; break; }
+    }
+    if (mNum > 0) return `${d}/${String(mNum).padStart(2, '0')}/${y}`;
   }
 
   // Try ISO-like date/time or date-only strings (e.g. 2025-07-09T09:51:37 or 2025-07-09 09:51:37)
@@ -76,6 +96,7 @@ function formatDateToFR(raw: string) {
   }
 
   // Try generic Date parse and format only date part
+  // Accept also 'MM/DD/YYYY' by trying both locale and strict parsing
   const dt = new Date(s);
   if (!isNaN(dt.getTime())) {
     const d = String(dt.getDate()).padStart(2, '0');

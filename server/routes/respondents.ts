@@ -49,7 +49,7 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
     const ageCol = findCol(['age']);
     const postalCol = findCol(['postal', 'code postal', 'postcode', 'zip']);
     const durationCol = findCol(['durée', 'duree', 'duration', 'séjour', 'sejour']);
-    const feedbackCol = findCol(['comment', 'commentaire', 'feedback', 'remarque']);
+    const feedbackCol = findCol(['comment', 'commentaire', 'feedback', 'remarque', 'votre avis', 'votre avis compte', 'votre avis compte pour nous', 'votre avis compte pour nous ! :)']);
 
     // Fallbacks: if noteCol not found, try column 11 (L) as in original heuristics
     let resolvedNoteCol = noteCol;
