@@ -7,9 +7,6 @@ export default function Analyses() {
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
     queryKey: ["resort-averages-analyses"],
     queryFn: async () => {
-      const SHEET_ID = "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
-      const GID_MATRICE_MOYENNE = "1104314362";
-
       function parseGvizText(text: string) {
         const start = text.indexOf("(");
         const end = text.lastIndexOf(")");
@@ -38,7 +35,10 @@ export default function Analyses() {
         return (await r.json()) as ResortAveragesResponse;
       } catch (err) {
         try {
-          const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
+          const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+          const resorts = (await import('@/lib/resorts')).RESORTS;
+          const cfg = resorts.find((r:any) => r.key === selected) || resorts[0];
+          const gurl = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?gid=${cfg.gidMatrice || '0'}`;
           const rr = await fetch(gurl);
           const text = await rr.text();
           const data = parseGvizText(text);
@@ -69,7 +69,7 @@ export default function Analyses() {
           const overallCell = cells[cols.length - 1];
           const overallAverage = toNumber(overallCell?.v) ?? 0;
           return {
-            resort: 'VM Resort Albanie',
+            resort: cfg.name,
             updatedAt: new Date().toISOString(),
             overallAverage,
             categories,
