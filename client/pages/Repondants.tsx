@@ -137,6 +137,8 @@ export default function Repondants() {
   const { resort: selectedResortKey } = useSelectedResort();
   const [page, setPage] = React.useState(1);
   const [pageSize] = React.useState(10);
+  import { RESORTS } from '@/lib/resorts';
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["repondants", selectedResortKey, page, pageSize],
     queryFn: async () => {
@@ -146,8 +148,45 @@ export default function Repondants() {
         // server returns { items, total, page, pageSize }
         return await fetchJsonSafe(apiUrl, { credentials: 'same-origin' });
       } catch (err) {
-        console.error('Failed to fetch respondents:', err);
-        return { items: [], total: 0, page: 1, pageSize };
+        console.error('Failed to fetch respondents, attempting direct Google Sheets fallback:', err);
+        try {
+          // fallback: fetch sheet1 and build a simple respondents list
+          const cfg = RESORTS.find(r => r.key === selectedResortKey);
+          if (!cfg) return { items: [], total: 0, page: 1, pageSize };
+          const sheet1Url = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq`;
+          const r = await fetch(sheet1Url);
+          if (!r.ok) return { items: [], total: 0, page: 1, pageSize };
+          const text = await r.text();
+          const json = parseGviz(text);
+          const scols: string[] = (json.table.cols || []).map((c: any) => (c.label || '').toString());
+          const srows: any[] = json.table.rows || [];
+          const items: any[] = [];
+          for (let i = 0; i < srows.length; i++) {
+            const row = srows[i];
+            const c = row.c || [];
+            const hasAny = (c || []).some((cell: any) => cell && cell.v != null && String(cell.v).toString().trim() !== '');
+            if (!hasAny) continue;
+            const obj: any = {};
+            obj.id = i + 1;
+            obj.label = cellToString(c[4]);
+            obj.name = obj.label;
+            obj.email = cellToString(c[3]);
+            obj.note = '';
+            obj.date = cellToString(c[0]) || '';
+            obj.age = '';
+            obj.postal = cellToString(c[8]);
+            obj.duration = '';
+            obj.feedback = '';
+            items.push(obj);
+          }
+          const total = items.length;
+          const start = (page - 1) * pageSize;
+          const pageItems = items.slice(start, start + pageSize);
+          return { items: pageItems, total, page, pageSize };
+        } catch (e) {
+          console.error('Direct Google Sheets fallback failed for respondents:', e);
+          return { items: [], total: 0, page: 1, pageSize };
+        }
       }
     },
     refetchOnWindowFocus: false,
