@@ -1,8 +1,6 @@
 import type { RequestHandler } from "express";
 import type { ResortAveragesResponse } from "@shared/api";
-
-const SHEET_ID = "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
-const GID_MATRICE_MOYENNE = "1104314362";
+import { RESORTS } from "../resorts";
 
 function parseGviz(text: string) {
   const start = text.indexOf("(");
@@ -21,10 +19,18 @@ function toNumber(val: unknown): number | null {
   return null;
 }
 
-export const getResortAverages: RequestHandler = async (_req, res) => {
+export const getResortAverages: RequestHandler = async (req, res) => {
   try {
+    const resortKey = req.params.resort as string;
+    const cfg = RESORTS[resortKey];
+    if (!cfg) return res.status(404).json({ error: 'Unknown resort' });
+
+    const SHEET_ID = cfg.sheetId;
+    const GID_MATRICE_MOYENNE = cfg.gidMatrice ?? '0';
+
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
     const r = await fetch(url);
+    if (!r.ok) return res.status(502).json({ error: 'Unable to fetch matrice' });
     const text = await r.text();
     const data = parseGviz(text);
 
@@ -61,7 +67,7 @@ export const getResortAverages: RequestHandler = async (_req, res) => {
     const overallAverage = toNumber(overallCell?.v) ?? 0;
 
     const response: ResortAveragesResponse = {
-      resort: "VM Resort Albanie",
+      resort: cfg.name,
       updatedAt: new Date().toISOString(),
       overallAverage,
       categories,

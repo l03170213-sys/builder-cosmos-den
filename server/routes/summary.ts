@@ -1,7 +1,6 @@
 import type { RequestHandler } from "express";
 import type { ResortSummaryResponse } from "@shared/api";
-
-const SHEET_ID = "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
+import { RESORTS } from "../resorts";
 
 function parseGviz(text: string) {
   const start = text.indexOf("(");
@@ -18,11 +17,18 @@ function valueToString(v: any) {
   return String(v);
 }
 
-export const getResortSummary: RequestHandler = async (_req, res) => {
+export const getResortSummary: RequestHandler = async (req, res) => {
   try {
+    const resortKey = req.params.resort as string;
+    const cfg = RESORTS[resortKey];
+    if (!cfg) return res.status(404).json({ error: 'Unknown resort' });
+
+    const SHEET_ID = cfg.sheetId;
+
     // Fetch first sheet (default gid=0)
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
     const r = await fetch(url);
+    if (!r.ok) return res.status(502).json({ error: 'Unable to fetch summary' });
     const text = await r.text();
     const data = parseGviz(text);
 
@@ -63,7 +69,7 @@ export const getResortSummary: RequestHandler = async (_req, res) => {
     }
 
     const response: ResortSummaryResponse = {
-      resort: "VM Resort Albanie",
+      resort: cfg.name,
       respondents,
       recommendationRate,
     };

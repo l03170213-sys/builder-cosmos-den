@@ -1,7 +1,5 @@
 import type { RequestHandler } from 'express';
-
-const SHEET_ID = '1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os';
-const GID_MATRICE_MOYENNE = '1104314362';
+import { RESORTS } from '../resorts';
 
 function parseGviz(text: string) {
   const start = text.indexOf('(');
@@ -40,6 +38,13 @@ function formatDateToFR(raw: string) {
 
 export const getResortRespondentDetails: RequestHandler = async (req, res) => {
   try {
+    const resortKey = req.params.resort as string;
+    const cfg = RESORTS[resortKey];
+    if (!cfg) return res.status(404).json({ error: 'Unknown resort' });
+
+    const SHEET_ID = cfg.sheetId;
+    const GID_MATRICE_MOYENNE = cfg.gidMatrice ?? '0';
+
     const qEmail = (req.query.email || '').toString().trim().toLowerCase();
     const qName = (req.query.name || '').toString().trim().toLowerCase();
     const qDate = (req.query.date || '').toString().trim();
@@ -60,7 +65,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
     if (!Number.isNaN(qRowNum) && qRowNum > 0 && qRowNum - 1 < rows.length) {
       const chosenIdx = qRowNum - 1;
-      console.debug('[respondent] forced row param, using row', qRowNum, '-> idx', chosenIdx);
       const row = rows[chosenIdx];
       const cells = row.c || [];
       const lastCellIdx = Math.max(0, cells.length - 1);
@@ -94,14 +98,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         const cellVal = c[ci] && c[ci].v != null ? String(c[ci].v).trim().toLowerCase() : '';
         if (!cellVal) continue;
         if (cellVal === qEmail || cellVal === qName) { matched = true; break; }
-        // allow partial matches (e.g. header contains email with additional text)
         if (qEmail && cellVal.includes(qEmail)) { matched = true; break; }
         if (qName && cellVal.includes(qName)) { matched = true; break; }
       }
       if (matched) candidateRowIdxs.push(i);
     }
 
-    console.debug('[respondent] candidates rows count:', candidateRowIdxs.length, 'email:', qEmail, 'name:', qName, 'date:', targetDate);
     // If no candidate rows were found but user did not provide a name, fallback to any 'Anonyme' row
     if (candidateRowIdxs.length === 0 && !qName) {
       for (let i = 0; i < rows.length; i++) {
@@ -109,7 +111,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         const c = r.c || [];
         const first = c[0] && c[0].v != null ? String(c[0].v).trim().toLowerCase() : '';
         if (first === 'anonyme' || first === 'anonymé' || first === 'anonym') {
-          console.debug('[respondent] fallback matched Anonyme row at index', i);
           candidateRowIdxs.push(i);
           break;
         }
@@ -132,7 +133,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       const row = rows[chosenIdx];
       const cells = row.c || [];
       const lastCellIdx = Math.max(0, cells.length - 1);
-      // Determine overall index: prefer column 11 (L) if present and non-empty, otherwise use last column available
       let overallIndex = 11;
       if (!(cells[11] && cells[11].v != null)) {
         overallIndex = Math.max(0, Math.min(cols.length - 1, lastCellIdx));
@@ -157,14 +157,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     }
 
     // Try cols-as-respondents: find column index
-    console.debug('[respondent] no row match, trying column match. cols length:', cols.length);
-    // log sample of first 10 rows for debugging
-    try {
-      const sample = rows.slice(0, 10).map((r: any, idx: number) => ({ idx, cells: (r.c || []).map(cellToString) }));
-      console.debug('[respondent] sample rows:', JSON.stringify(sample));
-      if (rows[5]) console.debug('[respondent] row 6 raw:', JSON.stringify((rows[5].c || []).map(cellToString)));
-    } catch (e) { /* ignore */ }
-
     let colIndex = -1;
     for (let i = 0; i < cols.length; i++) {
       const lbl = (cols[i] || '').toString().trim().toLowerCase();
@@ -180,7 +172,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       }
     }
 
-    console.debug('[respondent] column match index:', colIndex);
     if (colIndex !== -1) {
       const cats: { name: string; value: string }[] = [];
       for (const r of rows) {
@@ -203,7 +194,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
     // Last resort: try to locate respondent row in sheet1 and map to matrice row by index
     try {
-      console.debug('[respondent] attempting sheet1->matrice index mapping for', { email: qEmail, name: qName });
       const sheet1Url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
       const sr = await fetch(sheet1Url);
       if (sr.ok) {
@@ -230,7 +220,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           }
         }
         if (foundIdx !== -1 && foundIdx < rows.length) {
-          console.debug('[respondent] mapped sheet1 row', foundIdx + 1, 'to matrice row');
           const row = rows[foundIdx];
           const cells = row.c || [];
           const lastCellIdx = Math.max(0, cells.length - 1);
@@ -257,7 +246,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       console.error('sheet1 mapping attempt failed:', e);
     }
 
-    console.debug('[respondent] not found. params:', { email: qEmail, name: qName, date: qDate, rows: rows.length, cols: cols.length });
     return res.status(404).json({ error: 'Respondent not found in matrice' });
   } catch (err) {
     console.error('Failed to fetch respondent details:', err);

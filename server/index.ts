@@ -23,11 +23,11 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
-  // Google Sheets-powered data for VM Resort Albanie
-  app.get("/api/resort/vm-resort-albanie/averages", getResortAverages);
-  app.get("/api/resort/vm-resort-albanie/summary", getResortSummary);
-  app.get("/api/resort/vm-resort-albanie/respondents", getResortRespondents);
-  app.get("/api/resort/vm-resort-albanie/respondent", getResortRespondentDetails);
+  // Google Sheets-powered data for resorts (dynamic)
+  app.get("/api/resort/:resort/averages", getResortAverages);
+  app.get("/api/resort/:resort/summary", getResortSummary);
+  app.get("/api/resort/:resort/respondents", getResortRespondents);
+  app.get("/api/resort/:resort/respondent", getResortRespondentDetails);
 
   return app;
 }
