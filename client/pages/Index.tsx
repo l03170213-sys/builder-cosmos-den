@@ -33,8 +33,7 @@ export default function Index() {
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
     queryKey: ["resort-averages"],
     queryFn: async () => {
-      const SHEET_ID = "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
-      const GID_MATRICE_MOYENNE = "1104314362";
+      // sheet IDs are selected dynamically via the resort selector; use the client-selected resort when calling APIs
 
       function parseGvizText(text: string) {
         const start = text.indexOf("(");
@@ -54,7 +53,8 @@ export default function Index() {
       }
 
       try {
-        const url = new URL('/api/resort/vm-resort-albanie/averages', window.location.origin).toString();
+        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
           const text = await r.text().catch(() => r.statusText);
@@ -133,7 +133,8 @@ export default function Index() {
       }
 
       try {
-        const url = new URL('/api/resort/vm-resort-albanie/summary', window.location.origin).toString();
+        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+        const url = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
           const text = await r.text().catch(() => r.statusText);
