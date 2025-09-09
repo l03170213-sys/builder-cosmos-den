@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { ResortAveragesResponse } from "@shared/api";
 import { useSelectedResort } from '@/hooks/use-selected-resort';
 import { RESORTS } from '@/lib/resorts';
+import { safeFetch } from '@/lib/fetcher';
 
 export default function Analyses() {
   const { resort: selectedResortKey } = useSelectedResort();
