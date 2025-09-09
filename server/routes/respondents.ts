@@ -152,30 +152,28 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
             }
           }
 
-          // If no cols-as-respondents mapping found, try rows-as-respondents
-          if (!foundCols) {
-            for (let ri = 0; ri < mrows.length; ri++) {
-              const rrow = mrows[ri];
-              const cells = rrow.c || [];
-              // build lowercase cell string list
-              const lowerCells = cells.map((cell: any) => (cell && cell.v != null ? String(cell.v).trim().toLowerCase() : ''));
-              for (const [eKey, idxs] of Object.entries(byEmail)) {
-                for (const idx of idxs) {
-                  if (lowerCells.includes(eKey)) {
-                    // overall is at column index 11 if available
-                    const overallIdx = (cells[11] && cells[11].v != null) ? 11 : Math.max(0, cells.length - 1);
-                    const overallCell = cells[overallIdx];
-                    respondents[idx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[idx].note;
-                  }
+          // Always try rows-as-respondents to ensure 'Note général' is taken from column L (index 11)
+          for (let ri = 0; ri < mrows.length; ri++) {
+            const rrow = mrows[ri];
+            const cells = rrow.c || [];
+            // build lowercase cell string list
+            const lowerCells = cells.map((cell: any) => (cell && cell.v != null ? String(cell.v).trim().toLowerCase() : ''));
+            for (const [eKey, idxs] of Object.entries(byEmail)) {
+              for (const idx of idxs) {
+                if (lowerCells.includes(eKey)) {
+                  // Note général is column L (index 11) per requirement
+                  const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+                  const overallCell = cells[overallIdx];
+                  respondents[idx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[idx].note;
                 }
               }
-              for (const [lKey, idxs] of Object.entries(byLabel)) {
-                for (const idx of idxs) {
-                  if (lowerCells.includes(lKey)) {
-                    const overallIdx = (cells[11] && cells[11].v != null) ? 11 : Math.max(0, cells.length - 1);
-                    const overallCell = cells[overallIdx];
-                    respondents[idx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[idx].note;
-                  }
+            }
+            for (const [lKey, idxs] of Object.entries(byLabel)) {
+              for (const idx of idxs) {
+                if (lowerCells.includes(lKey)) {
+                  const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+                  const overallCell = cells[overallIdx];
+                  respondents[idx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[idx].note;
                 }
               }
             }
