@@ -73,7 +73,8 @@ function formatDateToFR(raw: string) {
     mai: 5, jun: 6, juin: 6, jul: 7, juil: 7, juillet: 7, aout: 8, août: 8, sep: 9, sept: 9, septembre: 9,
     oct: 10, octobre: 10, nov: 11, novembre: 11, dec: 12, déc: 12, decembre: 12
   };
-  const monthNameMatch = s.match(/^(\d{1,2})\s+([A-Za-z��-ÿ\-]+)\s+(\d{4})$/);
+  // Use Unicode property for letters to safely match accented month names
+  const monthNameMatch = s.match(/^(\d{1,2})\s+([\p{L}\-]+)\s+(\d{4})$/u);
   if (monthNameMatch) {
     const d = String(Number(monthNameMatch[1])).padStart(2, '0');
     const rawMonth = monthNameMatch[2].toLowerCase();
