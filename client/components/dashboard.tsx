@@ -85,18 +85,18 @@ export function CategoryDistribution({ data }: { data: CategoryAverage[] }) {
         <CardTitle className="text-lg">Répartition des Notes</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {data.map((item) => (
-          <div key={item.name} className="grid grid-cols-[1fr_auto] gap-3 items-center">
+        {data.map((item, idx) => (
+          <div key={`${item.name}-${idx}`} className="grid grid-cols-[1fr_auto] gap-3 items-center">
             <div>
               <div className="text-sm text-muted-foreground">{item.name}</div>
               <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
                 <div
                   className={cn("h-2 rounded-full bg-primary")}
-                  style={{ width: `${(item.average / 5) * 100}%` }}
+                  style={{ width: `${(Number(item.average) / 5) * 100}%` }}
                 />
               </div>
             </div>
-            <div className="text-sm font-medium tabular-nums">{item.average.toFixed(1)}/5</div>
+            <div className="text-sm font-medium tabular-nums">{Number(item.average || 0).toFixed(1)}/5</div>
           </div>
         ))}
       </CardContent>
