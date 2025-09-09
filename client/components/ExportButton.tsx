@@ -22,7 +22,7 @@ function makePage2Clone(original: HTMLElement) {
   const left = document.createElement("div");
   try {
     const selectedKey = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
-    const resorts = (await import('@/lib/resorts')).RESORTS;
+    const resorts = RESORTS;
     const cfg = resorts.find((r:any) => r.key === selectedKey) || resorts[0];
     left.innerHTML = `<h2 style="margin:0;font-size:20px;font-weight:700">${cfg.name}</h2><div style="margin-top:8px;color:#475569">Rapport de satisfaction</div>`;
   } catch (e) {
