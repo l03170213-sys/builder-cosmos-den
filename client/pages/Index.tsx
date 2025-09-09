@@ -122,8 +122,6 @@ export default function Index() {
   const { data: summary, isLoading: loadingSummary } = useQuery<import("@shared/api").ResortSummaryResponse>({
     queryKey: ["resort-summary"],
     queryFn: async () => {
-      const SHEET_ID = "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
-
       function parseGvizText(text: string) {
         const start = text.indexOf("(");
         const end = text.lastIndexOf(")");
@@ -151,7 +149,10 @@ export default function Index() {
       } catch (err) {
         console.warn('API summary fetch failed, trying direct Google Sheets fallback:', err);
         try {
-          const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
+          const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
+          const resorts = (await import('@/lib/resorts')).RESORTS;
+          const cfg = resorts.find((r:any) => r.key === selected) || resorts[0];
+          const gurl = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq`;
           const rr = await fetch(gurl);
           const text = await rr.text();
           const data = parseGvizText(text);
@@ -191,7 +192,7 @@ export default function Index() {
           }
 
           return {
-            resort: 'VM Resort Albanie',
+            resort: cfg.name,
             respondents,
             recommendationRate,
           } as import("@shared/api").ResortSummaryResponse;
