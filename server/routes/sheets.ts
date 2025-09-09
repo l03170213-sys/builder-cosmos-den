@@ -117,7 +117,8 @@ export const getResortAverages: RequestHandler = async (req, res) => {
     for (const m of fixedCategoryMapping) {
       if (m.colIndex === 0) continue; // skip name
       if (m.colIndex === 11) continue; // skip overall in category list
-      const val = toNumber(cells[m.colIndex]?.v);
+      const raw = toNumber(cells[m.colIndex]?.v);
+      const val = normalizeAverage(raw);
       if (val != null) categories.push({ name: m.name, average: val });
     }
 
