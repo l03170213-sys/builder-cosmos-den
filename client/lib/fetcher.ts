@@ -54,23 +54,35 @@ export async function fetchJsonSafe(url: string, opts?: RequestInit) {
   const contentType = r.headers.get('content-type') || '';
   const looksLikeHtml = contentType.includes('text/html') || text.trim().toLowerCase().startsWith('<!doctype');
 
-  // If server responded OK but returned HTML (dev server SPA fallback), attempt Netlify functions alternative
+  // If server responded OK but returned HTML (dev server SPA fallback), attempt several function-based fallbacks
   if (r.ok && looksLikeHtml) {
     try {
       const urlObj = new URL(url);
       if (urlObj.pathname.startsWith('/api/')) {
-        const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
-        const alt = new URL(altPath, urlObj.origin).toString();
-        const r2 = await safeFetch(alt, opts);
-        const text2 = await r2.clone().text().catch(() => '');
-        if (!r2.ok) {
-          const err: any = new Error(`Server error (alt): ${r2.status} ${text2}`);
-          err.status = r2.status; err.body = text2; throw err;
+        const candidates = [
+          urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/'),
+          urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/'),
+        ];
+        for (const p of candidates) {
+          try {
+            const alt = new URL(p, urlObj.origin).toString();
+            const r2 = await safeFetch(alt, opts);
+            const text2 = await r2.clone().text().catch(() => '');
+            const ct2 = r2.headers.get('content-type') || '';
+            const looksLikeHtml2 = ct2.includes('text/html') || String(text2).trim().toLowerCase().startsWith('<!doctype');
+            if (!r2.ok || looksLikeHtml2) {
+              // try next fallback
+              continue;
+            }
+            try { return JSON.parse(text2); } catch (e) { continue; }
+          } catch (e) {
+            // continue to next candidate
+            continue;
+          }
         }
-        try { return JSON.parse(text2); } catch (e) { const err: any = new Error(`Invalid JSON response (alt): ${String(text2).slice(0,500)}`); err.status = r2.status; err.body = text2; throw err; }
       }
     } catch (e) {
-      // continue to throw original error below
+      // ignore
     }
   }
 
