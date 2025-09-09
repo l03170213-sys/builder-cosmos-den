@@ -44,4 +44,9 @@ export const RESORTS: Record<string, { sheetId: string; gidMatrice?: string; nam
     gidMatrice: "879100003",
     name: "Hôtel Atlantica Oasis - Chypre",
   },
+  "pestana-royal-ocean-madeira": {
+    sheetId: "1e47IUWqQv-8Oh5-JJADgu9rfNW_6Iuw_OXzAIdLnBic",
+    gidMatrice: "1752837685",
+    name: "Hôtel Pestana Royal Océan - Madère",
+  },
 };
