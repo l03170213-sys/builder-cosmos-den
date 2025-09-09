@@ -189,13 +189,13 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             }
           }
 
-          // if not found, map by row-index: use sheet1RowIdx to pick matrice row and column L (11)
+          // if not found, use the last row of the matrice (global averages) and pick column L (11)
           if (!overallVal) {
-            const mappedRow = mrows[sheet1RowIdx];
-            if (mappedRow) {
-              const mcells = mappedRow.c || [];
-              const overallIdx = 11 < mcells.length ? 11 : Math.max(0, mcells.length - 1);
-              const c = mcells[overallIdx];
+            const lastRow = mrows[mrows.length - 1];
+            if (lastRow) {
+              const lcells = lastRow.c || [];
+              const overallIdx = 11 < lcells.length ? 11 : Math.max(0, lcells.length - 1);
+              const c = lcells[overallIdx];
               overallVal = c && c.v != null ? String(c.v) : null;
             }
           }
