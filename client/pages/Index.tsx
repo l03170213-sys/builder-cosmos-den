@@ -57,9 +57,8 @@ export default function Index() {
       }
 
       try {
-        const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
-        const resorts = (await import('@/lib/resorts')).RESORTS;
-        const cfg = resorts.find((r:any) => r.key === selected) || resorts[0];
+        const selected = selectedResortKey;
+        const cfg = currentResort;
         const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
