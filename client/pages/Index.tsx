@@ -149,9 +149,7 @@ export default function Index() {
       } catch (err) {
         console.warn('API summary fetch failed, trying direct Google Sheets fallback:', err);
         try {
-          const selected = window.localStorage.getItem('selectedResort') || 'vm-resort-albanie';
-          const resorts = (await import('@/lib/resorts')).RESORTS;
-          const cfg = resorts.find((r:any) => r.key === selected) || resorts[0];
+          const cfg = currentResort;
           const gurl = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq`;
           const rr = await fetch(gurl);
           const text = await rr.text();
