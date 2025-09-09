@@ -1,4 +1,7 @@
-export const RESORTS: Record<string, { sheetId: string; gidMatrice?: string; name: string }> = {
+export const RESORTS: Record<
+  string,
+  { sheetId: string; gidMatrice?: string; name: string }
+> = {
   "vm-resort-albanie": {
     sheetId: "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os",
     gidMatrice: "1104314362",

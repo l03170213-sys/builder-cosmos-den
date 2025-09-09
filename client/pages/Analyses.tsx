@@ -2,13 +2,14 @@ import React from "react";
 import ChartOnly from "@/components/ChartOnly";
 import { useQuery } from "@tanstack/react-query";
 import type { ResortAveragesResponse } from "@shared/api";
-import { useSelectedResort } from '@/hooks/use-selected-resort';
-import { RESORTS } from '@/lib/resorts';
-import { safeFetch } from '@/lib/fetcher';
+import { useSelectedResort } from "@/hooks/use-selected-resort";
+import { RESORTS } from "@/lib/resorts";
+import { safeFetch } from "@/lib/fetcher";
 
 export default function Analyses() {
   const { resort: selectedResortKey } = useSelectedResort();
-  const currentResort = RESORTS.find(r => r.key === selectedResortKey) || RESORTS[0];
+  const currentResort =
+    RESORTS.find((r) => r.key === selectedResortKey) || RESORTS[0];
 
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
     queryKey: ["resort-averages-analyses", selectedResortKey],
@@ -32,17 +33,27 @@ export default function Analyses() {
 
       try {
         const selected = selectedResortKey;
-        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
-        const r = await safeFetch(url, { credentials: 'same-origin' });
-        const text = await r.clone().text().catch(() => '');
+        const url = new URL(
+          `/api/resort/${selected}/averages`,
+          window.location.origin,
+        ).toString();
+        const r = await safeFetch(url, { credentials: "same-origin" });
+        const text = await r
+          .clone()
+          .text()
+          .catch(() => "");
         if (!r.ok) {
           throw new Error(`Server error: ${r.status} ${text}`);
         }
-        try { return JSON.parse(text) as ResortAveragesResponse; } catch (e) { throw new Error(`Invalid JSON response: ${text}`); }
+        try {
+          return JSON.parse(text) as ResortAveragesResponse;
+        } catch (e) {
+          throw new Error(`Invalid JSON response: ${text}`);
+        }
       } catch (err) {
         try {
           const cfg = currentResort;
-          const gurl = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?gid=${cfg.gidMatrice || '0'}`;
+          const gurl = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?gid=${cfg.gidMatrice || "0"}`;
           const rr = await fetch(gurl);
           const text = await rr.text();
           const data = parseGvizText(text);
@@ -54,7 +65,9 @@ export default function Analyses() {
           let lastRow = rows[rows.length - 1];
           for (let i = rows.length - 1; i >= 0; i--) {
             const rr2 = rows[i];
-            const hasValue = (rr2?.c ?? []).some((cell: any) => cell && cell.v != null && cell.v !== "");
+            const hasValue = (rr2?.c ?? []).some(
+              (cell: any) => cell && cell.v != null && cell.v !== "",
+            );
             if (hasValue) {
               lastRow = rr2;
               break;
@@ -79,7 +92,7 @@ export default function Analyses() {
             categories,
           } as ResortAveragesResponse;
         } catch (err2) {
-          console.error('Direct Google Sheets fallback failed:', err2);
+          console.error("Direct Google Sheets fallback failed:", err2);
           throw err;
         }
       }
@@ -93,11 +106,19 @@ export default function Analyses() {
       {isLoading || !data ? (
         <div className="w-full max-w-6xl animate-pulse h-96 rounded-md bg-gray-200" />
       ) : isError ? (
-        <div className="text-sm text-destructive">Impossible de charger les données.</div>
+        <div className="text-sm text-destructive">
+          Impossible de charger les données.
+        </div>
       ) : (
         <div className="w-full max-w-6xl bg-white rounded-md p-4 shadow-sm">
-          <h3 className="text-lg font-semibold mb-3">Tendances Temporelles - Hotel</h3>
-          <ChartOnly data={data.categories} chartType="bar" id="chart-wrapper" />
+          <h3 className="text-lg font-semibold mb-3">
+            Tendances Temporelles - Hotel
+          </h3>
+          <ChartOnly
+            data={data.categories}
+            chartType="bar"
+            id="chart-wrapper"
+          />
         </div>
       )}
     </div>
