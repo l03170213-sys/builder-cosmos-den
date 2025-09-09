@@ -59,7 +59,7 @@ export default function Index() {
       try {
         const selected = selectedResortKey;
         const cfg = currentResort;
-        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
+        const url = new URL(`/.netlify/functions/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
           const text = await r.text().catch(() => r.statusText);
@@ -139,7 +139,7 @@ export default function Index() {
       try {
         const selected = selectedResortKey;
         const cfg = currentResort;
-        const url = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
+        const url = new URL(`/.netlify/functions/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
           const text = await r.text().catch(() => r.statusText);
