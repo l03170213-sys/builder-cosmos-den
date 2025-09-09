@@ -348,56 +348,55 @@ export default function Repondants() {
           <h2 className="text-2xl font-semibold mb-4">Répondants</h2>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Liste des Répondants ({isLoading ? '…' : data?.length ?? 0})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading && <div>Chargement…</div>}
-              {isError && <div className="text-red-600">Impossible de charger les répondants.</div>}
+            <CardContent className="p-0">
+              <div className="font-normal px-6 pb-6">
+                {isLoading && <div>Chargement…</div>}
+                {isError && <div className="text-red-600">Impossible de charger les répondants.</div>}
 
-              {data && (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 table-auto">
-                    <thead className="bg-white">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Email</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Note Général</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Date</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Âges</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Code postal</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Durée du voyage</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
-                      {(data.items || []).map((row: any, i: number) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-600">{row.email}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{row.note ? formatAverage(row.note) : '—'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{formatDateToFR(row.date)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{row.age || '—'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{row.postal}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">{row.duration}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700">
-                            <button onClick={() => { setSelected(row); setDialogOpen(true); }} className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100">
-                              <Eye className="h-4 w-4" />
-                            </button>
-                          </td>
+                {data && (
+                  <div className="overflow-x-auto overflow-y-auto">
+                    <table className="min-w-full divide-y divide-gray-200 table-auto">
+                      <thead className="bg-white">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Email</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Note Général</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Date</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Âges</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Code postal</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Durée du voyage</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-100">
+                        {(data.items || []).map((row: any, i: number) => (
+                          <tr key={i} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm text-gray-600">{row.email}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{row.note ? formatAverage(row.note) : '—'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{formatDateToFR(row.date)}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{row.age || '—'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{row.postal}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{row.duration}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">
+                              <button onClick={() => { setSelected(row); setDialogOpen(true); }} className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100">
+                                <Eye className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
 
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="text-sm text-muted-foreground">Affichage {((data.page-1)*data.pageSize)+1} - {Math.min(data.total, data.page*data.pageSize)} sur {data.total}</div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setPage(Math.max(1, page-1))} disabled={page<=1} className="px-3 py-1 border rounded">Préc</button>
-                      <div className="text-sm">Page {data.page} / {Math.max(1, Math.ceil(data.total / data.pageSize))}</div>
-                      <button onClick={() => setPage(Math.min(Math.max(1, Math.ceil(data.total/data.pageSize)), page+1))} disabled={page>=Math.ceil(data.total/data.pageSize)} className="px-3 py-1 border rounded">Suiv</button>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="text-sm text-muted-foreground">Affichage {((data.page-1)*data.pageSize)+1} - {Math.min(data.total, data.page*data.pageSize)} sur {data.total}</div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setPage(Math.max(1, page-1))} disabled={page<=1} className="px-3 py-1 border rounded">Préc</button>
+                        <div className="text-sm">Page {data.page} / {Math.max(1, Math.ceil(data.total / data.pageSize))}</div>
+                        <button onClick={() => setPage(Math.min(Math.max(1, Math.ceil(data.total/data.pageSize)), page+1))} disabled={page>=Math.ceil(data.total/data.pageSize)} className="px-3 py-1 border rounded">Suiv</button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </CardContent>
           </Card>
 
