@@ -31,7 +31,7 @@ export default function Analyses() {
 
       try {
         const selected = selectedResortKey;
-        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
+        const url = new URL(`/.netlify/functions/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) {
           const text = await r.text().catch(() => r.statusText);
