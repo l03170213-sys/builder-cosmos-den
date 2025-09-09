@@ -171,17 +171,20 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
           let overallVal: string | null = null;
 
-          // try to find col label in matrice matching email or name
+          // try to find col label in matrice matching email or name and remember column index
+          let respColIndex = -1;
           for (let ci = 0; ci < mcols.length; ci++) {
             const lbl = (mcols[ci] || '').toString().trim().toLowerCase();
             if (!lbl) continue;
             if (emailVal && lbl.includes(emailVal)) {
+              respColIndex = ci;
               const lastRow = mrows[mrows.length - 1];
               const cell = lastRow && lastRow.c && lastRow.c[ci];
               overallVal = cell && cell.v != null ? String(cell.v) : overallVal;
               break;
             }
             if (nameVal && lbl.includes(nameVal)) {
+              respColIndex = ci;
               const lastRow = mrows[mrows.length - 1];
               const cell = lastRow && lastRow.c && lastRow.c[ci];
               overallVal = cell && cell.v != null ? String(cell.v) : overallVal;
@@ -190,16 +193,65 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           }
 
           // if not found, use the last row of the matrice (global averages) and pick column L (11)
+          let lastRow: any = mrows[mrows.length - 1];
+          let lastRowCells: any[] = lastRow ? (lastRow.c || []) : [];
+          const overallIdx = lastRow ? (11 < lastRowCells.length ? 11 : Math.max(0, lastRowCells.length - 1)) : 11;
           if (!overallVal) {
-            const lastRow = mrows[mrows.length - 1];
             if (lastRow) {
-              const lcells = lastRow.c || [];
-              const overallIdx = 11 < lcells.length ? 11 : Math.max(0, lcells.length - 1);
-              const c = lcells[overallIdx];
+              const c = lastRowCells[overallIdx];
               overallVal = c && c.v != null ? String(c.v) : null;
             }
           }
 
+          // Rebuild categories using matrice values when possible, otherwise fall back to sheet1 scells
+          const fixedCategoryMapping = [
+            { colIndex: 0, name: 'Nom' },
+            { colIndex: 1, name: '🌟 APPRÉCIATION GLOBALE' },
+            { colIndex: 2, name: '✈️ TRANSPORTS Aérien' },
+            { colIndex: 3, name: '🚐 Car navette' },
+            { colIndex: 4, name: '🏨 HÉBERGEMENT' },
+            { colIndex: 5, name: '🛏️ CHAMBRES' },
+            { colIndex: 6, name: '🏊 PISCINE' },
+            { colIndex: 7, name: '🎉 ANIMATION' },
+            { colIndex: 8, name: '👥 ÉQUIPES' },
+            { colIndex: 9, name: '🤝 Représentant Top of Travel' },
+            { colIndex: 10, name: '🌍 EXCURSIONS' },
+            { colIndex: 11, name: 'MOYENNE GÉNÉRALE' },
+          ];
+
+          const newCats: { name: string; value: string }[] = [];
+          for (const m of fixedCategoryMapping) {
+            let val = '';
+            // Nom comes from sheet1 first column if present
+            if (m.colIndex === 0) {
+              val = scells[0] && scells[0].v != null ? String(scells[0].v) : '';
+            } else if (m.colIndex === 11) {
+              // MOYENNE GLOBALE: prefer per-respondent value from last row if respColIndex known
+              if (respColIndex !== -1 && lastRow && lastRow.c && lastRow.c[respColIndex] && lastRow.c[respColIndex].v != null) {
+                val = String(lastRow.c[respColIndex].v);
+              } else if (lastRow && lastRow.c && lastRow.c[overallIdx] && lastRow.c[overallIdx].v != null) {
+                val = String(lastRow.c[overallIdx].v);
+              } else {
+                val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : '';
+              }
+            } else {
+              // Other categories: row in matrice corresponding to (colIndex - 1)
+              const rowIndex = m.colIndex - 1;
+              const mrow = mrows[rowIndex];
+              if (mrow && respColIndex !== -1 && mrow.c && mrow.c[respColIndex] && mrow.c[respColIndex].v != null) {
+                val = String(mrow.c[respColIndex].v);
+              } else if (mrow && mrow.c && mrow.c[overallIdx] && mrow.c[overallIdx].v != null) {
+                // fallback: take the value from the overall column if present in that row
+                val = String(mrow.c[overallIdx].v);
+              } else {
+                // final fallback: use sheet1 raw value if available
+                val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : '';
+              }
+            }
+            newCats.push({ name: m.name, value: val });
+          }
+
+          result.categories = newCats;
           result.overall = overallVal;
         }
       } catch (e) {
