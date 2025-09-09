@@ -111,6 +111,45 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
     const sheet1RowIdx = findRespondentRowInSheet1();
 
+    // helper to finalize result for Pestana: force category order and overall from column L when possible
+    const finalizeAndSend = (result: any, scells?: any[], mrows?: any[], lastRow?: any, respColIndex?: number, overallIdx?: number) => {
+      if (isPestana) {
+        const cats: { name: string; value: string }[] = [];
+        // prefer matrice values per-respondent when available
+        for (let i = 0; i < PESTANA_CATEGORY_NAMES.length; i++) {
+          const catName = PESTANA_CATEGORY_NAMES[i];
+          let val = '';
+          const rowIndex = i + 1; // mapping: category rows start at index 1 in matrice
+          if (mrows && typeof respColIndex === 'number' && respColIndex !== -1) {
+            const mrow = mrows[rowIndex];
+            if (mrow && mrow.c && mrow.c[respColIndex] && mrow.c[respColIndex].v != null) {
+              val = String(mrow.c[respColIndex].v);
+            }
+          }
+          // fallback to matrice overall column for that row
+          if (!val && mrows && typeof overallIdx === 'number') {
+            const mrow = mrows[rowIndex];
+            if (mrow && mrow.c && mrow.c[overallIdx] && mrow.c[overallIdx].v != null) val = String(mrow.c[overallIdx].v);
+          }
+          // fallback to scells if present (sheet1 raw respondent row)
+          if (!val && scells) {
+            const fallbackCell = scells[rowIndex];
+            if (fallbackCell && fallbackCell.v != null) val = String(fallbackCell.v);
+          }
+          cats.push({ name: catName, value: val });
+        }
+        result.categories = cats;
+
+        // overall: prefer scells column L (index 11) if present, else matrice per-respondent value, else matrice overall
+        let overall = result.overall || null;
+        if (scells && scells[11] && scells[11].v != null) overall = String(scells[11].v);
+        else if (mrows && typeof respColIndex === 'number' && respColIndex !== -1 && lastRow && lastRow.c && lastRow.c[respColIndex] && lastRow.c[respColIndex].v != null) overall = String(lastRow.c[respColIndex].v);
+        else if (lastRow && typeof overallIdx === 'number' && lastRow.c && lastRow.c[overallIdx] && lastRow.c[overallIdx].v != null) overall = String(lastRow.c[overallIdx].v);
+        result.overall = overall;
+      }
+      return res.status(200).json(result);
+    };
+
     // Extract per-category values from sheet1 row if found
     if (sheet1RowIdx !== -1) {
       const srow = srows[sheet1RowIdx];
