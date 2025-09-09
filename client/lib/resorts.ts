@@ -9,4 +9,9 @@ export const RESORTS = [
   { key: 'aquasun-village-crete', name: "Hôtel Aquasun Village - Crête", sheetId: '1Df7h7P7TRwomlx2RKHPxPNWzsO5INjqGnUfF1BpWA8w', gidMatrice: '1085505154' },
   { key: 'atlantica-oasis-chypre', name: "Hôtel Atlantica Oasis - Chypre", sheetId: '1GQ6UJXL7eiRU9pDbyzHWC-lQpASUgiJtm52nNqI8KNE', gidMatrice: '879100003' },
   { key: 'pestana-royal-ocean-madeira', name: "Hôtel Pestana Royal Océan - Madère", sheetId: '1e47IUWqQv-8Oh5-JJADgu9rfNW_6Iuw_OXzAIdLnBic', gidMatrice: '1752837685' },
+  { key: 'monchique-portugal', name: "Hôtel Monchique - Portugal", sheetId: '1LyUJwlEfSEsNkeBOdUOhmXPkY70dkcKkcCF19--y2Dk', gidMatrice: '373485969' },
+  { key: 'dom-pedro-madeira', name: "Hôtel Dom Pedro Madeira - Madère", sheetId: '127fqvrErex8BDwkaE2VUugD4WHMn47SPENhrIQCYo-U', gidMatrice: '862214363' },
+  { key: 'gabbiano-italie', name: "Hôtel Gabbiano - Italie", sheetId: '1E4vOTv3m7uUuCZ889rvwTXduFThcrRGGsbaJu4aJYks', gidMatrice: '358504289' },
+  { key: 'albatros-croatie', name: "Hôtel Albatros - Croatie", sheetId: '1iOXnFYJrr5v6XD7Upu9wsoJlPnBeMQJgcRq0HQVmcto', gidMatrice: '524730423' },
+  { key: 'delphin-montenegro', name: "Hôtel Delphin - Monténégro", sheetId: '1ToPI9UtLbTwZrY8pX_4vT71dOPn35ZvOGKlKCNWWctU', gidMatrice: '831268452' },
 ];
