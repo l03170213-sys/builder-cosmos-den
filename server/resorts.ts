@@ -4,11 +4,6 @@ export const RESORTS: Record<string, { sheetId: string; gidMatrice?: string; nam
     gidMatrice: "1104314362",
     name: "VM Resort - Albanie",
   },
-  "pestana-royal-ocean-madeira": {
-    sheetId: "1e47IUWqQv-8Oh5-JJADgu9rfNW_6Iuw_OXzAIdLnBic",
-    gidMatrice: "1159725488",
-    name: "Hôtel Pestana Royal Océan - Madère",
-  },
   "alvor-baia-portugal": {
     sheetId: "1mm2VGYefOx37T7_h6VZGN6Gt4mtF9njVOS344FaeyR0",
     gidMatrice: "2128033065",
