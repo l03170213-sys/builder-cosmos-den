@@ -67,7 +67,7 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       obj.id = r + 1;
       obj.label = cellToString(c[0]);
       obj.email = emailCol !== -1 ? cellToString(c[emailCol]) : '';
-      obj.note = resolvedNoteCol !== -1 ? cellToString(c[resolvedNoteCol]) : '';
+      obj.note = '';
       obj.date = dateCol !== -1 ? cellToString(c[dateCol]) : '';
       obj.age = ageCol !== -1 ? cellToString(c[ageCol]) : '';
       obj.postal = postalCol !== -1 ? cellToString(c[postalCol]) : '';
@@ -78,6 +78,112 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       if (!obj.email && obj.label && obj.label.includes('@')) obj.email = obj.label;
 
       respondents.push(obj);
+    }
+
+    // Try to enrich respondents with overall note from matrice sheet (column L / index 11)
+    try {
+      if (cfg.gidMatrice) {
+        const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${cfg.gidMatrice}`;
+        const mr = await fetch(mgurl);
+        if (mr.ok) {
+          const mtext = await mr.text();
+          const mjson = parseGviz(mtext);
+          const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || '').toString());
+          const mrows: any[] = mjson.table.rows || [];
+
+          // Build column-label map (lowercase) for cols-as-respondents scenario
+          const colLabelLower = mcols.map(c => (c || '').toString().trim().toLowerCase());
+
+          // For convenience, build a map of respondent email/name -> index in respondents array
+          const byEmail: Record<string, number[]> = {};
+          const byLabel: Record<string, number[]> = {};
+          respondents.forEach((resp, idx) => {
+            const e = (resp.email || '').toString().trim().toLowerCase();
+            const l = (resp.label || '').toString().trim().toLowerCase();
+            if (e) { byEmail[e] = byEmail[e] || []; byEmail[e].push(idx); }
+            if (l) { byLabel[l] = byLabel[l] || []; byLabel[l].push(idx); }
+          });
+
+          // Try cols-as-respondents: if any column label matches an email or label
+          let foundCols = false;
+          for (let ci = 0; ci < colLabelLower.length; ci++) {
+            const lbl = colLabelLower[ci];
+            if (!lbl) continue;
+            // exact match
+            if (byEmail[lbl]) {
+              for (const ridx of byEmail[lbl]) {
+                // overall value usually is in the last row of the matrix for that column
+                const lastRow = mrows[mrows.length - 1];
+                const overallCell = lastRow && lastRow.c && lastRow.c[ci];
+                respondents[ridx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[ridx].note;
+              }
+              foundCols = true;
+              continue;
+            }
+            if (byLabel[lbl]) {
+              for (const ridx of byLabel[lbl]) {
+                const lastRow = mrows[mrows.length - 1];
+                const overallCell = lastRow && lastRow.c && lastRow.c[ci];
+                respondents[ridx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[ridx].note;
+              }
+              foundCols = true;
+              continue;
+            }
+            // partial match: label includes email or name
+            for (const eKey of Object.keys(byEmail)) {
+              if (lbl.includes(eKey) && eKey) {
+                for (const ridx of byEmail[eKey]) {
+                  const lastRow = mrows[mrows.length - 1];
+                  const overallCell = lastRow && lastRow.c && lastRow.c[ci];
+                  respondents[ridx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[ridx].note;
+                }
+                foundCols = true;
+              }
+            }
+            for (const lKey of Object.keys(byLabel)) {
+              if (lbl.includes(lKey) && lKey) {
+                for (const ridx of byLabel[lKey]) {
+                  const lastRow = mrows[mrows.length - 1];
+                  const overallCell = lastRow && lastRow.c && lastRow.c[ci];
+                  respondents[ridx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[ridx].note;
+                }
+                foundCols = true;
+              }
+            }
+          }
+
+          // If no cols-as-respondents mapping found, try rows-as-respondents
+          if (!foundCols) {
+            for (let ri = 0; ri < mrows.length; ri++) {
+              const rrow = mrows[ri];
+              const cells = rrow.c || [];
+              // build lowercase cell string list
+              const lowerCells = cells.map((cell: any) => (cell && cell.v != null ? String(cell.v).trim().toLowerCase() : ''));
+              for (const [eKey, idxs] of Object.entries(byEmail)) {
+                for (const idx of idxs) {
+                  if (lowerCells.includes(eKey)) {
+                    // overall is at column index 11 if available
+                    const overallIdx = (cells[11] && cells[11].v != null) ? 11 : Math.max(0, cells.length - 1);
+                    const overallCell = cells[overallIdx];
+                    respondents[idx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[idx].note;
+                  }
+                }
+              }
+              for (const [lKey, idxs] of Object.entries(byLabel)) {
+                for (const idx of idxs) {
+                  if (lowerCells.includes(lKey)) {
+                    const overallIdx = (cells[11] && cells[11].v != null) ? 11 : Math.max(0, cells.length - 1);
+                    const overallCell = cells[overallIdx];
+                    respondents[idx].note = overallCell && overallCell.v != null ? String(overallCell.v) : respondents[idx].note;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to enrich respondents from matrice:', e);
     }
 
     res.status(200).json(respondents);
