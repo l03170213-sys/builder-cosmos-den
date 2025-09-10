@@ -344,18 +344,72 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         return s || '';
       }
 
-      const cats: { name: string; value: string }[] = [];
-      // read B..K (indices 1..10) from sheet1 for categories, and enforce I/J/K mapping for the last three
-      for (let i = 1; i <= 10; i++) {
-        const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
-        let cellIndex = i;
-        // explicit enforcement: ensure ÉQUIPES (col I), Représentant (col J), EXCURSIONS (col K) map to indices 8,9,10 in sheet1
-        if (name === '👥 ÉQUIPES') cellIndex = 8;
-        if (name === '🤝 Représentant Top of Travel') cellIndex = 9;
-        if (name === '🌍 EXCURSIONS') cellIndex = 10;
-        const cell = scells[cellIndex];
-        const val = parseRatingCell(cell);
-        cats.push({ name, value: val });
+      // Try to prefer values from the matrice row that corresponds to this respondent
+      let cats: { name: string; value: string }[] = [];
+      try {
+        const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
+        const mr = await fetch(mgurl);
+        if (mr.ok) {
+          const mtext = await mr.text();
+          const mjson = parseGviz(mtext);
+          const mrows: any[] = mjson.table.rows || [];
+
+          const targetName = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
+          const targetEmail = (srow.c && srow.c[3] && srow.c[3].v != null) ? String(srow.c[3].v).trim().toLowerCase() : '';
+
+          let matchedRow: any = null;
+          for (let ri = 0; ri < mrows.length; ri++) {
+            const mrow = mrows[ri];
+            const cells = mrow.c || [];
+            const first = (cells[0] && (cells[0].v != null ? String(cells[0].v) : cellToString(cells[0]))) || '';
+            const firstNorm = first.toString().trim().toLowerCase();
+            if (firstNorm && targetName && (firstNorm === targetName || firstNorm.includes(targetName) || targetName.includes(firstNorm))) { matchedRow = mrow; break; }
+            // search any cell for email or name
+            const norm = (cells || []).map((c: any) => (c && c.v != null ? String(c.v).toString().trim().toLowerCase() : cellToString(c).toString().trim().toLowerCase()));
+            if (targetEmail && norm.some(v => v && (v === targetEmail || v.includes(targetEmail)))) { matchedRow = mrow; break; }
+            if (targetName && norm.some(v => v && (v === targetName || v.includes(targetName)))) { matchedRow = mrow; break; }
+          }
+
+          if (matchedRow) {
+            const cells = matchedRow.c || [];
+            for (let i = 1; i <= 10; i++) {
+              const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+              cats.push({ name, value: cells[i] ? parseRatingCell(cells[i]) : '' });
+            }
+            // set overall from column L of matched row later in overall logic
+          } else {
+            // fallback to reading sheet1 scells (may be 'OUI')
+            for (let i = 1; i <= 10; i++) {
+              const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+              // enforce fixed indices for last three
+              let cellIndex = i;
+              if (name === '👥 ÉQUIPES') cellIndex = 8;
+              if (name === '🤝 Représentant Top of Travel') cellIndex = 9;
+              if (name === '🌍 EXCURSIONS') cellIndex = 10;
+              cats.push({ name, value: parseRatingCell(scells[cellIndex]) });
+            }
+          }
+        } else {
+          // couldn't fetch matrice, fallback to sheet1
+          for (let i = 1; i <= 10; i++) {
+            const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+            let cellIndex = i;
+            if (name === '👥 ÉQUIPES') cellIndex = 8;
+            if (name === '🤝 Représentant Top of Travel') cellIndex = 9;
+            if (name === '🌍 EXCURSIONS') cellIndex = 10;
+            cats.push({ name, value: parseRatingCell(scells[cellIndex]) });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to use matrice row for respondent categories:', e);
+        for (let i = 1; i <= 10; i++) {
+          const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+          let cellIndex = i;
+          if (name === '👥 ÉQUIPES') cellIndex = 8;
+          if (name === '🤝 Représentant Top of Travel') cellIndex = 9;
+          if (name === '🌍 EXCURSIONS') cellIndex = 10;
+          cats.push({ name, value: parseRatingCell(scells[cellIndex]) });
+        }
       }
 
       // prepare a result skeleton; overall & feedback to be resolved below
