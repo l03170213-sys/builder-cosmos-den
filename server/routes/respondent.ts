@@ -498,11 +498,11 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             let overallValFromMatrice: string | null = null;
             if (isPestana) {
               const c = lastRowCells[11];
-              overallValFromMatrice = c && c.v != null ? String(c.v) : null;
+              overallValFromMatrice = c ? parseRatingCell(c) : null;
             } else {
               // for other resorts prefer respondent column at last row
               const c = lastRow && lastRow.c && lastRow.c[respColIndex];
-              overallValFromMatrice = c && c.v != null ? String(c.v) : null;
+              overallValFromMatrice = c ? parseRatingCell(c) : null;
             }
 
             result.categories = [
