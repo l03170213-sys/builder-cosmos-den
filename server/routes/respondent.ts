@@ -357,21 +357,21 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           const targetName = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
           const targetEmail = (srow.c && srow.c[3] && srow.c[3].v != null) ? String(srow.c[3].v).trim().toLowerCase() : '';
 
-          let matchedRow: any = null;
+          let matchedMatriceRow: any = null;
           for (let ri = 0; ri < mrows.length; ri++) {
             const mrow = mrows[ri];
             const cells = mrow.c || [];
             const first = (cells[0] && (cells[0].v != null ? String(cells[0].v) : cellToString(cells[0]))) || '';
             const firstNorm = first.toString().trim().toLowerCase();
-            if (firstNorm && targetName && (firstNorm === targetName || firstNorm.includes(targetName) || targetName.includes(firstNorm))) { matchedRow = mrow; break; }
+            if (firstNorm && targetName && (firstNorm === targetName || firstNorm.includes(targetName) || targetName.includes(firstNorm))) { matchedMatriceRow = mrow; break; }
             // search any cell for email or name
             const norm = (cells || []).map((c: any) => (c && c.v != null ? String(c.v).toString().trim().toLowerCase() : cellToString(c).toString().trim().toLowerCase()));
-            if (targetEmail && norm.some(v => v && (v === targetEmail || v.includes(targetEmail)))) { matchedRow = mrow; break; }
-            if (targetName && norm.some(v => v && (v === targetName || v.includes(targetName)))) { matchedRow = mrow; break; }
+            if (targetEmail && norm.some(v => v && (v === targetEmail || v.includes(targetEmail)))) { matchedMatriceRow = mrow; break; }
+            if (targetName && norm.some(v => v && (v === targetName || v.includes(targetName)))) { matchedMatriceRow = mrow; break; }
           }
 
-          if (matchedRow) {
-            const cells = matchedRow.c || [];
+          if (matchedMatriceRow) {
+            const cells = matchedMatriceRow.c || [];
             for (let i = 1; i <= 10; i++) {
               const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
               cats.push({ name, value: cells[i] ? parseRatingCell(cells[i]) : '' });
