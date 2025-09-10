@@ -483,13 +483,14 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               // fallback to index-based row (i-1)
               if (foundRow === -1) foundRow = i - 1;
               const mrow = mrows[foundRow];
-              const val =
-                mrow &&
-                mrow.c &&
-                mrow.c[respColIndex] &&
-                mrow.c[respColIndex].v != null
-                  ? String(mrow.c[respColIndex].v)
-                  : "";
+              let val = "";
+              if (mrow && mrow.c) {
+                const cell = mrow.c[respColIndex];
+                if (cell && cell.v != null) val = parseRatingCell(cell);
+                else if (overallIdx != null && mrow.c[overallIdx] && mrow.c[overallIdx].v != null) val = parseRatingCell(mrow.c[overallIdx]);
+              }
+              // fallback to sheet1 scells if present
+              if (!val && scells && scells[foundRow]) val = parseRatingCell(scells[foundRow]);
               newCats.push({ name: catName, value: val });
             }
 
