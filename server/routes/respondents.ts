@@ -155,11 +155,24 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
               const cells = (mrows[ri].c || []) as any[];
               // build normalized cell strings using cellToString
               const normCells = cells.map((cell: any) => (cellToString(cell) || '').toString().trim().toLowerCase());
-              // try exact or includes match on email then label
+
+              // PRIORITY 1: match respondent name against first column of matrice row
+              if (lKey) {
+                const firstCell = (cellToString(cells[0]) || '').toString().trim().toLowerCase();
+                if (firstCell && (firstCell === lKey || firstCell.includes(lKey) || lKey.includes(firstCell))) {
+                  const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+                  const overallCell = cells[overallIdx];
+                  if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
+                  matched = true;
+                  break;
+                }
+              }
+
+              // PRIORITY 2: exact email match anywhere in row
               if (eKey) {
                 for (const txt of normCells) {
                   if (!txt) continue;
-                  if (txt === eKey || txt.includes(eKey) || eKey.includes(txt)) {
+                  if (txt === eKey) {
                     const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
                     const overallCell = cells[overallIdx];
                     if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
@@ -167,12 +180,28 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
                     break;
                   }
                 }
+                if (matched) break;
               }
-              if (matched) break;
+
+              // PRIORITY 3: partial email or name match anywhere in row
+              if (eKey) {
+                for (const txt of normCells) {
+                  if (!txt) continue;
+                  if (txt.includes(eKey) || eKey.includes(txt)) {
+                    const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+                    const overallCell = cells[overallIdx];
+                    if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
+                    matched = true;
+                    break;
+                  }
+                }
+                if (matched) break;
+              }
+
               if (lKey) {
                 for (const txt of normCells) {
                   if (!txt) continue;
-                  if (txt === lKey || txt.includes(lKey) || lKey.includes(txt)) {
+                  if (txt.includes(lKey) || lKey.includes(txt)) {
                     const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
                     const overallCell = cells[overallIdx];
                     if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
@@ -180,8 +209,8 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
                     break;
                   }
                 }
+                if (matched) break;
               }
-              if (matched) break;
             }
           }
 
