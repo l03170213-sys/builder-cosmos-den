@@ -317,6 +317,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         metaIdxs.add(feedbackColExactInSheet1);
       if (71 < scells.length) metaIdxs.add(71);
 
+      // Force fixed mapping for sheet1 columns: ensure specific categories come from exact columns
       const fixedCategoryMapping = [
         { colIndex: 0, name: "Nom" },
         { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
@@ -327,16 +328,34 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 6, name: "🏊 PISCINE" },
         { colIndex: 7, name: "🎉 ANIMATION" },
         { colIndex: 8, name: "👥 ÉQUIPES" },
-        { colIndex: 9, name: "�� Représentant Top of Travel" },
+        { colIndex: 9, name: "🤝 Représentant Top of Travel" },
         { colIndex: 10, name: "🌍 EXCURSIONS" },
         { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
       ];
 
+      // helper: parse rating-like cell to readable string, prefer numeric within 0-5
+      function parseRatingCell(cell: any) {
+        const s = cellToString(cell);
+        const m = s && s.match && s.match(/-?\d+[.,]?\d*/g);
+        if (m && m.length) {
+          const n = Number(String(m[0]).replace(',', '.'));
+          if (Number.isFinite(n) && n >= 0 && n <= 5) return String(Number(n.toFixed(2)));
+        }
+        return s || '';
+      }
+
       const cats: { name: string; value: string }[] = [];
-      for (const m of fixedCategoryMapping) {
-        const cell = scells[m.colIndex];
-        const val = cellToString(cell);
-        cats.push({ name: m.name, value: val });
+      // read B..K (indices 1..10) from sheet1 for categories, and enforce I/J/K mapping for the last three
+      for (let i = 1; i <= 10; i++) {
+        const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
+        let cellIndex = i;
+        // explicit enforcement: ensure ÉQUIPES (col I), Représentant (col J), EXCURSIONS (col K) map to indices 8,9,10 in sheet1
+        if (name === '👥 ÉQUIPES') cellIndex = 8;
+        if (name === '🤝 Représentant Top of Travel') cellIndex = 9;
+        if (name === '🌍 EXCURSIONS') cellIndex = 10;
+        const cell = scells[cellIndex];
+        const val = parseRatingCell(cell);
+        cats.push({ name, value: val });
       }
 
       // prepare a result skeleton; overall & feedback to be resolved below
