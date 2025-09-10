@@ -326,7 +326,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 4, name: "🏨 HÉBERGEMENT" },
         { colIndex: 5, name: "🛏️ CHAMBRES" },
         { colIndex: 6, name: "🏊 PISCINE" },
-        { colIndex: 7, name: "🎉 ANIMATION" },
+        { colIndex: 7, name: "�� ANIMATION" },
         { colIndex: 8, name: "👥 ÉQUIPES" },
         { colIndex: 9, name: "🤝 Représentant Top of Travel" },
         { colIndex: 10, name: "🌍 EXCURSIONS" },
@@ -430,6 +430,18 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         fcell = scells[feedbackColExactInSheet1];
       else if (scells[71] && scells[71].v != null) fcell = scells[71];
       result.feedback = fcell ? String(fcell.v) : null;
+
+      // Prefer overall from matched matrice row column L (index 11) if available
+      try {
+        if (typeof matchedMatriceRow !== 'undefined' && matchedMatriceRow && matchedMatriceRow.c && matchedMatriceRow.c[11] && matchedMatriceRow.c[11].v != null) {
+          result.overall = String(matchedMatriceRow.c[11].v);
+        } else if (scells && scells[11] && scells[11].v != null) {
+          // fallback to sheet1 column L if present
+          result.overall = String(scells[11].v);
+        }
+      } catch (e) {
+        console.error('Error while determining respondent overall from matched matrice row:', e);
+      }
 
       // Now fetch matrice to determine 'overall' (Note général) from column L (index 11) mapped to this respondent
       try {
