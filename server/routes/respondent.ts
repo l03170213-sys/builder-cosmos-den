@@ -75,7 +75,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
   try {
     const resortKey = req.params.resort as string;
     const cfg = RESORTS[resortKey];
-    if (!cfg) return res.status(404).json({ error: "Unknown resort" });
+    // enable debug when explicit flag is set or when requesting respondent named KIEHL
+    const isDebug = (req.query.debug === '1') || ((req.query.name || '').toString().trim().toLowerCase() === 'kiehl');
+    if (!cfg) {
+      if (isDebug) return res.status(404).json({ error: "Unknown resort", _debug: { resortKey } });
+      return res.status(404).json({ error: "Unknown resort" });
+    }
 
     const SHEET_ID = cfg.sheetId;
     const GID_MATRICE_MOYENNE = cfg.gidMatrice ?? "0";
@@ -108,10 +113,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     // First, fetch sheet1 (respondents raw sheet) to extract per-respondent category values and feedback
     const sheet1Url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
     const sr = await fetch(sheet1Url);
-    if (!sr.ok)
-      return res
-        .status(502)
-        .json({ error: "Unable to fetch sheet1 (respondents)" });
+    if (!sr.ok) {
+      if (isDebug) {
+        return res.status(502).json({ error: "Unable to fetch sheet1 (respondents)", _debug: { sheet1Url, status: sr.status } });
+      }
+      return res.status(502).json({ error: "Unable to fetch sheet1 (respondents)" });
+    }
     const stext = await sr.text();
     const sjson = parseGviz(stext);
     const scols: string[] = (sjson.table.cols || []).map((c: any) =>
@@ -675,8 +682,10 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     // If respondent not found in sheet1, fall back to previous matrice-first logic
     const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
     const rr = await fetch(gurl);
-    if (!rr.ok)
+    if (!rr.ok) {
+      if (isDebug) return res.status(502).json({ error: "Unable to fetch matrice", _debug: { gurl, status: rr.status } });
       return res.status(502).json({ error: "Unable to fetch matrice" });
+    }
     const text = await rr.text();
     const json = parseGviz(text);
     const cols: string[] = (json.table.cols || []).map((c: any) =>
@@ -983,6 +992,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       console.error("sheet1 mapping attempt failed:", e);
     }
 
+    if (isDebug) return res.status(404).json({ error: "Respondent not found in matrice", _debug: { sheet1RowIdx: typeof sheet1RowIdx !== 'undefined' ? sheet1RowIdx : null } });
     return res.status(404).json({ error: "Respondent not found in matrice" });
   } catch (err) {
     console.error("Failed to fetch respondent details:", err);
