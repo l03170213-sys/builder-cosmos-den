@@ -358,58 +358,73 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           const targetName = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
           const targetEmail = (srow.c && srow.c[3] && srow.c[3].v != null) ? String(srow.c[3].v).trim().toLowerCase() : '';
 
+          // normalize helper to strip diacritics and collapse spaces for robust matching
+          function normalizeDiacritics(s: string) {
+            if (!s) return '';
+            try {
+              return s
+                .toString()
+                .normalize('NFD')
+                .replace(/\p{Diacritic}/gu, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+            } catch (e) {
+              return s.toString().trim().toLowerCase();
+            }
+          }
+
           matchedMatriceRow = null;
           for (let ri = 0; ri < mrows.length; ri++) {
             const mrow = mrows[ri];
             const cells = mrow.c || [];
-            const first = (cells[0] && (cells[0].v != null ? String(cells[0].v) : cellToString(cells[0]))) || '';
-            const firstNorm = first.toString().trim().toLowerCase();
-            if (firstNorm && targetName && (firstNorm === targetName || firstNorm.includes(targetName) || targetName.includes(firstNorm))) { matchedMatriceRow = mrow; break; }
-            // search any cell for email or name
-            const norm = (cells || []).map((c: any) => (c && c.v != null ? String(c.v).toString().trim().toLowerCase() : cellToString(c).toString().trim().toLowerCase()));
-            if (targetEmail && norm.some(v => v && (v === targetEmail || v.includes(targetEmail)))) { matchedMatriceRow = mrow; break; }
-            if (targetName && norm.some(v => v && (v === targetName || v.includes(targetName)))) { matchedMatriceRow = mrow; break; }
+            const firstRaw = cellToString(cells[0]) || '';
+            const firstNorm = normalizeDiacritics(firstRaw);
+            const targetNameNorm = normalizeDiacritics(targetName);
+            const targetEmailNorm = (targetEmail || '').toString().trim().toLowerCase();
+
+            // priority: exact/normalized match on first cell (most reliable)
+            if (firstNorm && targetNameNorm && (firstNorm === targetNameNorm || firstNorm.includes(targetNameNorm) || targetNameNorm.includes(firstNorm))) {
+              matchedMatriceRow = mrow;
+              break;
+            }
+
+            // search any cell for email or normalized name tokens
+            const normCells = (cells || []).map((c: any) => normalizeDiacritics(cellToString(c)));
+            if (targetEmailNorm && normCells.some(v => v && v.includes(targetEmailNorm))) { matchedMatriceRow = mrow; break; }
+            if (targetNameNorm && normCells.some(v => v && (v.includes(targetNameNorm) || targetNameNorm.includes(v)))) { matchedMatriceRow = mrow; break; }
           }
 
           if (matchedMatriceRow) {
             const cells = matchedMatriceRow.c || [];
             for (let i = 1; i <= 10; i++) {
               const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-              cats.push({ name, value: cells[i] ? parseRatingCell(cells[i]) : '' });
+              const cell = cells[i];
+              // only accept numeric-like values from matrice (avoid 'OUI')
+              const parsed = parseRatingCell(cell);
+              // if parsed looks like a number, use it, else keep empty string
+              cats.push({ name, value: parsed && parsed.match(/^-?\d+(?:[.,]\d+)?$/) ? parsed : '' });
             }
-            // set overall from column L of matched row later in overall logic
+            // overall will be taken from matchedMatriceRow column L later
           } else {
-            // fallback to reading sheet1 scells (may be 'OUI')
+            // NO FALLBACK to sheet1 for category numeric values — must come from matrice
             for (let i = 1; i <= 10; i++) {
               const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-              // enforce fixed indices for last three
-              let cellIndex = i;
-              if (name === '👥 ÉQUIPES') cellIndex = 8;
-              if (name === '🤝 Représentant Top of Travel') cellIndex = 9;
-              if (name === '🌍 EXCURSIONS') cellIndex = 10;
-              cats.push({ name, value: parseRatingCell(scells[cellIndex]) });
+              cats.push({ name, value: '' });
             }
           }
         } else {
-          // couldn't fetch matrice, fallback to sheet1
+          // couldn't fetch matrice — return empty category values (do not use sheet1 'OUI')
           for (let i = 1; i <= 10; i++) {
             const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-            let cellIndex = i;
-            if (name === '👥 ÉQUIPES') cellIndex = 8;
-            if (name === '🤝 Représentant Top of Travel') cellIndex = 9;
-            if (name === '🌍 EXCURSIONS') cellIndex = 10;
-            cats.push({ name, value: parseRatingCell(scells[cellIndex]) });
+            cats.push({ name, value: '' });
           }
         }
       } catch (e) {
         console.error('Failed to use matrice row for respondent categories:', e);
         for (let i = 1; i <= 10; i++) {
           const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-          let cellIndex = i;
-          if (name === '👥 ÉQUIPES') cellIndex = 8;
-          if (name === '🤝 Représentant Top of Travel') cellIndex = 9;
-          if (name === '🌍 EXCURSIONS') cellIndex = 10;
-          cats.push({ name, value: parseRatingCell(scells[cellIndex]) });
+          cats.push({ name, value: '' });
         }
       }
 
