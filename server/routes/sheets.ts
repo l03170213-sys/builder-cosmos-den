@@ -80,24 +80,12 @@ export const getResortAverages: RequestHandler = async (req, res) => {
 
     const categories: { name: string; average: number }[] = [];
 
-    const isPestana = resortKey === "pestana-royal-ocean-madeira";
-
-    if (isPestana) {
-      // inclure systématiquement les colonnes 1..10
-      for (let idx = 1; idx <= 10; idx++) {
-        const name = fixedCategoryMapping[idx]?.name ?? `Col ${idx}`;
-        const raw = toNumber(cells[idx]?.v);
-        const val = normalizeAverage(raw);
-        categories.push({ name, average: val ?? 0 }); // garde 0 si vide
-      }
-    } else {
-      // comportement par défaut
-      for (const m of fixedCategoryMapping) {
-        if (m.colIndex === 0 || m.colIndex === 11) continue;
-        const raw = toNumber(cells[m.colIndex]?.v);
-        const val = normalizeAverage(raw);
-        if (val != null) categories.push({ name: m.name, average: val });
-      }
+    // Unified behavior (same as VM resort): include only categories with valid numeric averages
+    for (const m of fixedCategoryMapping) {
+      if (m.colIndex === 0 || m.colIndex === 11) continue; // skip name and overall
+      const raw = toNumber(cells[m.colIndex]?.v);
+      const val = normalizeAverage(raw);
+      if (val != null) categories.push({ name: m.name, average: val });
     }
 
     // overall from column L (index 11) if available, otherwise fallback to last cell
