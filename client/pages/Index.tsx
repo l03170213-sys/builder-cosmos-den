@@ -162,71 +162,8 @@ export default function Index() {
           throw new Error(`Invalid JSON response: ${text}`);
         }
       } catch (err) {
-        console.warn(
-          "API summary fetch failed, trying direct Google Sheets fallback:",
-          err,
-        );
-        try {
-          const cfg = currentResort;
-          const gurl = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq`;
-          const rr = await fetch(gurl);
-          const text = await rr.text();
-          const data = parseGvizText(text);
-
-          const cols: string[] = (data.table.cols || []).map((c: any) =>
-            (c.label || "").toString(),
-          );
-          const rows: any[] = (data.table.rows || []) as any[];
-
-          let respondents = 0;
-          for (const row of rows) {
-            const cells = row.c || [];
-            const hasValue = cells.some(
-              (cell: any) =>
-                cell &&
-                cell.v != null &&
-                String(cell.v).toString().trim() !== "",
-            );
-            if (hasValue) respondents++;
-          }
-
-          let recCol = -1;
-          for (let i = 0; i < cols.length; i++) {
-            const label = (cols[i] || "").toLowerCase();
-            if (
-              label.includes("recommand") ||
-              label.includes("recommend") ||
-              label.includes("recommandation")
-            ) {
-              recCol = i;
-              break;
-            }
-          }
-
-          let recommendationRate: number | null = null;
-          if (recCol !== -1) {
-            let yes = 0;
-            let valid = 0;
-            for (const row of rows) {
-              const cells = row.c || [];
-              const raw = valueToString(cells[recCol]);
-              if (!raw) continue;
-              valid++;
-              const v = raw.trim().toLowerCase();
-              if (v === "oui" || v === "o" || v === "yes") yes++;
-            }
-            if (valid > 0) recommendationRate = yes / valid;
-          }
-
-          return {
-            resort: cfg.name,
-            respondents,
-            recommendationRate,
-          } as import("@shared/api").ResortSummaryResponse;
-        } catch (err2) {
-          console.error("Direct summary fallback failed:", err2);
-          throw err;
-        }
+        console.error("API summary fetch failed:", err);
+        throw err;
       }
     },
     enabled: serverAvailable !== false,
