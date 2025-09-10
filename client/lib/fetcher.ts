@@ -27,9 +27,12 @@ export async function safeFetch(u: string, opts?: RequestInit) {
   for (let attempt = 0; attempt < tryUrls.length; attempt++) {
     const url = tryUrls[attempt];
     try {
+      console.debug("safeFetch: attempting", url, "opts=", opts);
       const r = await doFetch(url);
+      console.debug("safeFetch: success", url, r.status);
       return r;
     } catch (err: any) {
+      console.warn("safeFetch: attempt failed", url, err && err.message ? err.message : err);
       lastErr = err;
       // small delay before next attempt
       await new Promise((res) => setTimeout(res, 150 * (attempt + 1)));
