@@ -326,7 +326,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 4, name: "🏨 HÉBERGEMENT" },
         { colIndex: 5, name: "🛏️ CHAMBRES" },
         { colIndex: 6, name: "🏊 PISCINE" },
-        { colIndex: 7, name: "�� ANIMATION" },
+        { colIndex: 7, name: "🎉 ANIMATION" },
         { colIndex: 8, name: "👥 ÉQUIPES" },
         { colIndex: 9, name: "🤝 Représentant Top of Travel" },
         { colIndex: 10, name: "🌍 EXCURSIONS" },
@@ -346,6 +346,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
       // Try to prefer values from the matrice row that corresponds to this respondent
       let cats: { name: string; value: string }[] = [];
+      let matchedMatriceRow: any = undefined;
       try {
         const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
         const mr = await fetch(mgurl);
