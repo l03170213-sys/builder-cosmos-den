@@ -74,7 +74,7 @@ export const RESORTS: Record<
   },
   "pestana-royal-ocean-madeira": {
     sheetId: "1e47IUWqQv-8Oh5-JJADgu9rfNW_6Iuw_OXzAIdLnBic",
-    gidMatrice: "1752837685",
+    gidMatrice: "1159725488",
     name: "Hôtel Pestana Royal Océan - Madère",
   },
   "ariel-cala-dor-majorque": {
