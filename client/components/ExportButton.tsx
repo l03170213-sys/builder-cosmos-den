@@ -230,84 +230,8 @@ export default async function exportToPdf(options: {
       .querySelectorAll(".animate-pulse")
       .forEach((el: any) => (el.className = ""));
 
-    // Right below: table generated from matrice moyenne sheet
-    const tableContainer = document.createElement("div");
-    tableContainer.style.width = "100%";
-    tableContainer.style.verticalAlign = "top";
-    tableContainer.style.marginTop = "12px";
-
+    // Insert cloned distribution only (no detailed table)
     container.appendChild(clonedList);
-    container.appendChild(tableContainer);
-
-    // Fetch matrice moyenne to build the table on the right
-    try {
-      const selectedKey =
-        window.localStorage.getItem("selectedResort") || "vm-resort-albanie";
-      const resorts = RESORTS;
-      const cfg = resorts.find((r: any) => r.key === selectedKey) || resorts[0];
-      const SHEET_ID =
-        cfg.sheetId || "1jO4REgqWiXeh3U9e2uueRoLsviB0o64Li5d39Fp38os";
-      const GID = cfg.gidMatrice || "0";
-      const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}`;
-      const rr = await safeFetch(gurl);
-      const text = await rr
-        .clone()
-        .text()
-        .catch(() => "");
-      const start = text.indexOf("(");
-      const end = text.lastIndexOf(")");
-      const json = JSON.parse(text.slice(start + 1, end));
-      const cols = (json.table.cols || []).map((c: any) =>
-        (c.label || "").toString(),
-      );
-      const rows = json.table.rows || [];
-
-      // Build a compact table: first 5 rows (or all if <=5) plus a footer 'Moyenne globale' if present as last row
-      const tbl = document.createElement("table");
-      tbl.style.width = "100%";
-      tbl.style.borderCollapse = "collapse";
-      tbl.style.fontSize = "12px";
-
-      const thead = document.createElement("thead");
-      const thr = document.createElement("tr");
-      thr.style.background = "#f8fafc";
-      thr.style.borderBottom = "1px solid #e6edf3";
-      // Use first column as name and last as MOYENNE GÉNÉRALE
-      const headersToShow = [0, 1]; // name and first category
-      // But we want all categories; limit columns for compactness: show first 6 cols and last
-      const maxCols = Math.min(cols.length, 8);
-      for (let i = 0; i < maxCols; i++) {
-        const th = document.createElement("th");
-        th.style.padding = "6px 8px";
-        th.style.textAlign = "left";
-        th.style.color = "#475569";
-        th.textContent = cols[i] || `Col ${i}`;
-        thr.appendChild(th);
-      }
-      thead.appendChild(thr);
-      tbl.appendChild(thead);
-
-      const tbody = document.createElement("tbody");
-      const displayRows = rows.slice(0, Math.min(6, rows.length));
-      for (const r of displayRows) {
-        const tr = document.createElement("tr");
-        tr.style.borderBottom = "1px solid #eef2f6";
-        const cells = r.c || [];
-        for (let i = 0; i < maxCols; i++) {
-          const td = document.createElement("td");
-          td.style.padding = "6px 8px";
-          td.style.color = "#0f172a";
-          td.textContent =
-            cells[i] && cells[i].v != null ? String(cells[i].v) : "";
-          tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-      }
-      tbl.appendChild(tbody);
-      tableContainer.appendChild(tbl);
-    } catch (err) {
-      tableContainer.textContent = "Impossible de charger la table détaillée.";
-    }
 
     // render to canvas
     container.style.position = "fixed";
