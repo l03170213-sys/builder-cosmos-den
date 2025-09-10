@@ -133,7 +133,7 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       respondents.push(obj);
     }
 
-    // Try to enrich respondents with overall note from matrice sheet (column L / index 11)
+    // Try to enrich respondents with overall note from matrice sheet (prefer rows-as-respondents and column L per respondent)
     try {
       if (cfg.gidMatrice) {
         const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${cfg.gidMatrice}`;
@@ -141,127 +141,104 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
         if (mr.ok) {
           const mtext = await mr.text();
           const mjson = parseGviz(mtext);
-          const mcols: string[] = (mjson.table.cols || []).map((c: any) =>
-            (c.label || "").toString(),
-          );
+          const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || '').toString());
           const mrows: any[] = mjson.table.rows || [];
 
-          // Build column-label map (lowercase) for cols-as-respondents scenario
-          const colLabelLower = mcols.map((c) =>
-            (c || "").toString().trim().toLowerCase(),
-          );
+          // First pass: for each respondent, try to find a row in mrows that contains their email or label
+          for (let ridx = 0; ridx < respondents.length; ridx++) {
+            const resp = respondents[ridx];
+            const eKey = (resp.email || '').toString().trim().toLowerCase();
+            const lKey = (resp.label || '').toString().trim().toLowerCase();
+            let found = false;
+            for (let ri = 0; ri < mrows.length; ri++) {
+              const cells = (mrows[ri].c || []) as any[];
+              const lowerCells = cells.map((cell: any) => (cell && cell.v != null ? String(cell.v).trim().toLowerCase() : ''));
+              if (eKey && lowerCells.includes(eKey)) {
+                const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+                const overallCell = cells[overallIdx];
+                if (overallCell && overallCell.v != null) {
+                  resp.note = String(overallCell.v);
+                }
+                found = true;
+                break;
+              }
+              if (!found && lKey && lowerCells.includes(lKey)) {
+                const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+                const overallCell = cells[overallIdx];
+                if (overallCell && overallCell.v != null) {
+                  resp.note = String(overallCell.v);
+                }
+                found = true;
+                break;
+              }
+            }
+          }
 
-          // For convenience, build a map of respondent email/name -> index in respondents array
+          // Second pass: if some respondents still have no note, try cols-as-respondents fallback (column header matching)
+          const colLabelLower = mcols.map((c) => (c || '').toString().trim().toLowerCase());
           const byEmail: Record<string, number[]> = {};
           const byLabel: Record<string, number[]> = {};
           respondents.forEach((resp, idx) => {
-            const e = (resp.email || "").toString().trim().toLowerCase();
-            const l = (resp.label || "").toString().trim().toLowerCase();
-            if (e) {
-              byEmail[e] = byEmail[e] || [];
-              byEmail[e].push(idx);
-            }
-            if (l) {
-              byLabel[l] = byLabel[l] || [];
-              byLabel[l].push(idx);
-            }
+            const e = (resp.email || '').toString().trim().toLowerCase();
+            const l = (resp.label || '').toString().trim().toLowerCase();
+            if (e) { byEmail[e] = byEmail[e] || []; byEmail[e].push(idx); }
+            if (l) { byLabel[l] = byLabel[l] || []; byLabel[l].push(idx); }
           });
 
-          // Try cols-as-respondents: if any column label matches an email or label
-          let foundCols = false;
           for (let ci = 0; ci < colLabelLower.length; ci++) {
             const lbl = colLabelLower[ci];
             if (!lbl) continue;
-            // exact match
+            // exact email matches
             if (byEmail[lbl]) {
               for (const ridx of byEmail[lbl]) {
-                // overall value usually is in the last row of the matrix for that column
+                if (respondents[ridx].note && respondents[ridx].note !== '') continue;
                 const lastRow = mrows[mrows.length - 1];
                 const overallCell = lastRow && lastRow.c && lastRow.c[ci];
-                respondents[ridx].note =
-                  overallCell && overallCell.v != null
-                    ? String(overallCell.v)
-                    : respondents[ridx].note;
+                if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
               }
-              foundCols = true;
               continue;
             }
             if (byLabel[lbl]) {
               for (const ridx of byLabel[lbl]) {
+                if (respondents[ridx].note && respondents[ridx].note !== '') continue;
                 const lastRow = mrows[mrows.length - 1];
                 const overallCell = lastRow && lastRow.c && lastRow.c[ci];
-                respondents[ridx].note =
-                  overallCell && overallCell.v != null
-                    ? String(overallCell.v)
-                    : respondents[ridx].note;
+                if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
               }
-              foundCols = true;
               continue;
             }
-            // partial match: label includes email or name
+            // partial match
             for (const eKey of Object.keys(byEmail)) {
               if (lbl.includes(eKey) && eKey) {
                 for (const ridx of byEmail[eKey]) {
+                  if (respondents[ridx].note && respondents[ridx].note !== '') continue;
                   const lastRow = mrows[mrows.length - 1];
                   const overallCell = lastRow && lastRow.c && lastRow.c[ci];
-                  respondents[ridx].note =
-                    overallCell && overallCell.v != null
-                      ? String(overallCell.v)
-                      : respondents[ridx].note;
+                  if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
                 }
-                foundCols = true;
               }
             }
             for (const lKey of Object.keys(byLabel)) {
               if (lbl.includes(lKey) && lKey) {
                 for (const ridx of byLabel[lKey]) {
+                  if (respondents[ridx].note && respondents[ridx].note !== '') continue;
                   const lastRow = mrows[mrows.length - 1];
                   const overallCell = lastRow && lastRow.c && lastRow.c[ci];
-                  respondents[ridx].note =
-                    overallCell && overallCell.v != null
-                      ? String(overallCell.v)
-                      : respondents[ridx].note;
+                  if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
                 }
-                foundCols = true;
               }
             }
           }
 
-          // Always try rows-as-respondents to ensure 'Note général' is taken from column L (index 11)
-          for (let ri = 0; ri < mrows.length; ri++) {
-            const rrow = mrows[ri];
-            const cells = rrow.c || [];
-            // build lowercase cell string list
-            const lowerCells = cells.map((cell: any) =>
-              cell && cell.v != null ? String(cell.v).trim().toLowerCase() : "",
-            );
-            for (const [eKey, idxs] of Object.entries(byEmail)) {
-              for (const idx of idxs) {
-                if (lowerCells.includes(eKey)) {
-                  // Note général is column L (index 11) per requirement
-                  const overallIdx =
-                    11 < cells.length ? 11 : Math.max(0, cells.length - 1);
-                  const overallCell = cells[overallIdx];
-                  respondents[idx].note =
-                    overallCell && overallCell.v != null
-                      ? String(overallCell.v)
-                      : respondents[idx].note;
-                }
-              }
-            }
-            for (const [lKey, idxs] of Object.entries(byLabel)) {
-              for (const idx of idxs) {
-                if (lowerCells.includes(lKey)) {
-                  const overallIdx =
-                    11 < cells.length ? 11 : Math.max(0, cells.length - 1);
-                  const overallCell = cells[overallIdx];
-                  respondents[idx].note =
-                    overallCell && overallCell.v != null
-                      ? String(overallCell.v)
-                      : respondents[idx].note;
-                }
-              }
-            }
+          // Third pass: fallback by row index mapping (if still missing)
+          for (let i = 0; i < respondents.length; i++) {
+            if (respondents[i].note && respondents[i].note !== '') continue;
+            const mrow = mrows[i];
+            if (!mrow) continue;
+            const mcells = mrow.c || [];
+            const overallIdx = 11 < mcells.length ? 11 : Math.max(0, mcells.length - 1);
+            const overallCell = mcells[overallIdx];
+            if (overallCell && overallCell.v != null) respondents[i].note = String(overallCell.v);
           }
         }
       }
