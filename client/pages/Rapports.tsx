@@ -26,34 +26,37 @@ export default function Rapports() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold">Rapports</h1>
-          <div className="space-x-2">
-            <button
-              onClick={onExportAllGraphics}
-              className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
-            >
-              Exporter tous les graphiques
-            </button>
-            <button
-              onClick={onExportAllOfficial}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white text-sm"
-            >
-              Exporter tous (format officiel)
-            </button>
+    <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
+      <Sidebar />
+      <div className="flex flex-col min-w-0">
+        <Header />
+        <main className="max-w-screen-2xl mx-auto w-full px-4 py-6 space-y-6">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-semibold">Rapports</h1>
+            <div className="space-x-2">
+              <button
+                onClick={onExportAllGraphics}
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+              >
+                Exporter tous les graphiques
+              </button>
+              <button
+                onClick={onExportAllOfficial}
+                className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white text-sm"
+              >
+                Exporter tous (format officiel)
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-md p-4 shadow-sm">
-          <p className="text-sm text-muted-foreground">
-            Cliquez sur un des boutons ci-dessus pour lancer l'export de tous
-            les hôtels ({RESORTS.length}). Les fichiers PDF seront téléchargés
-            un par un.
-          </p>
-        </div>
+          <div className="bg-white rounded-md p-4 shadow-sm">
+            <p className="text-sm text-muted-foreground">
+              Cliquez sur un des boutons ci-dessus pour lancer l'export de tous
+              les hôtels ({RESORTS.length}). Les fichiers PDF seront téléchargés
+              un par un.
+            </p>
+          </div>
+        </main>
       </div>
     </div>
   );
