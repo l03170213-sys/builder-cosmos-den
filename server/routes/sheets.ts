@@ -44,33 +44,25 @@ export const getResortAverages: RequestHandler = async (req, res) => {
 
     const SHEET_ID = cfg.sheetId;
     const GID_MATRICE_MOYENNE = cfg.gidMatrice ?? "0";
-
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
     const r = await fetch(url);
-    if (!r.ok)
-      return res.status(502).json({ error: "Unable to fetch matrice" });
+    if (!r.ok) return res.status(502).json({ error: "Unable to fetch matrice" });
+
     const text = await r.text();
     const data = parseGviz(text);
 
-    const cols: string[] = data.table.cols.map((c: any) => c.label || "");
     const rows: any[] = data.table.rows as any[];
 
-    // Find last non-empty row
+    // last non-empty row
     let lastRow = rows[rows.length - 1];
     for (let i = rows.length - 1; i >= 0; i--) {
       const rr = rows[i];
-      const hasValue = (rr?.c ?? []).some(
-        (cell: any) => cell && cell.v != null && cell.v !== "",
-      );
-      if (hasValue) {
-        lastRow = rr;
-        break;
-      }
+      const hasValue = (rr?.c ?? []).some((cell: any) => cell && cell.v != null && cell.v !== "");
+      if (hasValue) { lastRow = rr; break; }
     }
 
     const cells = (lastRow?.c ?? []) as any[];
 
-    // Use fixed category mapping (columns A-L => indices 0-11), categories start at index 1
     const fixedCategoryMapping = [
       { colIndex: 0, name: "Nom" },
       { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
@@ -86,53 +78,31 @@ export const getResortAverages: RequestHandler = async (req, res) => {
       { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
     ];
 
-    const categories = [] as { name: string; average: number }[];
+    const categories: { name: string; average: number }[] = [];
 
     const isPestana = resortKey === "pestana-royal-ocean-madeira";
 
     if (isPestana) {
-      // For Pestana, use the last non-empty row (last row present on the table) as the source of averages
-      const cells = (lastRow?.c ?? []) as any[];
-
-      // Always include columns 1..10 as categories (keep labels even if values are empty)
+      // inclure systématiquement les colonnes 1..10
       for (let idx = 1; idx <= 10; idx++) {
-        const name =
-          fixedCategoryMapping.find((m) => m.colIndex === idx)?.name ||
-          `Col ${idx}`;
+        const name = fixedCategoryMapping[idx]?.name ?? `Col ${idx}`;
         const raw = toNumber(cells[idx]?.v);
-        const val = normalizeAverage(raw) ?? 0;
-        categories.push({ name, average: val });
+        const val = normalizeAverage(raw);
+        categories.push({ name, average: val ?? 0 }); // garde 0 si vide
       }
-
-      // overall from column L (index 11) of the last non-empty row
-      const overallIdx = 11;
-      const overallAverage =
-        normalizeAverage(toNumber(cells[overallIdx]?.v)) ?? 0;
-
-      const response: ResortAveragesResponse = {
-        resort: cfg.name,
-        updatedAt: new Date().toISOString(),
-        overallAverage,
-        categories,
-      };
-
-      return res.status(200).json(response);
+    } else {
+      // comportement par défaut
+      for (const m of fixedCategoryMapping) {
+        if (m.colIndex === 0 || m.colIndex === 11) continue;
+        const raw = toNumber(cells[m.colIndex]?.v);
+        const val = normalizeAverage(raw);
+        if (val != null) categories.push({ name: m.name, average: val });
+      }
     }
 
-    // Default behavior for other resorts
-    // Build categories from fixed mapping, skipping 'Nom' and 'MOYENNE GÉNÉRALE' for category list
-    for (const m of fixedCategoryMapping) {
-      if (m.colIndex === 0) continue; // skip name
-      if (m.colIndex === 11) continue; // skip overall in category list
-      const raw = toNumber(cells[m.colIndex]?.v);
-      const val = normalizeAverage(raw);
-      if (val != null) categories.push({ name: m.name, average: val });
-    }
-
-    // Determine overallAverage from fixed column L (index 11) if present, otherwise fall back to last column
-    const overallIdx = Math.min(11, Math.max(0, cells.length - 1));
-    const overallCell = cells[overallIdx];
-    const overallAverage = normalizeAverage(toNumber(overallCell?.v)) ?? 0;
+    // overall from column L (index 11) if available, otherwise fallback to last cell
+    const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+    const overallAverage = normalizeAverage(toNumber(cells[overallIdx]?.v)) ?? 0;
 
     const response: ResortAveragesResponse = {
       resort: cfg.name,
@@ -141,9 +111,9 @@ export const getResortAverages: RequestHandler = async (req, res) => {
       categories,
     };
 
-    res.status(200).json(response);
+    return res.status(200).json(response);
   } catch (err) {
     console.error("Failed to fetch sheet:", err);
-    res.status(500).json({ error: "Unable to load Google Sheet data" });
+    return res.status(500).json({ error: "Unable to load Google Sheet data" });
   }
 };
