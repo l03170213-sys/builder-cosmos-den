@@ -278,13 +278,57 @@ export default async function exportToPdf(options: {
     return;
   }
 
-  // default behavior: include chart first
+  // default behavior: include chart first (with hotel name header)
   if (!chartEl) throw new Error("Chart element not found");
-  const chartCanvas = await html2canvas(chartEl, {
+
+  // Build a temporary container that includes the hotel name above the chart
+  const chartContainer = document.createElement("div");
+  chartContainer.style.width = "794px"; // portrait width approx
+  chartContainer.style.minHeight = "500px";
+  chartContainer.style.padding = "24px";
+  chartContainer.style.background = "white";
+  chartContainer.style.boxSizing = "border-box";
+  chartContainer.style.fontFamily = "Inter, Arial, Helvetica, sans-serif";
+  chartContainer.style.color = "#0f172a";
+
+  // hotel name header
+  const header = document.createElement("div");
+  header.style.display = "flex";
+  header.style.justifyContent = "space-between";
+  header.style.alignItems = "center";
+  header.style.marginBottom = "12px";
+  try {
+    const selectedKey =
+      window.localStorage.getItem("selectedResort") || "vm-resort-albanie";
+    const resorts = RESORTS;
+    const cfg = resorts.find((r: any) => r.key === selectedKey) || resorts[0];
+    header.innerHTML = `<div style="font-size:18px;font-weight:700">${cfg.name}</div>`;
+  } catch (e) {
+    header.innerHTML = `<div style="font-size:18px;font-weight:700">VM Resort</div>`;
+  }
+  chartContainer.appendChild(header);
+
+  // Clone chart element into container
+  const clonedChart = chartEl.cloneNode(true) as HTMLElement;
+  clonedChart.style.width = "100%";
+  clonedChart.style.height = "auto";
+  // Remove potential animations
+  clonedChart
+    .querySelectorAll?.(".animate-pulse")
+    .forEach((el: any) => (el.className = ""));
+  chartContainer.appendChild(clonedChart);
+
+  // render the chartContainer to canvas
+  chartContainer.style.position = "fixed";
+  chartContainer.style.left = "-9999px";
+  document.body.appendChild(chartContainer);
+  const chartCanvas = await html2canvas(chartContainer, {
     scale: 2,
     useCORS: true,
     backgroundColor: "#ffffff",
   });
+  document.body.removeChild(chartContainer);
+
   const page2 = makePage2Clone(listEl);
   page2.style.position = "fixed";
   page2.style.left = "-9999px";
