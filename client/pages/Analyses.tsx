@@ -51,50 +51,8 @@ export default function Analyses() {
           throw new Error(`Invalid JSON response: ${text}`);
         }
       } catch (err) {
-        try {
-          const cfg = currentResort;
-          const gurl = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?gid=${cfg.gidMatrice || "0"}`;
-          const rr = await fetch(gurl);
-          const text = await rr.text();
-          const data = parseGvizText(text);
-
-          const cols: string[] = data.table.cols.map((c: any) => c.label || "");
-          const rows: any[] = data.table.rows || [];
-
-          // Find last non-empty row
-          let lastRow = rows[rows.length - 1];
-          for (let i = rows.length - 1; i >= 0; i--) {
-            const rr2 = rows[i];
-            const hasValue = (rr2?.c ?? []).some(
-              (cell: any) => cell && cell.v != null && cell.v !== "",
-            );
-            if (hasValue) {
-              lastRow = rr2;
-              break;
-            }
-          }
-
-          const cells = (lastRow?.c ?? []) as any[];
-          const firstDataCol = 1;
-          const lastDataCol = cols.length - 2;
-          const categories = [] as any[];
-          for (let i = firstDataCol; i <= lastDataCol; i++) {
-            const label = cols[i] || `Col ${i}`;
-            const val = toNumber(cells[i]?.v);
-            if (val != null) categories.push({ name: label, average: val });
-          }
-          const overallCell = cells[cols.length - 1];
-          const overallAverage = toNumber(overallCell?.v) ?? 0;
-          return {
-            resort: cfg.name,
-            updatedAt: new Date().toISOString(),
-            overallAverage,
-            categories,
-          } as ResortAveragesResponse;
-        } catch (err2) {
-          console.error("Direct Google Sheets fallback failed:", err2);
-          throw err;
-        }
+        console.error("API fetch failed:", err);
+        throw err;
       }
     },
     retry: false,
