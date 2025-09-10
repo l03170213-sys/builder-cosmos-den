@@ -380,3 +380,69 @@ export default async function exportToPdf(options: {
 
   final.save(filename);
 }
+
+function sanitizeFilename(name: string) {
+  return name
+    .replace(/[^\n\w\d\-_. ]+/g, "")
+    .replace(/\s+/g, "_")
+    .toLowerCase();
+}
+
+export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "official"; delayMs?: number; timeoutMs?: number; }) {
+  const { mode = "both", delayMs = 500, timeoutMs = 8000 } = options || {};
+  const resorts = RESORTS;
+  const original = typeof window !== "undefined" ? window.localStorage.getItem("selectedResort") || (resorts[0] && resorts[0].key) : null;
+
+  const waitForElement = async (id: string, timeout = timeoutMs) => {
+    const start = Date.now();
+    while (Date.now() - start < timeout) {
+      const el = document.getElementById(id);
+      if (el) return el;
+      await new Promise((r) => setTimeout(r, 200));
+    }
+    return null;
+  };
+
+  for (const r of resorts) {
+    try {
+      if (typeof window === "undefined") break;
+      window.localStorage.setItem("selectedResort", r.key);
+      window.dispatchEvent(new CustomEvent("resort-change"));
+
+      // Wait for list and summary/chart to render
+      if (mode === "both" || mode === "graphics") {
+        const chart = await waitForElement("chart-wrapper", timeoutMs);
+        const list = await waitForElement("list-wrapper", timeoutMs);
+        if (chart && list) {
+          await exportToPdf({ chartId: "chart-wrapper", listId: "list-wrapper", filename: `${sanitizeFilename(r.name)}-graphique.pdf` });
+          await new Promise((r) => setTimeout(r, delayMs));
+        } else {
+          // skip if required elements not present
+          // eslint-disable-next-line no-console
+          console.warn(`Skipping graphic export for ${r.key} - elements not found`);
+        }
+      }
+
+      if (mode === "both" || mode === "official") {
+        const summary = await waitForElement("pdf-summary", timeoutMs);
+        const list = await waitForElement("list-wrapper", timeoutMs);
+        if (summary && list) {
+          await exportToPdf({ chartId: "chart-wrapper", listId: "list-wrapper", summaryId: "pdf-summary", filename: `${sanitizeFilename(r.name)}-officiel.pdf` });
+          await new Promise((r) => setTimeout(r, delayMs));
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn(`Skipping official export for ${r.key} - elements not found`);
+        }
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("Error exporting resort", r.key, err);
+    }
+  }
+
+  // restore original selected resort
+  if (original) {
+    window.localStorage.setItem("selectedResort", original);
+    window.dispatchEvent(new CustomEvent("resort-change"));
+  }
+}
