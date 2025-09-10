@@ -548,6 +548,23 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         console.error("Failed to fetch matrice for overall:", e);
       }
 
+      // Attach debug info when requested
+      if (req.query.debug === '1') {
+        try {
+          const dbg: any = {};
+          dbg.sheet1RowIdx = typeof sheet1RowIdx !== 'undefined' ? sheet1RowIdx : null;
+          dbg.scells = (typeof scells !== 'undefined' && scells) ? (scells || []).map(cellToString).slice(0, 200) : null;
+          dbg.respColIndex = typeof respColIndex !== 'undefined' ? respColIndex : null;
+          dbg.mcols = typeof mcols !== 'undefined' ? (mcols || []).slice(0, 200) : null;
+          dbg.mrowsLength = typeof mrows !== 'undefined' ? (mrows || []).length : null;
+          dbg.lastRowIndex = (typeof mrows !== 'undefined' && typeof lastRow !== 'undefined' && lastRow) ? Math.max(0, (mrows || []).indexOf(lastRow)) : null;
+          dbg.lastRowCells = (typeof lastRowCells !== 'undefined' && lastRowCells) ? (lastRowCells || []).map(cellToString).slice(0,200) : null;
+          result._debug = dbg;
+        } catch (ex) {
+          console.error('Failed to build debug info:', ex);
+        }
+      }
+
       return res.status(200).json(result);
     }
 
