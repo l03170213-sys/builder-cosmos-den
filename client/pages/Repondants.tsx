@@ -38,13 +38,11 @@ function formatDateToFR(raw: string) {
     .replace(/\s+/g, " ")
     .trim();
 
-  // Handle Google/Sheets style Date(YYYY,M,D,H,mm,ss)
-  const sheetsDate = s.match(
-    /^Date\((\d{4}),(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2}),(\d{1,2})\)$/,
-  );
+  // Handle Google/Sheets style Date(YYYY,M,D,...) — accept both Date(Y,M,D) and Date(Y,M,D,H,mm,ss)
+  const sheetsDate = s.match(/^Date\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})(?:\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})\s*)?\)$/);
   if (sheetsDate) {
     const year = Number(sheetsDate[1]);
-    const monthIndex = Number(sheetsDate[2]); // already 0-based in this format
+    const monthIndex = Number(sheetsDate[2]); // Google Sheets Date month is 0-based in this representation
     const day = Number(sheetsDate[3]);
     const dt = new Date(year, monthIndex, day);
     const d = String(dt.getDate()).padStart(2, "0");
