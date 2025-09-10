@@ -622,8 +622,9 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         console.error("Failed to fetch matrice for overall:", e);
       }
 
-      // Attach debug info when requested
-      if (req.query.debug === '1') {
+      // Attach debug info when requested or if specific respondent (KIEHL) to aid debugging
+      const qNameLower = (req.query.name || '').toString().trim().toLowerCase();
+      if (req.query.debug === '1' || qNameLower === 'kiehl') {
         try {
           const dbg: any = {};
           dbg.sheet1RowIdx = typeof sheet1RowIdx !== 'undefined' ? sheet1RowIdx : null;
@@ -633,6 +634,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           dbg.mrowsLength = typeof mrows !== 'undefined' ? (mrows || []).length : null;
           dbg.lastRowIndex = (typeof mrows !== 'undefined' && typeof lastRow !== 'undefined' && lastRow) ? Math.max(0, (mrows || []).indexOf(lastRow)) : null;
           dbg.lastRowCells = (typeof lastRowCells !== 'undefined' && lastRowCells) ? (lastRowCells || []).map(cellToString).slice(0,200) : null;
+          dbg.matchedMatriceRow = (typeof matchedMatriceRow !== 'undefined' && matchedMatriceRow) ? (matchedMatriceRow.c || []).map(cellToString) : null;
           result._debug = dbg;
         } catch (ex) {
           console.error('Failed to build debug info:', ex);
