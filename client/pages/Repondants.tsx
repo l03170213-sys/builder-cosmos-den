@@ -223,7 +223,8 @@ export default function Repondants() {
             obj.name = obj.label;
             obj.email = cellToString(c[3]);
             obj.note = "";
-            obj.date = cellToString(c[0]) || "";
+            // Use column C (index 2) for date
+            obj.date = cellToString(c[2]) || "";
             obj.age = "";
             obj.postal = cellToString(c[8]);
             obj.duration = "";
