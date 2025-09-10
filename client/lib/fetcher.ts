@@ -42,9 +42,12 @@ export async function safeFetch(u: string, opts?: RequestInit) {
   // If all attempts failed, try a couple of simple retries on the original URL
   for (let retry = 0; retry < 2; retry++) {
     try {
+      console.debug("safeFetch: final retry", retry + 1, "for", u);
       const r = await doFetch(u);
+      console.debug("safeFetch: final retry success", u, r.status);
       return r;
     } catch (err: any) {
+      console.warn("safeFetch: final retry failed", retry + 1, err && err.message ? err.message : err);
       lastErr = err;
       await new Promise((res) => setTimeout(res, 200 * (retry + 1)));
     }
