@@ -358,7 +358,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           const targetName = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
           const targetEmail = (srow.c && srow.c[3] && srow.c[3].v != null) ? String(srow.c[3].v).trim().toLowerCase() : '';
 
-          let matchedMatriceRow: any = null;
+          matchedMatriceRow = null;
           for (let ri = 0; ri < mrows.length; ri++) {
             const mrow = mrows[ri];
             const cells = mrow.c || [];
