@@ -347,6 +347,13 @@ export default function Repondants() {
       if (selected?.email) params.set("email", selected.email);
       if (selected?.name) params.set("name", selected.name);
       if (selected?.date) params.set("date", selected.date);
+      // When debugging KIEHL, request server debug output
+      try {
+        const selName = (selected?.name || "").toString().trim().toLowerCase();
+        if (selName === "kiehl") params.set("debug", "1");
+      } catch (ex) {
+        // ignore
+      }
       const apiUrl = new URL(
         "/api/resort/" + selectedResortKey + "/respondent?" + params.toString(),
         window.location.origin,
@@ -397,6 +404,13 @@ export default function Repondants() {
         if (selected?.email) params.set("email", selected.email);
         if (selected?.name) params.set("name", selected.name);
         if (selected?.date) params.set("date", selected.date);
+        // include debug flag automatically when inspecting KIEHL to surface server _debug
+        try {
+          const selName = (selected?.name || "").toString().trim().toLowerCase();
+          if (selName === "kiehl") params.set("debug", "1");
+        } catch (ex) {
+          // ignore
+        }
         const apiUrl = new URL(
           "/api/resort/" +
             selectedResortKey +
