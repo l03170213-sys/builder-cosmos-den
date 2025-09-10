@@ -193,11 +193,9 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       if (targetDate) {
         for (const idx of candidates) {
           const cells = srows[idx].c || [];
-          const matchesDate = cells.some(
-            (cell: any) =>
-              formatDateToFR(cellToString(cell)) === targetDate &&
-              targetDate !== "",
-          );
+          // Use column C (index 2) specifically for date matching
+          const dateCell = cells[2];
+          const matchesDate = dateCell && formatDateToFR(cellToString(dateCell)) === targetDate && targetDate !== "";
           if (matchesDate) return idx;
         }
       }
