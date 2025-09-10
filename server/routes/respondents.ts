@@ -144,33 +144,44 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
           const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || '').toString());
           const mrows: any[] = mjson.table.rows || [];
 
-          // First pass: for each respondent, try to find a row in mrows that contains their email or label
+          // First pass: for each respondent, try to find a row in mrows that contains their email or label (use cellToString for robust matching)
           for (let ridx = 0; ridx < respondents.length; ridx++) {
             const resp = respondents[ridx];
             const eKey = (resp.email || '').toString().trim().toLowerCase();
             const lKey = (resp.label || '').toString().trim().toLowerCase();
-            let found = false;
+            if (!eKey && !lKey) continue;
+            let matched = false;
             for (let ri = 0; ri < mrows.length; ri++) {
               const cells = (mrows[ri].c || []) as any[];
-              const lowerCells = cells.map((cell: any) => (cell && cell.v != null ? String(cell.v).trim().toLowerCase() : ''));
-              if (eKey && lowerCells.includes(eKey)) {
-                const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
-                const overallCell = cells[overallIdx];
-                if (overallCell && overallCell.v != null) {
-                  resp.note = String(overallCell.v);
+              // build normalized cell strings using cellToString
+              const normCells = cells.map((cell: any) => (cellToString(cell) || '').toString().trim().toLowerCase());
+              // try exact or includes match on email then label
+              if (eKey) {
+                for (const txt of normCells) {
+                  if (!txt) continue;
+                  if (txt === eKey || txt.includes(eKey) || eKey.includes(txt)) {
+                    const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+                    const overallCell = cells[overallIdx];
+                    if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
+                    matched = true;
+                    break;
+                  }
                 }
-                found = true;
-                break;
               }
-              if (!found && lKey && lowerCells.includes(lKey)) {
-                const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
-                const overallCell = cells[overallIdx];
-                if (overallCell && overallCell.v != null) {
-                  resp.note = String(overallCell.v);
+              if (matched) break;
+              if (lKey) {
+                for (const txt of normCells) {
+                  if (!txt) continue;
+                  if (txt === lKey || txt.includes(lKey) || lKey.includes(txt)) {
+                    const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+                    const overallCell = cells[overallIdx];
+                    if (overallCell && overallCell.v != null) respondents[ridx].note = String(overallCell.v);
+                    matched = true;
+                    break;
+                  }
                 }
-                found = true;
-                break;
               }
+              if (matched) break;
             }
           }
 
