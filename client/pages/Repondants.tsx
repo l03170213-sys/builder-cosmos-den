@@ -470,6 +470,12 @@ export default function Repondants() {
           <Card>
             <CardContent className="p-0">
               <div className="font-normal px-6 pb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div />
+                  <div className="flex items-center gap-2">
+                    <button id="export-all-btn" onClick={async () => { /* placeholder, will be wired below */ }} className="px-3 py-2 rounded-md bg-primary text-white">Exporter tous les répondants (PDF)</button>
+                  </div>
+                </div>
                 {isLoading && <div>Chargement…</div>}
                 {isError && (
                   <div className="text-red-600">
@@ -605,7 +611,7 @@ export default function Repondants() {
                   style={{ borderColor: "#e6edf3" }}
                 >
                   <div className="text-xs text-muted-foreground">
-                    Note Général
+                    Note G��néral
                   </div>
                   <div className="mt-2 text-2xl font-extrabold">
                     {loadingRespondentData
