@@ -97,12 +97,25 @@ export default function Analyses() {
   const modalQuery = useQuery<ResortAveragesResponse | null>({
     queryKey: ["resort-modal", modalResortKey],
     queryFn: async () => {
-      if (!modalResortKey) return null;
-      const url = new URL(`/api/resort/${modalResortKey}/averages`, window.location.origin).toString();
-      const r = await safeFetch(url, { credentials: "same-origin" });
-      const text = await r.clone().text().catch(() => "");
-      if (!r.ok) throw new Error(`Server error: ${r.status} ${text}`);
-      return JSON.parse(text) as ResortAveragesResponse;
+      try {
+        if (!modalResortKey) return null;
+        const url = new URL(`/api/resort/${modalResortKey}/averages`, window.location.origin).toString();
+        const r = await safeFetch(url, { credentials: "same-origin" });
+        const text = await r.clone().text().catch(() => "");
+        if (!r.ok) {
+          console.warn("modal resort fetch non-ok", r.status, text);
+          return null;
+        }
+        try {
+          return JSON.parse(text) as ResortAveragesResponse;
+        } catch (e) {
+          console.warn("modal resort invalid json", e, text);
+          return null;
+        }
+      } catch (err: any) {
+        console.warn("modal resort fetch failed", err && err.message ? err.message : err);
+        return null;
+      }
     },
     enabled: !!modalResortKey && modalOpen,
     retry: false,
