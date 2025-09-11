@@ -459,6 +459,49 @@ export default function Repondants() {
     };
   }, [dialogOpen, selected]);
 
+  // export handlers
+  React.useEffect(() => {
+    const btn = document.getElementById('export-all-btn');
+    if (!btn) return;
+    const handler = async () => {
+      try {
+        (btn as HTMLButtonElement).disabled = true;
+        btn.textContent = 'Préparation...';
+        // wait 5s per requirement
+        await new Promise((res) => setTimeout(res, 5000));
+        // fetch all respondents pages sequentially
+        const selected = selectedResortKey;
+        const all: any[] = [];
+        let pageIdx = 1;
+        while (true) {
+          const apiUrl = new URL(`/api/resort/${selected}/respondents?page=${pageIdx}&pageSize=500`, window.location.origin).toString();
+          const resp = await fetch(apiUrl, { credentials: 'same-origin' });
+          if (!resp.ok) break;
+          const json = await resp.json().catch(() => null);
+          if (!json || !Array.isArray(json.items)) break;
+          all.push(...json.items);
+          if (all.length >= json.total) break;
+          pageIdx++;
+        }
+        // dynamically import pdf helper
+        const mod = await import('@/lib/pdf');
+        await mod.exportAllRespondentsPdf(selectedResortKey, all, (done: number, total: number) => {
+          btn.textContent = `Exportation ${done}/${total}…`;
+        });
+        btn.textContent = 'Téléchargement terminé';
+      } catch (e) {
+        console.error('Export all failed', e);
+        btn.textContent = 'Échec de l\'export';
+      } finally {
+        setTimeout(() => {
+          if (btn) { btn.textContent = 'Exporter tous les répondants (PDF)'; (btn as HTMLButtonElement).disabled = false; }
+        }, 2500);
+      }
+    };
+    btn.addEventListener('click', handler);
+    return () => btn.removeEventListener('click', handler);
+  }, [selectedResortKey]);
+
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
       <Sidebar />
@@ -611,11 +654,11 @@ export default function Repondants() {
                   style={{ borderColor: "#e6edf3" }}
                 >
                   <div className="text-xs text-muted-foreground">
-                    Note G��néral
+                    Note Général
                   </div>
                   <div className="mt-2 text-2xl font-extrabold">
                     {loadingRespondentData
-                      ? "…"
+                      ? "���"
                       : respondentNoteGeneral
                         ? `${formatAverage(respondentNoteGeneral)}/5`
                         : "—"}
