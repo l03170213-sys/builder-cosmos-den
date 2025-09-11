@@ -434,12 +434,18 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       }
 
       // prepare a result skeleton; overall & feedback to be resolved below
-      const result = {
-        categories: cats,
-        overall: null as null | string,
-        column: null as null | string,
-        feedback: null as null | string,
-      };
+      const result: any = {
+      categories: cats,
+      overall: null as null | string,
+      column: null as null | string,
+      feedback: null as null | string,
+      date: null as null | string,
+      age: null as null | string,
+      postal: null as null | string,
+      duration: null as null | string,
+      name: null as null | string,
+      email: null as null | string,
+    };
 
       // feedback from sheet1: prefer exact header, else BT
       let fcell: any = null;
