@@ -35,17 +35,33 @@ export default function Rapports() {
             <h1 className="text-2xl font-semibold">Rapports</h1>
             <div className="space-x-2">
               <button
-                onClick={onExportAllGraphics}
-                className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
-              >
-                Exporter tous les graphiques
-              </button>
-              <button
-                onClick={onExportAllOfficial}
-                className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white text-sm"
-              >
-                Exporter tous (format officiel)
-              </button>
+              onClick={async () => {
+                try {
+                  await exportAllHotels({ mode: "graphics", preCaptureMs: 5000 });
+                  alert("Export des graphiques lancé pour tous les hôtels.");
+                } catch (err) {
+                  console.error(err);
+                  alert("Erreur lors de l'export des graphiques pour tous les hôtels.");
+                }
+              }}
+              className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+            >
+              Exporter tous les graphiques
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await exportAllHotels({ mode: "official", preCaptureMs: 5000 });
+                  alert("Export officiel lancé pour tous les hôtels.");
+                } catch (err) {
+                  console.error(err);
+                  alert("Erreur lors de l'export officiel pour tous les hôtels.");
+                }
+              }}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white text-sm"
+            >
+              Exporter tous (format officiel)
+            </button>
             </div>
           </div>
 
