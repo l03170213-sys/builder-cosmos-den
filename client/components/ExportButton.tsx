@@ -502,6 +502,8 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
         const summaryEl = await waitForElement("pdf-summary", timeoutMs);
         const listEl = await waitForElement("list-wrapper", timeoutMs);
         if (summaryEl && listEl) {
+          // allow UI to finish rendering before capture
+          await new Promise((res) => setTimeout(res, preCaptureMs));
           const summaryContainer = makeSummaryClone(summaryEl as HTMLElement);
           summaryContainer.style.position = "fixed";
           summaryContainer.style.left = "-9999px";
