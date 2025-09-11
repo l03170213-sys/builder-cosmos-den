@@ -17,10 +17,10 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="h-20 border-b sticky top-0 z-10" style={{ backgroundColor: "var(--vm-primary)", color: "white", borderColor: "rgba(0,0,0,0.05)" }}>
+    <header className="h-20 border-b sticky top-0 z-10" style={{ backgroundColor: "white", color: "var(--vm-primary)", borderColor: "rgba(0,0,0,0.05)" }}>
       <div className="h-full max-w-screen-2xl mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="text-2xl font-extrabold tracking-tight" style={{ color: 'white' }}>{settings.appName}</div>
+          <div className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--vm-primary)' }}>{settings.appName}</div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -29,7 +29,8 @@ export default function Header() {
               aria-label="Select resort"
               value={resort}
               onChange={(e) => setSelected(e.target.value)}
-              className="rounded-md border px-3 py-2 text-sm"
+              className="rounded-md px-3 py-2 text-sm"
+              style={{ backgroundColor: 'var(--vm-primary)', color: 'white', border: '1px solid rgba(0,0,0,0.08)' }}
             >
               {RESORTS.map((r) => (
                 <option key={r.key} value={r.key}>{r.name}</option>
