@@ -1,7 +1,12 @@
 export async function safeFetch(u: string, opts?: RequestInit) {
   const doFetch = async (url: string) => {
-    const r = await fetch(url, opts);
-    return r;
+    try {
+      const r = await fetch(url, opts);
+      return r;
+    } catch (err) {
+      // rethrow so caller can handle and potentially try alternative forms
+      throw err;
+    }
   };
 
   const tryUrls: string[] = [];
@@ -10,12 +15,11 @@ export async function safeFetch(u: string, opts?: RequestInit) {
     tryUrls.push(u);
     if (urlObj.pathname.startsWith("/api/")) {
       // add Netlify functions alternative
-      const altPath = urlObj.pathname.replace(
-        /^\/api\//,
-        "/.netlify/functions/api/",
-      );
+      const altPath = urlObj.pathname.replace(/^\/api\//, "/.netlify/functions/api/");
       const alt = new URL(altPath, urlObj.origin).toString();
       tryUrls.push(alt); // try original first, alt second
+      // also try relative path (no origin) as some preview/proxy setups block absolute origin fetches
+      tryUrls.push(urlObj.pathname + urlObj.search);
     }
   } catch (e) {
     // fallback to original url only
@@ -39,7 +43,7 @@ export async function safeFetch(u: string, opts?: RequestInit) {
     }
   }
 
-  // If all attempts failed, try a couple of simple retries on the original URL
+  // If all attempts failed, try a couple of simple retries on the original URL (and relative if possible)
   for (let retry = 0; retry < 2; retry++) {
     try {
       console.debug("safeFetch: final retry", retry + 1, "for", u);
@@ -51,6 +55,15 @@ export async function safeFetch(u: string, opts?: RequestInit) {
       lastErr = err;
       await new Promise((res) => setTimeout(res, 200 * (retry + 1)));
     }
+  }
+
+  // Last attempt: if the last error was a network/fetch error, throw a clearer message
+  if (lastErr && lastErr instanceof Error && lastErr.message === "Failed to fetch") {
+    const e: any = new Error(
+      "Network error: unable to reach the backend. If you're running the preview, ensure the dev server or proxy is available."
+    );
+    e.cause = lastErr;
+    throw e;
   }
 
   throw lastErr || new Error("Failed to fetch");
