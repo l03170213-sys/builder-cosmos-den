@@ -298,23 +298,14 @@ export default function Index() {
                           requestAnimationFrame(() => r(undefined)),
                         );
                         // small delay to ensure labels render
-                        await new Promise((r) => setTimeout(r, 80));
-                        const html2canvas = (await import("html2canvas"))
-                          .default;
-                        const el = document.getElementById("chart-wrapper");
-                        if (!el) throw new Error("Chart element not found");
-                        const canvas = await html2canvas(el, {
-                          scale: 2,
-                          backgroundColor: "#ffffff",
-                          useCORS: true,
-                        });
-                        const dataUrl = canvas.toDataURL("image/png");
-                        const a = document.createElement("a");
-                        a.href = dataUrl;
-                        a.download = "vm-resort-chart.png";
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
+                        try {
+                          const exportFn = (await import("@/components/ExportButton")).default;
+                          const sanitize = (s: string) => s.replace(/[^\w\d\-_. ]+/g, "").replace(/\s+/g, "_").toLowerCase();
+                          await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", filename: `${sanitize(currentResort.name)}-graphique.pdf` });
+                        } catch (e) {
+                          console.error(e);
+                          alert("Erreur lors de l'export du graphique");
+                        }
                       } catch (err) {
                         console.error(err);
                         alert("Erreur lors de l'export du graphique");
