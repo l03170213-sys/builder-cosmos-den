@@ -156,8 +156,90 @@ export default function Analyses() {
         </section>
 
         <section className="bg-white rounded-md p-4 shadow-sm">
+          <h3 className="text-lg font-semibold mb-3">Alertes & Points faibles</h3>
+          <p className="text-sm text-muted-foreground mb-3">Analyse automatique pour détecter les hôtels ou catégories nécessitant une attention (faible moyenne, forte variance, peu de répondants).</p>
+
+          {/* Compute aggregated category stats */}
+          {allResortsQuery.isLoading ? (
+            <div className="h-32 animate-pulse bg-gray-200 rounded" />
+          ) : (
+            (() => {
+              const rows = allResortsQuery.data || [];
+              // aggregate categories
+              const catMap: Record<string, { total: number; count: number; values: number[] }> = {};
+              for (const r of rows) {
+                if (r.error || !r.categories) continue;
+                for (const c of r.categories) {
+                  if (typeof c.average !== 'number') continue;
+                  catMap[c.name] = catMap[c.name] || { total: 0, count: 0, values: [] };
+                  catMap[c.name].total += Number(c.average);
+                  catMap[c.name].count += 1;
+                  catMap[c.name].values.push(Number(c.average));
+                }
+              }
+              const catStats = Object.keys(catMap).map((name) => {
+                const v = catMap[name];
+                const avg = v.total / v.count;
+                const mean = avg;
+                const variance = v.values.reduce((acc, x) => acc + Math.pow(x - mean, 2), 0) / Math.max(1, v.count);
+                const std = Math.sqrt(variance);
+                return { name, avg, std, count: v.count };
+              });
+
+              catStats.sort((a, b) => a.avg - b.avg);
+
+              // hotels with low overall
+              const badHotels = (rows as any[]).filter((h) => !h.error && typeof h.overall === 'number').sort((a, b) => a.overall - b.overall).slice(0, 6);
+
+              // categories with high variance
+              const highVar = catStats.filter((c) => c.std >= 0.6).sort((a, b) => b.std - a.std).slice(0, 6);
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-3">
+                    <div className="text-sm font-medium">Catégories les plus faibles (moyenne)</div>
+                    <ul className="mt-2 space-y-2">
+                      {catStats.slice(0, 6).map((c) => (
+                        <li key={c.name} className="flex items-center justify-between bg-white border p-2 rounded">
+                          <div className="text-sm">{c.name}</div>
+                          <div className="text-sm font-semibold">{c.avg.toFixed(2)}/5</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-3">
+                    <div className="text-sm font-medium">Hôtels à surveiller (moyenne générale basse)</div>
+                    <ul className="mt-2 space-y-2">
+                      {badHotels.map((h: any) => (
+                        <li key={h.key} className="flex items-center justify-between bg-white border p-2 rounded">
+                          <div className="text-sm">{h.name}</div>
+                          <div className="text-sm font-semibold">{Number(h.overall).toFixed(2)}/5</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-3">
+                    <div className="text-sm font-medium">Incohérences (forte variance par catégorie)</div>
+                    <ul className="mt-2 space-y-2">
+                      {highVar.map((c) => (
+                        <li key={c.name} className="flex items-center justify-between bg-white border p-2 rounded">
+                          <div className="text-sm">{c.name}</div>
+                          <div className="text-sm font-semibold">σ={c.std.toFixed(2)}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })()
+          )}
+        </section>
+
+        <section className="bg-white rounded-md p-4 shadow-sm">
           <h3 className="text-lg font-semibold mb-3">Tendances temporelles (hôtel sélectionné)</h3>
-          <p className="text-sm text-muted-foreground mb-3">La source actuelle fournit la moyenne globale actuelle et les moyennes par cat��gorie (instantané). Pour des tendances temporelles réelles, il faut enregistrer périodiquement ces valeurs côté serveur. En attendant, voici l'instantané actuel et la répartition par catégorie.</p>
+          <p className="text-sm text-muted-foreground mb-3">La source actuelle fournit la moyenne globale actuelle et les moyennes par catégorie (instantané). Pour des tendances temporelles réelles, il faut enregistrer périodiquement ces valeurs côté serveur. En attendant, voici l'instantané actuel et la répartition par catégorie.</p>
 
           {isLoading || !data ? (
             <div className="w-full animate-pulse h-64 rounded-md bg-gray-200" />
