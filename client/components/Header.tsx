@@ -17,11 +17,10 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="h-16 border-b bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
+    <header className="h-20 border-b sticky top-0 z-10" style={{ backgroundColor: "var(--vm-primary)", color: "white", borderColor: "rgba(0,0,0,0.05)" }}>
       <div className="h-full max-w-screen-2xl mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src={settings.logoUrl} alt={settings.appName} className="h-8 w-auto object-contain" />
-          <div className="text-lg font-semibold">{settings.appName}</div>
+          <img src={settings.logoUrl} alt={settings.appName} className="h-12 w-auto object-contain" />
         </div>
 
         <div className="flex items-center gap-3">
