@@ -329,27 +329,6 @@ export default function Index() {
                   </button>
 
                   <button
-                    id="export-all-graphics"
-                    onClick={async () => {
-                      try {
-                        const exportModule = await import("@/components/ExportButton");
-                        if (exportModule && exportModule.exportAllHotels) {
-                          await exportModule.exportAllHotels({ mode: "graphics" });
-                        } else {
-                          alert("Fonction d'export groupé non disponible");
-                        }
-                      } catch (err) {
-                        console.error(err);
-                        alert("Erreur lors de l'export de tous les graphiques");
-                      }
-                    }}
-                    aria-label="Exporter tous les graphiques"
-                    className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
-                  >
-                    Exporter tous les graphiques
-                  </button>
-
-                  <button
                     id="export-officiel"
                     onClick={async () => {
                       try {
