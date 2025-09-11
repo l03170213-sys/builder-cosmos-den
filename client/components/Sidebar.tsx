@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
 import { BarChart3, LineChart, Users2, FileText, Zap, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import React from "react";
+import { loadSettings } from "@/lib/settings";
 
 const items = [
   { to: "/", label: "Dashboard", icon: BarChart3 },
