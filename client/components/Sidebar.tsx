@@ -12,11 +12,18 @@ const items = [
 ];
 
 export function Sidebar() {
+  const [settings, setSettings] = React.useState(() => loadSettings());
+  React.useEffect(() => {
+    const onStorage = () => setSettings(loadSettings());
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   return (
     <aside className="hidden md:flex md:flex-col w-64 shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <div className="h-16 flex items-center gap-2 px-4 text-white font-semibold tracking-tight">
-        <div className="h-8 w-8 rounded-lg bg-white/15 grid place-items-center">🏨</div>
-        <span>HotelSat</span>
+        <img src={settings.logoUrl} alt={settings.appName} className="h-8 w-8 object-contain rounded" />
+        <span>{settings.appName}</span>
       </div>
       <nav className="px-2 py-4 space-y-1">
         {items.map(({ to, label, icon: Icon }) => (
