@@ -68,7 +68,8 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
     ]);
     // Use column C (index 2) as the date column for all resorts per request
     const dateCol = 2;
-    const ageCol = findCol(["age"]);
+    // Per request, age should be read from column BK (zero-based index 62)
+    const ageCol = 62;
     const postalCol = findCol(["postal", "code postal", "postcode", "zip"]);
     const durationCol = findCol([
       "durée",
