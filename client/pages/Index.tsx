@@ -50,65 +50,27 @@ export default function Index() {
     };
   }, []);
 
-  const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
+  const { data, isLoading, isError } = useQuery<ResortAveragesResponse | null>({
     queryKey: ["resort-averages", selectedResortKey],
     queryFn: async () => {
-      // sheet IDs are selected dynamically via the resort selector; use the client-selected resort when calling APIs
-
-      function parseGvizText(text: string) {
-        const start = text.indexOf("(");
-        const end = text.lastIndexOf(")");
-        const json = text.slice(start + 1, end);
-        return JSON.parse(json);
-      }
-
-      function toNumber(val: any): number | null {
-        if (val == null) return null;
-        if (typeof val === "number") return Number.isFinite(val) ? val : null;
-        if (typeof val === "string") {
-          const s = val.replace(/\u00A0/g, "").trim();
-          const m = s.match(/-?\d+[.,]?\d*/);
-          if (!m) return null;
-          const n = Number(m[0].replace(",", "."));
-          return Number.isFinite(n) ? n : null;
-        }
-        if (typeof val === "object") {
-          if (val.v != null) return toNumber(val.v);
-          if (val.f != null) return toNumber(val.f);
-        }
-        return null;
-      }
-
-      function normalizeAverage(n: number | null): number | null {
-        if (n == null) return null;
-        if (n < 0 || n > 5) return null;
-        return n;
-      }
-
-      const cfg = currentResort;
       try {
         const selected = selectedResortKey;
-        const url = new URL(
-          `/api/resort/${selected}/averages`,
-          window.location.origin,
-        ).toString();
+        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await safeFetch(url, { credentials: "same-origin" });
-        const text = await r
-          .clone()
-          .text()
-          .catch(() => "");
+        const text = await r.clone().text().catch(() => "");
         if (!r.ok) {
-          throw new Error(`Server error: ${r.status} ${text}`);
+          console.warn("resort averages fetch returned non-ok", r.status, text);
+          return null;
         }
         try {
           return JSON.parse(text) as ResortAveragesResponse;
         } catch (e) {
-          throw new Error(`Invalid JSON response: ${text}`);
+          console.warn("resort averages invalid json", e, text);
+          return null;
         }
-      } catch (err) {
-        // Do not attempt client-side Google Sheets fetches here — surface API errors
-        console.error("API fetch failed:", err);
-        throw err;
+      } catch (err: any) {
+        console.warn("resort averages fetch failed", err && err.message ? err.message : err);
+        return null;
       }
     },
     enabled: serverAvailable !== false,
