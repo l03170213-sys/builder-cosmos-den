@@ -458,6 +458,31 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       else if (scells[71] && scells[71].v != null) fcell = scells[71];
       result.feedback = fcell ? String(fcell.v) : null;
 
+      // attach meta fields (date, age BK, postal, duration, name, email) from sheet1 when available
+      try {
+        result.date = scells[2] && scells[2].v != null ? String(scells[2].v) : null;
+      } catch (e) {}
+      try {
+        result.age = scells[62] && scells[62].v != null ? String(scells[62].v) : null;
+      } catch (e) {}
+      try {
+        result.postal = scells[8] && scells[8].v != null ? String(scells[8].v) : null;
+      } catch (e) {}
+      try {
+        // attempt to find duration column by header heuristics
+        const durIdx = scols.findIndex((h: string) => {
+          const nh = normalize(h || "");
+          return nh.includes("dur") || nh.includes("séjour") || nh.includes("duree");
+        });
+        if (durIdx !== -1 && scells[durIdx] && scells[durIdx].v != null) result.duration = String(scells[durIdx].v);
+      } catch (e) {}
+      try {
+        result.name = scells[4] && scells[4].v != null ? String(scells[4].v) : null;
+      } catch (e) {}
+      try {
+        result.email = scells[3] && scells[3].v != null ? String(scells[3].v) : null;
+      } catch (e) {}
+
       // Prefer overall from matched matrice row column L (index 11) if available
       try {
         if (typeof matchedMatriceRow !== 'undefined' && matchedMatriceRow && matchedMatriceRow.c && matchedMatriceRow.c[11] && matchedMatriceRow.c[11].v != null) {
