@@ -294,6 +294,29 @@ export default function Analyses() {
             </div>
           </section>
 
+          <Dialog open={modalOpen} onOpenChange={(open) => { if (!open) closeModal(); setModalOpen(open); }}>
+            <DialogContent>
+              <DialogTitle>{RESORTS.find(r => r.key === modalResortKey)?.name || 'Hôtel'}</DialogTitle>
+              <DialogDescription>
+                {modalQuery.isLoading ? (
+                  <div className="h-64 animate-pulse bg-gray-200 rounded" />
+                ) : modalQuery.isError ? (
+                  <div className="text-sm text-destructive">Impossible de charger les données.</div>
+                ) : modalQuery.data ? (
+                  <div className="space-y-4">
+                    <div className="text-sm text-muted-foreground">Moyenne Générale</div>
+                    <div className="text-3xl font-extrabold">{modalQuery.data ? `${modalQuery.data.overallAverage.toFixed(1)}/5` : '—'}</div>
+                    <div className="mt-2">
+                      <ChartOnly data={modalQuery.data.categories} chartType="bar" id="modal-hotel-chart" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">Aucune donnée.</div>
+                )}
+              </DialogDescription>
+            </DialogContent>
+          </Dialog>
+
         </main>
       </div>
     </div>
