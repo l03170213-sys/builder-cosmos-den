@@ -1,4 +1,6 @@
 import React from "react";
+import Sidebar from "@/components/Sidebar";
+import Header from "@/components/Header";
 import ChartOnly from "@/components/ChartOnly";
 import { useQuery } from "@tanstack/react-query";
 import type { ResortAveragesResponse } from "@shared/api";
