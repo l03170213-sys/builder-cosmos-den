@@ -81,51 +81,28 @@ export default function Index() {
   });
 
   const { data: summary, isLoading: loadingSummary } = useQuery<
-    import("@shared/api").ResortSummaryResponse
+    import("@shared/api").ResortSummaryResponse | null
   >({
     queryKey: ["resort-summary", selectedResortKey],
     queryFn: async () => {
-      function parseGvizText(text: string) {
-        const start = text.indexOf("(");
-        const end = text.lastIndexOf(")");
-        const json = text.slice(start + 1, end);
-        return JSON.parse(json);
-      }
-
-      function valueToString(v: any) {
-        if (v == null) return "";
-        if (typeof v === "string") return v.trim();
-        if (typeof v === "number") return String(v);
-        if (v && typeof v === "object" && v.v != null)
-          return String(v.v).trim();
-        return String(v);
-      }
-
       try {
         const selected = selectedResortKey;
-        const cfg = currentResort;
-        const url = new URL(
-          `/api/resort/${selected}/summary`,
-          window.location.origin,
-        ).toString();
+        const url = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await safeFetch(url, { credentials: "same-origin" });
-        const text = await r
-          .clone()
-          .text()
-          .catch(() => "");
+        const text = await r.clone().text().catch(() => "");
         if (!r.ok) {
-          throw new Error(`Server error: ${r.status} ${text}`);
+          console.warn("resort summary fetch non-ok", r.status, text);
+          return null;
         }
         try {
-          return JSON.parse(
-            text,
-          ) as import("@shared/api").ResortSummaryResponse;
+          return JSON.parse(text) as import("@shared/api").ResortSummaryResponse;
         } catch (e) {
-          throw new Error(`Invalid JSON response: ${text}`);
+          console.warn("resort summary invalid json", e, text);
+          return null;
         }
-      } catch (err) {
-        console.error("API summary fetch failed:", err);
-        throw err;
+      } catch (err: any) {
+        console.warn("API summary fetch failed:", err && err.message ? err.message : err);
+        return null;
       }
     },
     enabled: serverAvailable !== false,
