@@ -576,15 +576,38 @@ export default function Repondants() {
                               {row.duration}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-700">
-                              <button
-                                onClick={() => {
-                                  setSelected(row);
-                                  setDialogOpen(true);
-                                }}
-                                className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setSelected(row);
+                                    setDialogOpen(true);
+                                  }}
+                                  className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const btn = document.getElementById('export-single-btn-' + i) as HTMLButtonElement | null;
+                                      if (btn) { btn.disabled = true; btn.textContent = 'Préparation...'; }
+                                      const mod = await import('@/lib/pdf');
+                                      await mod.exportRespondentPdf(selectedResortKey, row);
+                                      if (btn) btn.textContent = 'Téléchargé';
+                                      setTimeout(() => { if (btn) { btn.textContent = 'PDF'; btn.disabled = false; } }, 2000);
+                                    } catch (e) {
+                                      console.error('Export respondent failed', e);
+                                      const btn = document.getElementById('export-single-btn-' + i) as HTMLButtonElement | null;
+                                      if (btn) { btn.textContent = 'Erreur'; setTimeout(() => { if (btn) { btn.textContent = 'PDF'; btn.disabled = false; } }, 2000); }
+                                    }
+                                  }}
+                                  id={`export-single-btn-${i}`}
+                                  className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs bg-secondary"
+                                >
+                                  PDF
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -658,7 +681,7 @@ export default function Repondants() {
                   </div>
                   <div className="mt-2 text-2xl font-extrabold">
                     {loadingRespondentData
-                      ? "���"
+                      ? "…"
                       : respondentNoteGeneral
                         ? `${formatAverage(respondentNoteGeneral)}/5`
                         : "—"}
