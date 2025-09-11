@@ -119,7 +119,16 @@ export async function exportAllRespondentsPdf(resortKey: string, allRespondents:
       if (r.date) params.set("date", r.date);
       const url = `/api/resort/${resortKey}/respondent?${params.toString()}`;
       const details = await fetchJsonSafe(url, { credentials: "same-origin" }).catch(() => null);
-      addRespondentPage(doc, i, total, r.name || r.label || r.email || `Respondent ${i + 1}`, details?.overall || r.note || "", details?.feedback || r.feedback || "", (details && details.categories) || null);
+      addRespondentPage(
+        doc,
+        i,
+        total,
+        r.name || r.label || r.email || `Respondent ${i + 1}`,
+        details?.overall || r.note || "",
+        details?.feedback || r.feedback || "",
+        (details && details.categories) || null,
+        { date: details?.date || r.date || null, age: details?.age || r.age || null, postal: details?.postal || r.postal || null, duration: details?.duration || r.duration || null }
+      );
       added++;
       if (onProgress) onProgress(added, total);
     } catch (e) {
