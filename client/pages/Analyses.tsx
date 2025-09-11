@@ -46,10 +46,15 @@ export default function Analyses() {
     queryFn: async () => {
       const promises = RESORTS.map(async (r) => {
         const url = new URL(`/api/resort/${r.key}/averages`, window.location.origin).toString();
-        const resp = await safeFetch(url, { credentials: "same-origin" });
-        if (!resp.ok) return { key: r.key, name: r.name, error: true };
-        const json = (await resp.json()) as ResortAveragesResponse;
-        return { key: r.key, name: r.name, overall: json.overallAverage, categories: json.categories };
+        try {
+          const resp = await safeFetch(url, { credentials: "same-origin" });
+          if (!resp.ok) return { key: r.key, name: r.name, error: true };
+          const json = (await resp.json()) as ResortAveragesResponse;
+          return { key: r.key, name: r.name, overall: json.overallAverage, categories: json.categories };
+        } catch (e) {
+          console.warn("allResortsQuery: fetch failed for", r.key, e && e.message ? e.message : e);
+          return { key: r.key, name: r.name, error: true };
+        }
       });
       return Promise.all(promises);
     },
