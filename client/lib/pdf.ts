@@ -11,7 +11,18 @@ function sanitizeText(s: any) {
     let str = String(s).normalize('NFKC');
     // remove invisible/control/other characters
     str = str.replace(/\p{C}/gu, '');
-    // collapse multiple whitespace
+    // Collapse multiple whitespace
+    str = str.replace(/\s+/g, ' ').trim();
+    // Collapse digits separated by spaces (e.g. '2 . 5 4' => '2.54')
+    str = str.replace(/(\d)\s+\.\s+(\d)/g, '$1.$2');
+    str = str.replace(/(\d)\s+(\d)/g, '$1$2');
+    // If string looks like letters separated by spaces (e.g. 'T R A N S P O R T S'), glue them
+    const tokens = str.split(' ');
+    const singleLetterCount = tokens.filter((t) => t.length === 1).length;
+    if (tokens.length >= 6 && singleLetterCount / tokens.length > 0.6) {
+      str = tokens.join('');
+    }
+    // Trim again
     str = str.replace(/\s+/g, ' ').trim();
     return str;
   } catch (e) {
