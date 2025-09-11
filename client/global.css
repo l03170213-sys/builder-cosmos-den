@@ -101,4 +101,13 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Dynamic primary color support (set --vm-primary via JS) */
+  :root {
+    --vm-primary: #2fb7a8;
+  }
+
+  .bg-primary { background-color: var(--vm-primary) !important; }
+  .text-primary { color: var(--vm-primary) !important; }
+  .border-primary { border-color: var(--vm-primary) !important; }
 }
