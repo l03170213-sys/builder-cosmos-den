@@ -277,31 +277,6 @@ export default function Analyses() {
             </div>
           </section>
 
-          <section className="bg-white rounded-md p-4 shadow-sm">
-            <h3 className="text-lg font-semibold mb-3">Tendances temporelles (hôtel sélectionné)</h3>
-            <p className="text-sm text-muted-foreground mb-3">La source actuelle fournit la moyenne globale actuelle et les moyennes par catégorie (instantané). Pour des tendances temporelles réelles, il faut enregistrer périodiquement ces valeurs côté serveur. En attendant, voici l'instantané actuel et la répartition par catégorie.</p>
-
-            {isLoading || !data ? (
-              <div className="w-full animate-pulse h-64 rounded-md bg-gray-200" />
-            ) : isError ? (
-              <div className="text-sm text-destructive">Impossible de charger les données.</div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="bg-white rounded-md p-4">
-                  <div className="text-sm text-muted-foreground">Moyenne Générale</div>
-                  <div className="mt-2 text-3xl font-extrabold">{data ? `${data.overallAverage.toFixed(1)}/5` : "—"}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">Mise à jour: {data && data.updatedAt ? new Date(data.updatedAt).toLocaleDateString() : "—"}</div>
-                </div>
-
-                <div className="bg-white rounded-md p-4">
-                  <div className="text-sm text-muted-foreground">Répartition par catégorie</div>
-                  <div className="mt-2">
-                    <ChartOnly data={data.categories} chartType="bar" id="chart-wrapper" />
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
         </main>
       </div>
     </div>
