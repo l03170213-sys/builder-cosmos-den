@@ -447,6 +447,8 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
         const chartEl = await waitForElement("chart-wrapper", timeoutMs);
         const listEl = await waitForElement("list-wrapper", timeoutMs);
         if (chartEl && listEl) {
+          // allow UI to fully render charts (user requested ~5s)
+          await new Promise((res) => setTimeout(res, preCaptureMs));
           // Build chart container (with hotel name) and render
           const chartContainer = document.createElement("div");
           chartContainer.style.width = "794px";
