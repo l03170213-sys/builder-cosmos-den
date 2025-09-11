@@ -5,14 +5,6 @@ import type { ResortAveragesResponse } from "@shared/api";
 import { useSelectedResort } from "@/hooks/use-selected-resort";
 import { RESORTS } from "@/lib/resorts";
 import { safeFetch } from "@/lib/fetcher";
-
-import React from "react";
-import ChartOnly from "@/components/ChartOnly";
-import { useQuery } from "@tanstack/react-query";
-import type { ResortAveragesResponse } from "@shared/api";
-import { useSelectedResort } from "@/hooks/use-selected-resort";
-import { RESORTS } from "@/lib/resorts";
-import { safeFetch } from "@/lib/fetcher";
 import {
   ResponsiveContainer,
   BarChart,
@@ -165,7 +157,7 @@ export default function Analyses() {
 
         <section className="bg-white rounded-md p-4 shadow-sm">
           <h3 className="text-lg font-semibold mb-3">Tendances temporelles (hôtel sélectionné)</h3>
-          <p className="text-sm text-muted-foreground mb-3">La source actuelle fournit la moyenne globale actuelle et les moyennes par catégorie (instantané). Pour des tendances temporelles réelles, il faut enregistrer périodiquement ces valeurs côté serveur. En attendant, voici l'instantané actuel et la répartition par catégorie.</p>
+          <p className="text-sm text-muted-foreground mb-3">La source actuelle fournit la moyenne globale actuelle et les moyennes par cat��gorie (instantané). Pour des tendances temporelles réelles, il faut enregistrer périodiquement ces valeurs côté serveur. En attendant, voici l'instantané actuel et la répartition par catégorie.</p>
 
           {isLoading || !data ? (
             <div className="w-full animate-pulse h-64 rounded-md bg-gray-200" />
