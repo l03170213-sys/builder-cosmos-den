@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Analyses from "./pages/Analyses";
 import Rapports from "./pages/Rapports";
+import Automatisation from "./pages/Automatisation";
 import Repondants from "./pages/Repondants";
 import NotFound from "./pages/NotFound";
 
