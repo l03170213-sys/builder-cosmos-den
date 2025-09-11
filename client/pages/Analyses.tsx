@@ -22,6 +22,7 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 
 export default function Analyses() {
   const { resort: selectedResortKey, setSelected } = useSelectedResort();
@@ -67,6 +68,33 @@ export default function Analyses() {
   const toggleSelect = (key: string) => {
     setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev.slice(0, 8), key]));
   };
+
+  // modal for viewing a single hotel's chart
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [modalResortKey, setModalResortKey] = React.useState<string | null>(null);
+  const openModal = (key: string) => {
+    setModalResortKey(key);
+    setModalOpen(true);
+  };
+  const closeModal = () => {
+    setModalOpen(false);
+    setModalResortKey(null);
+  };
+
+  const modalQuery = useQuery<ResortAveragesResponse | null>({
+    queryKey: ["resort-modal", modalResortKey],
+    queryFn: async () => {
+      if (!modalResortKey) return null;
+      const url = new URL(`/api/resort/${modalResortKey}/averages`, window.location.origin).toString();
+      const r = await safeFetch(url, { credentials: "same-origin" });
+      const text = await r.clone().text().catch(() => "");
+      if (!r.ok) throw new Error(`Server error: ${r.status} ${text}`);
+      return JSON.parse(text) as ResortAveragesResponse;
+    },
+    enabled: !!modalResortKey && modalOpen,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
   const interHotelData = (allResortsQuery.data || [])
     .filter((r: any) => !r.error && typeof r.overall === "number")
@@ -209,7 +237,7 @@ export default function Analyses() {
                     <div className="mt-1 text-sm">Moyenne: {Number(bestHotel.overall).toFixed(2)}/5</div>
                     <div className="mt-3">
                       <button
-                        onClick={() => { setSelected(bestHotel.key); window.location.href = '/'; }}
+                        onClick={() => openModal(bestHotel.key)}
                         className="px-3 py-1 rounded-md bg-primary text-white text-sm"
                       >Voir</button>
                     </div>
@@ -227,7 +255,7 @@ export default function Analyses() {
                     <div className="mt-1 text-sm">Moyenne: {Number(worstHotel.overall).toFixed(2)}/5</div>
                     <div className="mt-3">
                       <button
-                        onClick={() => { setSelected(worstHotel.key); window.location.href = '/'; }}
+                        onClick={() => openModal(worstHotel.key)}
                         className="px-3 py-1 rounded-md border text-sm"
                       >Voir</button>
                     </div>
@@ -263,17 +291,6 @@ export default function Analyses() {
                 </ul>
               </div>
 
-              <div className="bg-white rounded-md p-3">
-                <div className="text-sm font-medium">Incohérences (forte variance par catégorie)</div>
-                <ul className="mt-2 space-y-2">
-                  {analysis.highVar.slice(0, 6).map((c: any) => (
-                    <li key={c.name} className="flex items-center justify-between bg-white border p-2 rounded">
-                      <div className="text-sm">{c.name}</div>
-                      <div className="text-sm font-semibold">σ={c.std.toFixed(2)}</div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
           </section>
 
