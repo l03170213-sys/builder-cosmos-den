@@ -265,17 +265,6 @@ export default function Analyses() {
                 )}
               </div>
 
-              <div className="bg-white border p-3 rounded">
-                <div className="text-sm font-medium">Catégories les plus faibles</div>
-                <ul className="mt-2 space-y-2">
-                  {analysis.catStats.slice(0, 6).map((c) => (
-                    <li key={c.name} className="flex items-center justify-between bg-white p-2 rounded">
-                      <div className="text-sm">{c.name}</div>
-                      <div className="text-sm font-semibold">{c.avg.toFixed(2)}/5</div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
