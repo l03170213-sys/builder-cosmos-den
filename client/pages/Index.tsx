@@ -328,6 +328,8 @@ export default function Index() {
                         const exportFn = (
                           await import("@/components/ExportButton")
                         ).default;
+                        // wait 5s to allow summary to render fully
+                        await new Promise((r) => setTimeout(r, 5000));
                         // Official export: uses the pdf-summary content and list-wrapper to build a 2-page PDF matching the provided template
                         await exportFn({
                           chartId: "chart-wrapper",
@@ -413,7 +415,7 @@ export default function Index() {
                   style={{ borderColor: "#e6edf3" }}
                 >
                   <div className="text-xs text-muted-foreground">
-                    Moyenne g��nérale
+                    Moyenne générale
                   </div>
                   <div className="mt-2 text-2xl font-extrabold">
                     {data ? `${data.overallAverage.toFixed(1)}/5` : "—"}
