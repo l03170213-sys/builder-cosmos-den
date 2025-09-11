@@ -353,26 +353,6 @@ export default function Index() {
                     Exporter (format officiel)
                   </button>
 
-                  <button
-                    id="export-all-official"
-                    onClick={async () => {
-                      try {
-                        const exportModule = await import("@/components/ExportButton");
-                        if (exportModule && exportModule.exportAllHotels) {
-                          await exportModule.exportAllHotels({ mode: "official" });
-                        } else {
-                          alert("Fonction d'export groupé non disponible");
-                        }
-                      } catch (err) {
-                        console.error(err);
-                        alert("Erreur lors de l'export officiel de tous les hôtels");
-                      }
-                    }}
-                    aria-label="Exporter tous les officiels"
-                    className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white text-sm"
-                  >
-                    Exporter tous (format officiel)
-                  </button>
                 </div>
               </div>
 
