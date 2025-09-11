@@ -86,7 +86,16 @@ export async function exportRespondentPdf(resortKey: string, respondent: any) {
     const details = await fetchJsonSafe(url, { credentials: "same-origin" }).catch(() => null);
 
     const doc = new jsPDF();
-    addRespondentPage(doc, 0, 1, respondent.name || respondent.label || respondent.email || "Anonyme", details?.overall || respondent.note || "", details?.feedback || respondent.feedback || "", (details && details.categories) || null);
+    addRespondentPage(
+      doc,
+      0,
+      1,
+      respondent.name || respondent.label || respondent.email || "Anonyme",
+      details?.overall || respondent.note || "",
+      details?.feedback || respondent.feedback || "",
+      (details && details.categories) || null,
+      { date: details?.date || respondent.date || null, age: details?.age || respondent.age || null, postal: details?.postal || respondent.postal || null, duration: details?.duration || respondent.duration || null }
+    );
     doc.save(`respondent-${(respondent.name || respondent.email || "anon").replace(/[^a-z0-9_-]/gi, "_")}.pdf`);
   } catch (e) {
     throw e;
