@@ -1,4 +1,5 @@
 import "./global.css";
+import * as React from "react";
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,27 +12,61 @@ import Rapports from "./pages/Rapports";
 import Automatisation from "./pages/Automatisation";
 import Repondants from "./pages/Repondants";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/analyses" element={<Analyses />} />
-          <Route path="/rapports" element={<Rapports />} />
-          <Route path="/automatisation" element={<Automatisation />} />
-          <Route path="/repondants" element={<Repondants />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [authed, setAuthed] = React.useState<boolean>(() => {
+    try {
+      return typeof window !== "undefined" && localStorage.getItem("vm:authed") === "1";
+    } catch (e) {
+      return false;
+    }
+  });
+
+  React.useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "vm:authed") {
+        setAuthed(e.newValue === "1");
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // Render login screen until the correct password is provided
+  if (!authed) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Login onSuccess={() => setAuthed(true)} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/analyses" element={<Analyses />} />
+            <Route path="/rapports" element={<Rapports />} />
+            <Route path="/automatisation" element={<Automatisation />} />
+            <Route path="/repondants" element={<Repondants />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
