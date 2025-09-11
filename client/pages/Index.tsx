@@ -301,6 +301,8 @@ export default function Index() {
                         try {
                           const exportFn = (await import("@/components/ExportButton")).default;
                           const sanitize = (s: string) => s.replace(/[^\w\d\-_. ]+/g, "").replace(/\s+/g, "_").toLowerCase();
+                          // wait 5s to let charts render fully
+                          await new Promise((r) => setTimeout(r, 5000));
                           await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", filename: `${sanitize(currentResort.name)}-graphique.pdf` });
                         } catch (e) {
                           console.error(e);
@@ -411,7 +413,7 @@ export default function Index() {
                   style={{ borderColor: "#e6edf3" }}
                 >
                   <div className="text-xs text-muted-foreground">
-                    Moyenne générale
+                    Moyenne g��nérale
                   </div>
                   <div className="mt-2 text-2xl font-extrabold">
                     {data ? `${data.overallAverage.toFixed(1)}/5` : "—"}
