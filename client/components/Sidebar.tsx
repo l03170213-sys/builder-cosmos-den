@@ -22,8 +22,8 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className="hidden md:flex md:flex-col w-64 shrink-0 border-r" style={{ backgroundColor: "var(--vm-primary)", color: "white", borderColor: "rgba(0,0,0,0.06)" }}>
-      <div className="h-20 flex items-center gap-2 px-4 text-white font-semibold tracking-tight">
+    <aside className="hidden md:flex md:flex-col w-64 shrink-0 border-r" style={{ backgroundColor: "white", color: "var(--vm-primary)", borderColor: "rgba(0,0,0,0.06)" }}>
+      <div className="h-20 flex items-center gap-2 px-4 font-semibold tracking-tight">
         <img src={settings.logoUrl} alt={settings.appName} className="h-16 w-auto object-contain rounded" />
       </div>
       <nav className="px-2 py-4 space-y-1">
@@ -35,8 +35,8 @@ export function Sidebar() {
               cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
                 isActive
-                  ? "bg-white/10 text-white"
-                  : "text-white/80 hover:bg-white/10 hover:text-white",
+                  ? "bg-primary text-white"
+                  : "text-primary hover:bg-primary hover:text-white",
               )
             }
           >
