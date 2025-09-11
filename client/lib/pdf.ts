@@ -5,24 +5,59 @@ function pause(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
-function addRespondentPage(doc: any, idx: number, total: number, name: string, overall: string | null, feedback: string | null, categories: { name: string; value: string }[] | null) {
+function sanitizeText(s: any) {
+  if (s == null) return "";
+  try {
+    let str = String(s).normalize('NFKC');
+    // remove invisible/control/other characters
+    str = str.replace(/\p{C}/gu, '');
+    // collapse multiple whitespace
+    str = str.replace(/\s+/g, ' ').trim();
+    return str;
+  } catch (e) {
+    return String(s);
+  }
+}
+
+function formatOverall(s: any) {
+  if (s == null || s === '') return '—';
+  const n = Number(String(s).toString().replace(',', '.'));
+  if (Number.isNaN(n)) return sanitizeText(s);
+  return n.toFixed(1).replace('.', ',');
+}
+
+function addRespondentPage(doc: any, idx: number, total: number, name: string, overall: string | null, feedback: string | null, categories: { name: string; value: string }[] | null, meta?: { date?: string | null; age?: string | null; postal?: string | null; duration?: string | null }) {
   if (idx > 0) doc.addPage();
   doc.setFontSize(18);
   doc.setTextColor(20, 20, 20);
-  doc.text(`${name || "Anonyme"}`, 20, 30);
-  doc.setFontSize(12);
-  doc.text(`Note générale: ${overall != null && overall !== "" ? overall : "—"}`, 20, 45);
-  doc.setFontSize(11);
-  doc.text("Avis du répondant:", 20, 60);
-  const feedbackText = feedback || "(aucun)";
-  // wrap text
-  const split = doc.splitTextToSize(feedbackText, 170);
-  doc.text(split, 20, 68);
+  doc.text(`${sanitizeText(name) || 'Anonyme'}`, 20, 30);
 
-  let y = 68 + split.length * 6 + 8;
+  // meta info line
+  doc.setFontSize(11);
+  const metaParts: string[] = [];
+  if (meta?.date) metaParts.push(`Date: ${sanitizeText(meta.date)}`);
+  if (meta?.age) metaParts.push(`Âge: ${sanitizeText(meta.age)}`);
+  if (meta?.postal) metaParts.push(`Code postal: ${sanitizeText(meta.postal)}`);
+  if (meta?.duration) metaParts.push(`Durée: ${sanitizeText(meta.duration)}`);
+  if (metaParts.length) {
+    doc.setFontSize(10);
+    doc.text(metaParts.join(' — '), 20, 42);
+  }
+
+  doc.setFontSize(12);
+  doc.text(`Note générale: ${formatOverall(overall)}`, 20, metaParts.length ? 55 : 45);
+  doc.setFontSize(11);
+  const feedbackText = sanitizeText(feedback) || '(aucun)';
+  // wrap text
+  const startFeedbackY = metaParts.length ? 70 : 60;
+  doc.text('Avis du répondant:', 20, startFeedbackY);
+  const split = doc.splitTextToSize(feedbackText, 170);
+  doc.text(split, 20, startFeedbackY + 8);
+
+  let y = startFeedbackY + 8 + split.length * 6 + 8;
   if (categories && categories.length) {
     doc.setFontSize(12);
-    doc.text("Notes par catégorie:", 20, y);
+    doc.text('Notes par catégorie:', 20, y);
     y += 8;
     doc.setFontSize(10);
     for (const c of categories) {
@@ -30,7 +65,9 @@ function addRespondentPage(doc: any, idx: number, total: number, name: string, o
         doc.addPage();
         y = 30;
       }
-      doc.text(`- ${c.name}: ${c.value}`, 24, y);
+      const nameSan = sanitizeText(c.name);
+      const valSan = formatOverall(c.value);
+      doc.text(`- ${nameSan}: ${valSan}`, 24, y);
       y += 7;
     }
   }
