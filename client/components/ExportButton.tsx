@@ -388,8 +388,8 @@ function sanitizeFilename(name: string) {
     .toLowerCase();
 }
 
-export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "official"; delayMs?: number; timeoutMs?: number; }) {
-  const { mode = "both", delayMs = 500, timeoutMs = 8000 } = options || {};
+export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "official"; delayMs?: number; timeoutMs?: number; canvasScale?: number }) {
+  const { mode = "both", delayMs = 200, timeoutMs = 8000, canvasScale = 1.5 } = options || {};
   const resorts = RESORTS;
   const original = typeof window !== "undefined" ? window.localStorage.getItem("selectedResort") || (resorts[0] && resorts[0].key) : null;
 
@@ -398,9 +398,40 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
     while (Date.now() - start < timeout) {
       const el = document.getElementById(id);
       if (el) return el;
-      await new Promise((r) => setTimeout(r, 200));
+      await new Promise((r) => setTimeout(r, 150));
     }
     return null;
+  };
+
+  // Prepare a single PDF document for all resorts
+  const final = new jsPDF({ unit: "px", format: "a4", orientation: "landscape" });
+  let isFirstPage = true;
+
+  const addScaledImage = async (pdf: any, dataUrl: string, orientation: "landscape" | "portrait" = "landscape") => {
+    const margin = 20;
+    const pageW = orientation === "landscape" ? pdf.internal.pageSize.getWidth() : pdf.internal.pageSize.getHeight();
+    const pageH = orientation === "landscape" ? pdf.internal.pageSize.getHeight() : pdf.internal.pageSize.getWidth();
+
+    if (!isFirstPage) {
+      if (orientation === "landscape") pdf.addPage(undefined, "landscape");
+      else pdf.addPage([pdf.internal.pageSize.getHeight(), pdf.internal.pageSize.getWidth()], "portrait");
+    }
+
+    const imgEl = new Image();
+    imgEl.src = dataUrl;
+    await new Promise((res) => (imgEl.onload = res));
+    const imgW = imgEl.naturalWidth;
+    const imgH = imgEl.naturalHeight;
+    const availW = pageW - margin * 2;
+    const availH = pageH - margin * 2;
+    const scale = Math.min(availW / imgW, availH / imgH, 1);
+    const drawW = imgW * scale;
+    const drawH = imgH * scale;
+    const x = (pageW - drawW) / 2;
+    const y = (pageH - drawH) / 2;
+
+    pdf.addImage(dataUrl, "PNG", x, y, drawW, drawH);
+    isFirstPage = false;
   };
 
   for (const r of resorts) {
@@ -409,33 +440,81 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
       window.localStorage.setItem("selectedResort", r.key);
       window.dispatchEvent(new CustomEvent("resort-change"));
 
-      // Wait for list and summary/chart to render
+      // Wait shortly for the UI to update
+      await new Promise((r) => setTimeout(r, 150));
+
       if (mode === "both" || mode === "graphics") {
-        const chart = await waitForElement("chart-wrapper", timeoutMs);
-        const list = await waitForElement("list-wrapper", timeoutMs);
-        if (chart && list) {
-          await exportToPdf({ chartId: "chart-wrapper", listId: "list-wrapper", filename: `${sanitizeFilename(r.name)}-graphique.pdf` });
+        const chartEl = await waitForElement("chart-wrapper", timeoutMs);
+        const listEl = await waitForElement("list-wrapper", timeoutMs);
+        if (chartEl && listEl) {
+          // Build chart container (with hotel name) and render
+          const chartContainer = document.createElement("div");
+          chartContainer.style.width = "794px";
+          chartContainer.style.minHeight = "500px";
+          chartContainer.style.padding = "24px";
+          chartContainer.style.background = "white";
+          chartContainer.style.boxSizing = "border-box";
+          chartContainer.style.fontFamily = "Inter, Arial, Helvetica, sans-serif";
+          chartContainer.style.color = "#0f172a";
+
+          const header = document.createElement("div");
+          header.style.display = "flex";
+          header.style.justifyContent = "space-between";
+          header.style.alignItems = "center";
+          header.style.marginBottom = "12px";
+          header.innerHTML = `<div style="font-size:18px;font-weight:700">${r.name}</div>`;
+          chartContainer.appendChild(header);
+
+          const clonedChart = chartEl.cloneNode(true) as HTMLElement;
+          clonedChart.style.width = "100%";
+          clonedChart.style.height = "auto";
+          clonedChart.querySelectorAll?.(".animate-pulse").forEach((el: any) => (el.className = ""));
+          chartContainer.appendChild(clonedChart);
+
+          chartContainer.style.position = "fixed";
+          chartContainer.style.left = "-9999px";
+          document.body.appendChild(chartContainer);
+          const chartCanvas = await html2canvas(chartContainer, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+          document.body.removeChild(chartContainer);
+
+          const chartImgData = chartCanvas.toDataURL("image/png");
+          await addScaledImage(final, chartImgData, "landscape");
+
+          // Now render the distribution/list page (portrait)
+          const page2 = makePage2Clone(listEl as HTMLElement);
+          page2.style.position = "fixed";
+          page2.style.left = "-9999px";
+          document.body.appendChild(page2);
+          const listCanvas = await html2canvas(page2, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+          document.body.removeChild(page2);
+          const listImgData = listCanvas.toDataURL("image/png");
+          await addScaledImage(final, listImgData, "portrait");
+
           await new Promise((r) => setTimeout(r, delayMs));
         } else {
-          // skip if required elements not present
-          // eslint-disable-next-line no-console
-          console.warn(`Skipping graphic export for ${r.key} - elements not found`);
+          console.warn(`Skipping graphic pages for ${r.key} - elements not found`);
         }
       }
 
       if (mode === "both" || mode === "official") {
-        const summary = await waitForElement("pdf-summary", timeoutMs);
-        const list = await waitForElement("list-wrapper", timeoutMs);
-        if (summary && list) {
-          await exportToPdf({ chartId: "chart-wrapper", listId: "list-wrapper", summaryId: "pdf-summary", filename: `${sanitizeFilename(r.name)}-officiel.pdf` });
+        const summaryEl = await waitForElement("pdf-summary", timeoutMs);
+        const listEl = await waitForElement("list-wrapper", timeoutMs);
+        if (summaryEl && listEl) {
+          const summaryContainer = makeSummaryClone(summaryEl as HTMLElement);
+          summaryContainer.style.position = "fixed";
+          summaryContainer.style.left = "-9999px";
+          document.body.appendChild(summaryContainer);
+          const summaryCanvas = await html2canvas(summaryContainer, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+          document.body.removeChild(summaryContainer);
+          const summaryImg = summaryCanvas.toDataURL("image/png");
+          await addScaledImage(final, summaryImg, "landscape");
+
           await new Promise((r) => setTimeout(r, delayMs));
         } else {
-          // eslint-disable-next-line no-console
-          console.warn(`Skipping official export for ${r.key} - elements not found`);
+          console.warn(`Skipping official page for ${r.key} - elements not found`);
         }
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error("Error exporting resort", r.key, err);
     }
   }
@@ -444,5 +523,13 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
   if (original) {
     window.localStorage.setItem("selectedResort", original);
     window.dispatchEvent(new CustomEvent("resort-change"));
+  }
+
+  // Trigger single download
+  try {
+    final.save("rapports_tous_hotels.pdf");
+  } catch (e) {
+    console.error("Failed to save combined PDF:", e);
+    alert("Erreur lors de la génération du PDF combiné");
   }
 }
