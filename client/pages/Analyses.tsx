@@ -28,15 +28,28 @@ export default function Analyses() {
   const { resort: selectedResortKey, setSelected } = useSelectedResort();
   const currentResort = RESORTS.find((r) => r.key === selectedResortKey) || RESORTS[0];
 
-  const { data, isLoading, isError } = useQuery<ResortAveragesResponse>({
+  const { data, isLoading, isError } = useQuery<ResortAveragesResponse | null>({
     queryKey: ["resort-averages-analyses", selectedResortKey],
     queryFn: async () => {
-      const selected = selectedResortKey;
-      const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
-      const r = await safeFetch(url, { credentials: "same-origin" });
-      const text = await r.clone().text().catch(() => "");
-      if (!r.ok) throw new Error(`Server error: ${r.status} ${text}`);
-      return JSON.parse(text) as ResortAveragesResponse;
+      try {
+        const selected = selectedResortKey;
+        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
+        const r = await safeFetch(url, { credentials: "same-origin" });
+        const text = await r.clone().text().catch(() => "");
+        if (!r.ok) {
+          console.warn("resort averages fetch returned non-ok", r.status, text);
+          return null;
+        }
+        try {
+          return JSON.parse(text) as ResortAveragesResponse;
+        } catch (e) {
+          console.warn("resort averages invalid json", e, text);
+          return null;
+        }
+      } catch (err: any) {
+        console.warn("resort averages fetch failed", err && err.message ? err.message : err);
+        return null;
+      }
     },
     retry: false,
     refetchOnWindowFocus: false,
