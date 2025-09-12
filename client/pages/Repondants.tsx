@@ -415,7 +415,10 @@ export default function Repondants() {
     onSuccess: (d: any) => {
       setCategoriesByRespondent(d?.categories || null);
       const overall = d && (d.overall ?? d.overallAverage ?? d.overallScore ?? d.overall_score ?? d.overall_value ?? null);
-      setRespondentNoteGeneral(overall != null ? overall : null);
+      // do not overwrite the note from the list row if present — prefer row.note
+      if (!selected?.note) {
+        setRespondentNoteGeneral(overall != null ? overall : null);
+      }
       setRespondentColumnLetter(d?.column ?? null);
       setRespondentFeedback(d?.feedback ?? null);
     },
@@ -749,7 +752,7 @@ export default function Repondants() {
                       : "Colonne L de la fiche matrice (correspondant au répondant) / 5"}
                   </div>
                   {averages && (averages as any).overallAverage && (
-                    <div className="mt-1 text-xs text-muted-foreground">Moyenne h��tel: {formatAverage((averages as any).overallAverage)}/5</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Moyenne hôtel: {formatAverage((averages as any).overallAverage)}/5</div>
                   )}
                 </div>
 
