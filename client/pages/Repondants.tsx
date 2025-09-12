@@ -734,7 +734,13 @@ export default function Repondants() {
                       ? "…"
                       : respondentNoteGeneral
                         ? `${formatAverage(respondentNoteGeneral)}/5`
-                        : (averages && (averages as any).overallAverage ? `${formatAverage((averages as any).overallAverage)}/5` : "—")}
+                        : (() => {
+                            const key = getRowKey(selected);
+                            const fromMap = key ? (respondentNotesMap as any)[key] : null;
+                            if (fromMap) return `${formatAverage(fromMap)}/5`;
+                            if (averages && (averages as any).overallAverage) return `${formatAverage((averages as any).overallAverage)}/5`;
+                            return "—";
+                          })()}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
                     {respondentColumnLetter
