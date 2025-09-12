@@ -58,15 +58,21 @@ export async function safeFetch(u: string, opts?: RequestInit) {
   }
 
   // Last attempt: if the last error was a network/fetch error, throw a clearer message
-  if (lastErr && lastErr instanceof Error && lastErr.message === "Failed to fetch") {
-    const e: any = new Error(
-      "Network error: unable to reach the backend. If you're running the preview, ensure the dev server or proxy is available."
-    );
-    e.cause = lastErr;
-    throw e;
+  if (lastErr) {
+    const isTypeError = (lastErr instanceof Error && (lastErr.message === "Failed to fetch" || lastErr.name === 'TypeError')) || String(lastErr).includes("Failed to fetch") || String(lastErr).toLowerCase().includes('networkerror') || String(lastErr).toLowerCase().includes('network error');
+    if (isTypeError) {
+      const e: any = new Error(
+        "Network error: unable to reach the backend. If you're running the preview or deployed app, ensure the backend (dev server, functions or proxy) is available and CORS/proxy settings allow requests."
+      );
+      e.cause = lastErr;
+      throw e;
+    }
   }
 
-  throw lastErr || new Error("Failed to fetch");
+  // Fallback: always throw a sanitized error (avoid throwing raw TypeError from fetch which can be confusing)
+  const finalErr: any = lastErr instanceof Error ? new Error(`Request failed: ${lastErr.message}`) : new Error("Request failed");
+  finalErr.cause = lastErr;
+  throw finalErr;
 }
 
 export async function fetchJsonSafe(url: string, opts?: RequestInit) {
