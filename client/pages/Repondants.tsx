@@ -562,7 +562,7 @@ export default function Repondants() {
                               {row.name || row.label || row.email}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-700">
-                              {row.note ? formatAverage(row.note) : "—"}
+                              {row.note ? formatAverage(row.note) : (averages && (averages as any).overallAverage ? `${formatAverage((averages as any).overallAverage)}` : "—") }
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
                               {formatDateToFR(row.date)}
