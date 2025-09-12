@@ -439,7 +439,8 @@ export default function Repondants() {
     (async () => {
       setLoadingRespondentData(true);
       setCategoriesByRespondent(null);
-      setRespondentNoteGeneral(null);
+      // prefer note from the row if available; otherwise reset and let fetch populate
+      setRespondentNoteGeneral(selected?.note ?? null);
       setRespondentColumnLetter(null);
       try {
         const params = new URLSearchParams();
@@ -748,7 +749,7 @@ export default function Repondants() {
                       : "Colonne L de la fiche matrice (correspondant au répondant) / 5"}
                   </div>
                   {averages && (averages as any).overallAverage && (
-                    <div className="mt-1 text-xs text-muted-foreground">Moyenne hôtel: {formatAverage((averages as any).overallAverage)}/5</div>
+                    <div className="mt-1 text-xs text-muted-foreground">Moyenne h��tel: {formatAverage((averages as any).overallAverage)}/5</div>
                   )}
                 </div>
 
