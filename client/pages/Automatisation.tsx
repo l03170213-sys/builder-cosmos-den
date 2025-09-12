@@ -100,6 +100,7 @@ export default function Automatisation() {
           </div>
 
           <div className="bg-white rounded-md p-4 shadow-sm">
+            <AutomationRules />
             <p className="text-sm text-muted-foreground mb-4">Liste des hôtels et liens vers leur feuille 1 (données répondants) et la feuille matrice moyenne.</p>
 
             <div className="space-y-4 mb-4">
@@ -150,7 +151,7 @@ export default function Automatisation() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button onClick={() => open(sheet1Edit)} className="px-3 py-1 rounded-md border text-sm" title="Ouvrir feuille 1 (édition)">Feuille 1 (édit)</button>
+                      <button onClick={() => open(sheet1Edit)} className="px-3 py-1 rounded-md border text-sm" title="Ouvrir feuille 1 (édition)">Feuille 1 (��dit)</button>
 
                       <button onClick={() => open(matriceEdit)} className="px-3 py-1 rounded-md border text-sm bg-primary text-white" title="Ouvrir feuille matrice moyenne (édition)">Matrice Moyenne (édit)</button>
 
