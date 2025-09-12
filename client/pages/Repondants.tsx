@@ -414,9 +414,10 @@ export default function Repondants() {
     refetchOnWindowFocus: false,
     onSuccess: (d: any) => {
       setCategoriesByRespondent(d?.categories || null);
-      setRespondentNoteGeneral(d?.overall || null);
-      setRespondentColumnLetter(d?.column || null);
-      setRespondentFeedback(d?.feedback || null);
+      const overall = d && (d.overall ?? d.overallAverage ?? d.overallScore ?? d.overall_score ?? d.overall_value ?? null);
+      setRespondentNoteGeneral(overall != null ? overall : null);
+      setRespondentColumnLetter(d?.column ?? null);
+      setRespondentFeedback(d?.feedback ?? null);
     },
     onError: (err) => {
       console.error("Failed to fetch respondent details:", err);
