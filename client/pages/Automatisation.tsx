@@ -99,7 +99,6 @@ export default function Automatisation() {
           </div>
 
           <div className="bg-white rounded-md p-4 shadow-sm">
-            <p className="text-sm text-muted-foreground mb-4">Liste des hôtels et liens vers leur feuille 1 (données répondants) et la feuille matrice moyenne.</p>
 
             <div className="space-y-4 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
