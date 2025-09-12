@@ -425,7 +425,8 @@ export default function Repondants() {
     onError: (err) => {
       console.error("Failed to fetch respondent details:", err);
       setCategoriesByRespondent(null);
-      setRespondentNoteGeneral(null);
+      // preserve the note from the list row if present
+      if (!selected?.note) setRespondentNoteGeneral(null);
       setRespondentColumnLetter(null);
       setRespondentFeedback(null);
     },
