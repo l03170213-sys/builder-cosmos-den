@@ -1,7 +1,12 @@
 export async function safeFetch(u: string, opts?: RequestInit) {
   const doFetch = async (url: string) => {
     try {
-      const r = await fetch(url, opts);
+      // Use a safe set of options for cross-origin and credentialed requests
+      const optsOnFetch: RequestInit = { ...opts };
+      if (!optsOnFetch.mode) optsOnFetch.mode = "cors";
+      // default credentials to same-origin if not provided to avoid unexpected CORS preflight issues
+      if (optsOnFetch.credentials === undefined) optsOnFetch.credentials = "same-origin";
+      const r = await fetch(url, optsOnFetch);
       return r;
     } catch (err) {
       // rethrow so caller can handle and potentially try alternative forms
