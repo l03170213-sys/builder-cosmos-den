@@ -103,6 +103,16 @@ export default function Parametres() {
                 <li>Zapier, Figma, Builder.io, Sentry, Semgrep, Linear, Notion, Prisma Postgres, Context7 — connectez-les via <strong>Open MCP popover</strong></li>
               </ul>
               <div className="mt-3 text-sm text-muted-foreground">Après connexion, je peux implémenter la persistance serveur et migrer ces paramètres vers la base.</div>
+
+              <div className="mt-4 border-t pt-4">
+                <h3 className="text-lg font-semibold mb-2">Gestion des utilisateurs</h3>
+                <p className="text-sm text-muted-foreground mb-2">Créez des comptes d'accès et attribuez des rôles (admin/editor/viewer). Les utilisateurs sont stockés localement pour l'instant.</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <button onClick={() => setShowUsers(true)} className="px-3 py-2 rounded-md bg-primary text-white">Ouvrir gestion utilisateurs</button>
+                  <div className="text-sm text-muted-foreground">Les rôles contrôlent l'accès aux actions sensibles (ex: suppression, export massif).</div>
+                </div>
+                <ManageUsers open={showUsers} onOpenChange={(v)=>setShowUsers(v)} />
+              </div>
             </div>
           </div>
         </main>
