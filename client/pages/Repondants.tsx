@@ -496,7 +496,8 @@ export default function Repondants() {
         console.error("Failed to fetch respondent matrice via server:", err);
         if (mounted) {
           setCategoriesByRespondent(null);
-          setRespondentNoteGeneral(null);
+          // preserve selected row note when fetch fails
+          setRespondentNoteGeneral(selected?.note ?? null);
           setRespondentColumnLetter(null);
           setRespondentFeedback(null);
         }
