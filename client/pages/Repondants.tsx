@@ -480,7 +480,8 @@ export default function Repondants() {
           if (err && err.status === 404) {
             if (mounted) {
               setCategoriesByRespondent(null);
-              setRespondentNoteGeneral(null);
+              // keep the selected row's note if it exists
+              setRespondentNoteGeneral(selected?.note ?? null);
               setRespondentColumnLetter(null);
               setRespondentFeedback(null);
             }
