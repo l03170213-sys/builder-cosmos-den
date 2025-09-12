@@ -1,3 +1,5 @@
+export type EmailProvider = "test-local" | "sendgrid" | "smtp";
+
 export type AppSettings = {
   appName: string;
   logoUrl: string;
@@ -8,6 +10,18 @@ export type AppSettings = {
   refreshIntervalMs: number;
   enableSnapshots: boolean;
   roles: { admin: boolean; editor: boolean; viewer: boolean };
+
+  // New behaviour / export / notification settings
+  anonymizePII: boolean;
+  enableEmailNotifications: boolean;
+  emailProvider: EmailProvider;
+  emailFrom?: string;
+  defaultReportFormat: "pdf" | "csv";
+  scheduledReportsEnabled: boolean;
+  scheduledReportsCron: string;
+  retentionDays: number;
+  maxExportBatch: number;
+  autoExportOnSnapshot: boolean;
 };
 
 const STORAGE_KEY = "vm_app_settings_v1";
@@ -23,6 +37,17 @@ export const DEFAULT_SETTINGS: AppSettings = {
   refreshIntervalMs: 30000,
   enableSnapshots: false,
   roles: { admin: true, editor: false, viewer: false },
+
+  anonymizePII: false,
+  enableEmailNotifications: false,
+  emailProvider: "test-local",
+  emailFrom: "no-reply@example.com",
+  defaultReportFormat: "pdf",
+  scheduledReportsEnabled: false,
+  scheduledReportsCron: "0 6 * * *",
+  retentionDays: 365,
+  maxExportBatch: 100,
+  autoExportOnSnapshot: false,
 };
 
 export function loadSettings(): AppSettings {
