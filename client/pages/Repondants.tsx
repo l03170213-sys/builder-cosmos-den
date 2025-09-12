@@ -333,6 +333,47 @@ export default function Repondants() {
     return col;
   };
 
+  // map to store fetched per-respondent overall notes
+  const [respondentNotesMap, setRespondentNotesMap] = React.useState<Record<string,string>>({});
+
+  const getRowKey = (row: any) => {
+    if (!row) return "";
+    if (row.email) return `e:${String(row.email).toLowerCase()}`;
+    if (row.id) return `id:${row.id}`;
+    return `n:${String(row.name || "").trim().toLowerCase()}|${String(row.date || "")}`;
+  };
+
+  React.useEffect(() => {
+    if (!data || !Array.isArray((data as any).items)) return;
+    const items = (data as any).items;
+    let mounted = true;
+    (async () => {
+      for (const it of items) {
+        const key = getRowKey(it);
+        if (!key) continue;
+        if ((respondentNotesMap as any)[key] !== undefined) continue;
+        if (it.note) continue;
+        try {
+          const params = new URLSearchParams();
+          if (it.email) params.set('email', it.email);
+          if (it.name) params.set('name', it.name);
+          if (it.date) params.set('date', it.date);
+          const apiUrl = new URL('/api/resort/' + selectedResortKey + '/respondent?' + params.toString(), window.location.origin).toString();
+          const resp = await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }).catch(() => null);
+          const noteVal = resp && (resp.overall ?? resp.overallAverage ?? resp.overallScore ?? resp.overall);
+          if (mounted) {
+            setRespondentNotesMap(prev => ({ ...prev, [key]: noteVal != null ? String(noteVal) : '' }));
+          }
+        } catch (e) {
+          // ignore
+        }
+        // small throttle to avoid bursts
+        await new Promise((r) => setTimeout(r, 200));
+      }
+    })();
+    return () => { mounted = false; };
+  }, [data, selectedResortKey]);
+
   const respondentQuery = useQuery({
     queryKey: [
       "respondentDetails",
@@ -562,7 +603,13 @@ export default function Repondants() {
                               {row.name || row.label || row.email}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-700">
-                              {row.note ? formatAverage(row.note) : (averages && (averages as any).overallAverage ? `${formatAverage((averages as any).overallAverage)}` : "—") }
+                              {(() => {
+                              const key = getRowKey(row);
+                              const noteRaw = row.note ?? (key ? (respondentNotesMap as any)[key] : undefined);
+                              if (noteRaw != null && noteRaw !== "") return formatAverage(noteRaw);
+                              if (averages && (averages as any).overallAverage) return formatAverage((averages as any).overallAverage);
+                              return "—";
+                            })()}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
                               {formatDateToFR(row.date)}
