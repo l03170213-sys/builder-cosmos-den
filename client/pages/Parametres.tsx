@@ -88,6 +88,60 @@ export default function Parametres() {
               </div>
             </div>
 
+            <div className="bg-gray-50 rounded-md p-3 border">
+              <h3 className="text-md font-semibold mb-2">Paramètres avancés</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label className="inline-flex items-center gap-2"><input type="checkbox" checked={settings.anonymizePII} onChange={(e) => update('anonymizePII', e.target.checked)} /> Anonymiser les PII</label>
+                <label className="inline-flex items-center gap-2"><input type="checkbox" checked={settings.enableEmailNotifications} onChange={(e) => update('enableEmailNotifications', e.target.checked)} /> Activer notifications e-mail</label>
+
+                <div>
+                  <label className="text-sm">Fournisseur e-mail</label>
+                  <select value={settings.emailProvider} onChange={(e) => update('emailProvider', e.target.value as any)} className="w-full rounded-md border px-3 py-2 mt-1">
+                    <option value="test-local">Test local</option>
+                    <option value="sendgrid">SendGrid</option>
+                    <option value="smtp">SMTP</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm">Adresse e‑mail d'envoi</label>
+                  <input value={settings.emailFrom || ''} onChange={(e) => update('emailFrom', e.target.value)} className="w-full rounded-md border px-3 py-2 mt-1" />
+                </div>
+
+                <div>
+                  <label className="text-sm">Format de rapport par défaut</label>
+                  <select value={settings.defaultReportFormat} onChange={(e) => update('defaultReportFormat', e.target.value as any)} className="w-full rounded-md border px-3 py-2 mt-1">
+                    <option value="pdf">PDF</option>
+                    <option value="csv">CSV</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm">Rapports programmés</label>
+                  <div className="mt-1"><label className="inline-flex items-center gap-2"><input type="checkbox" checked={settings.scheduledReportsEnabled} onChange={(e)=>update('scheduledReportsEnabled', e.target.checked)} /> Activer</label></div>
+                </div>
+
+                <div>
+                  <label className="text-sm">Cron rapports programmés</label>
+                  <input value={settings.scheduledReportsCron} onChange={(e)=>update('scheduledReportsCron', e.target.value)} className="w-full rounded-md border px-3 py-2 mt-1" />
+                </div>
+
+                <div>
+                  <label className="text-sm">Rétention (jours)</label>
+                  <input type="number" value={String(settings.retentionDays)} onChange={(e)=>update('retentionDays', Number(e.target.value || 0))} className="w-full rounded-md border px-3 py-2 mt-1" />
+                </div>
+
+                <div>
+                  <label className="text-sm">Taille max export (par batch)</label>
+                  <input type="number" value={String(settings.maxExportBatch)} onChange={(e)=>update('maxExportBatch', Number(e.target.value || 0))} className="w-full rounded-md border px-3 py-2 mt-1" />
+                </div>
+
+                <div className="col-span-1 md:col-span-2">
+                  <label className="inline-flex items-center gap-2"><input type="checkbox" checked={settings.autoExportOnSnapshot} onChange={(e)=>update('autoExportOnSnapshot', e.target.checked)} /> Export automatique lors des snapshots</label>
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center gap-2">
               <button onClick={onSave} className="px-3 py-2 rounded-md bg-primary text-white">Enregistrer</button>
               <button onClick={onReset} className="px-3 py-2 rounded-md border">Réinitialiser</button>
