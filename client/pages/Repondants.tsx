@@ -465,9 +465,10 @@ export default function Repondants() {
           });
           if (mounted) {
             setCategoriesByRespondent(dataResp.categories || null);
-            setRespondentNoteGeneral(dataResp.overall || null);
-            setRespondentColumnLetter(dataResp.column || null);
-            setRespondentFeedback(dataResp.feedback || null);
+            const overallResp = dataResp && (dataResp.overall ?? dataResp.overallAverage ?? dataResp.overallScore ?? dataResp.overall_score ?? dataResp.overall_value ?? null);
+            setRespondentNoteGeneral(overallResp != null ? overallResp : null);
+            setRespondentColumnLetter(dataResp.column ?? null);
+            setRespondentFeedback(dataResp.feedback ?? null);
           }
         } catch (err: any) {
           if (err && err.status === 404) {
