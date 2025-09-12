@@ -685,13 +685,16 @@ export default function Repondants() {
                       ? "…"
                       : respondentNoteGeneral
                         ? `${formatAverage(respondentNoteGeneral)}/5`
-                        : "—"}
+                        : (averages && (averages as any).overallAverage ? `${formatAverage((averages as any).overallAverage)}/5` : "—")}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
                     {respondentColumnLetter
                       ? `Colonne ${respondentColumnLetter} de la fiche matrice (correspondant au répondant)`
                       : "Colonne L de la fiche matrice (correspondant au répondant) / 5"}
                   </div>
+                  {averages && (averages as any).overallAverage && (
+                    <div className="mt-1 text-xs text-muted-foreground">Moyenne hôtel: {formatAverage((averages as any).overallAverage)}/5</div>
+                  )}
                 </div>
 
                 <div
