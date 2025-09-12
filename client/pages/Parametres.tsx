@@ -2,6 +2,7 @@ import React from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { loadSettings, saveSettings, resetSettings, DEFAULT_SETTINGS, AppSettings } from "@/lib/settings";
+import ManageUsers from "@/components/ManageUsers";
 
 export default function Parametres() {
   const [settings, setSettings] = React.useState<AppSettings>(() => loadSettings());
