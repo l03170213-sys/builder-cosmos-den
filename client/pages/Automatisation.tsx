@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import { RESORTS } from "@/lib/resorts";
+import AutomationRules from "@/components/AutomationRules";
 
 function parseSheetId(url: string) {
   try {
