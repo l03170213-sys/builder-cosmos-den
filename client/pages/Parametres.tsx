@@ -7,6 +7,7 @@ import ManageUsers from "@/components/ManageUsers";
 export default function Parametres() {
   const [settings, setSettings] = React.useState<AppSettings>(() => loadSettings());
   const [status, setStatus] = React.useState<string | null>(null);
+  const [showUsers, setShowUsers] = React.useState(false);
 
   React.useEffect(() => {
     // apply theme immediately
