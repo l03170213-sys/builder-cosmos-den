@@ -443,8 +443,13 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
 
   const totalResorts = resorts.length;
   let resortIndex = 0;
+  // initial progress report
+  if (onProgress) try { onProgress(0, totalResorts, null); } catch(e) {}
+
   for (const r of resorts) {
     resortIndex++;
+    // report start of processing this resort
+    if (onProgress) try { onProgress(resortIndex - 1, totalResorts, r.name); } catch(e) {}
     try {
       if (typeof window === "undefined") break;
       window.localStorage.setItem("selectedResort", r.key);
