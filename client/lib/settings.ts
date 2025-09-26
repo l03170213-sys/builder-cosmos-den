@@ -39,8 +39,7 @@ const STORAGE_KEY = "vm_app_settings_v1";
 
 export const DEFAULT_SETTINGS: AppSettings = {
   appName: "TRAVELSAT APPLICATION",
-  logoUrl:
-    "https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2Fc4dfccf922984678bdcd751669adb5da?format=webp&width=800",
+  logoUrl: "https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F12622cd3e2df4e72854c80c8717330d2?format=webp&width=800",
   primaryColor: "#2fb7a8",
   dateLocale: "fr-FR",
   timezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Paris" : "Europe/Paris",
