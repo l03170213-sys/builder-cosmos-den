@@ -1,6 +1,6 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { RESORTS } from "@/lib/resorts";
+import { getResorts } from "@/lib/resorts";
 import { safeFetch } from "@/lib/fetcher";
 import { loadSettings } from "@/lib/settings";
 
