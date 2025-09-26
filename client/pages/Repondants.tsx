@@ -197,7 +197,7 @@ export default function Repondants() {
         );
         try {
           // fallback: fetch sheet1 and build a simple respondents list
-          const cfg = RESORTS.find((r) => r.key === selectedResortKey);
+          const cfg = getResorts().find((r) => r.key === selectedResortKey);
           if (!cfg) return { items: [], total: 0, page: 1, pageSize };
           const sheet1Url = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq`;
           const r = await fetch(sheet1Url);
