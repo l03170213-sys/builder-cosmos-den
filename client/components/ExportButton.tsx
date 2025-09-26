@@ -444,58 +444,71 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
       await new Promise((r) => setTimeout(r, 150));
 
       if (mode === "both" || mode === "graphics") {
-        const chartEl = await waitForElement("chart-wrapper", timeoutMs);
-        const listEl = await waitForElement("list-wrapper", timeoutMs);
-        if (chartEl && listEl) {
-          // allow UI to fully render charts (user requested ~5s)
-          await new Promise((res) => setTimeout(res, preCaptureMs));
-          // Build chart container (with hotel name) and render
-          const chartContainer = document.createElement("div");
-          chartContainer.style.width = "794px";
-          chartContainer.style.minHeight = "500px";
-          chartContainer.style.padding = "24px";
-          chartContainer.style.background = "white";
-          chartContainer.style.boxSizing = "border-box";
-          chartContainer.style.fontFamily = "Inter, Arial, Helvetica, sans-serif";
-          chartContainer.style.color = "#0f172a";
+        // Try capture up to 3 times (initial wait + backoff) to allow UI to render
+        let capturedGraphics = false;
+        for (let attempt = 0; attempt < 3 && !capturedGraphics; attempt++) {
+          const chartEl = await waitForElement("chart-wrapper", timeoutMs);
+          const listEl = await waitForElement("list-wrapper", timeoutMs);
+          if (chartEl && listEl) {
+            try {
+              // allow UI to fully render charts
+              const waitMs = preCaptureMs + attempt * 700;
+              await new Promise((res) => setTimeout(res, waitMs));
 
-          const header = document.createElement("div");
-          header.style.display = "flex";
-          header.style.justifyContent = "space-between";
-          header.style.alignItems = "center";
-          header.style.marginBottom = "12px";
-          header.innerHTML = `<div style="font-size:18px;font-weight:700">${r.name}</div>`;
-          chartContainer.appendChild(header);
+              // Build chart container (with hotel name) and render
+              const chartContainer = document.createElement("div");
+              chartContainer.style.width = "794px";
+              chartContainer.style.minHeight = "500px";
+              chartContainer.style.padding = "24px";
+              chartContainer.style.background = "white";
+              chartContainer.style.boxSizing = "border-box";
+              chartContainer.style.fontFamily = "Inter, Arial, Helvetica, sans-serif";
+              chartContainer.style.color = "#0f172a";
 
-          const clonedChart = chartEl.cloneNode(true) as HTMLElement;
-          clonedChart.style.width = "100%";
-          clonedChart.style.height = "auto";
-          clonedChart.querySelectorAll?.(".animate-pulse").forEach((el: any) => (el.className = ""));
-          chartContainer.appendChild(clonedChart);
+              const header = document.createElement("div");
+              header.style.display = "flex";
+              header.style.justifyContent = "space-between";
+              header.style.alignItems = "center";
+              header.style.marginBottom = "12px";
+              header.innerHTML = `<div style="font-size:18px;font-weight:700">${r.name}</div>`;
+              chartContainer.appendChild(header);
 
-          chartContainer.style.position = "fixed";
-          chartContainer.style.left = "-9999px";
-          document.body.appendChild(chartContainer);
-          const chartCanvas = await html2canvas(chartContainer, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
-          document.body.removeChild(chartContainer);
+              const clonedChart = chartEl.cloneNode(true) as HTMLElement;
+              clonedChart.style.width = "100%";
+              clonedChart.style.height = "auto";
+              clonedChart.querySelectorAll?.(".animate-pulse").forEach((el: any) => (el.className = ""));
+              chartContainer.appendChild(clonedChart);
 
-          const chartImgData = chartCanvas.toDataURL("image/png");
-          await addScaledImage(final, chartImgData, "landscape");
+              chartContainer.style.position = "fixed";
+              chartContainer.style.left = "-9999px";
+              document.body.appendChild(chartContainer);
+              const chartCanvas = await html2canvas(chartContainer, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+              document.body.removeChild(chartContainer);
 
-          // Now render the distribution/list page (portrait)
-          const page2 = makePage2Clone(listEl as HTMLElement);
-          page2.style.position = "fixed";
-          page2.style.left = "-9999px";
-          document.body.appendChild(page2);
-          const listCanvas = await html2canvas(page2, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
-          document.body.removeChild(page2);
-          const listImgData = listCanvas.toDataURL("image/png");
-          await addScaledImage(final, listImgData, "portrait");
+              const chartImgData = chartCanvas.toDataURL("image/png");
+              await addScaledImage(final, chartImgData, "landscape");
 
-          await new Promise((r) => setTimeout(r, delayMs));
-        } else {
-          console.warn(`Skipping graphic pages for ${r.key} - elements not found`);
+              // Now render the distribution/list page (portrait)
+              const page2 = makePage2Clone(listEl as HTMLElement);
+              page2.style.position = "fixed";
+              page2.style.left = "-9999px";
+              document.body.appendChild(page2);
+              const listCanvas = await html2canvas(page2, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+              document.body.removeChild(page2);
+              const listImgData = listCanvas.toDataURL("image/png");
+              await addScaledImage(final, listImgData, "portrait");
+
+              capturedGraphics = true;
+            } catch (err) {
+              console.warn(`Attempt ${attempt} failed capturing graphics for ${r.key}:`, err);
+              // continue to next attempt
+            }
+          } else {
+            console.warn(`Elements not found for graphics attempt ${attempt} on ${r.key}`);
+          }
+          if (!capturedGraphics) await new Promise((res) => setTimeout(res, 500 + attempt * 300));
         }
+        if (!capturedGraphics) console.warn(`Skipping graphic pages for ${r.key} after retries`);
       }
 
       if (mode === "both" || mode === "official") {
