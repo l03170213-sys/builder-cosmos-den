@@ -134,6 +134,22 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
+
+    // normalize helper to strip diacritics and collapse spaces for robust matching
+    function normalizeDiacritics(s: string) {
+      if (!s) return '';
+      try {
+        return s
+          .toString()
+          .normalize('NFD')
+          .replace(/\p{Diacritic}/gu, '')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .toLowerCase();
+      } catch (e) {
+        return s.toString().trim().toLowerCase();
+      }
+    }
     const TARGET_FEEDBACK_TITLE = "Votre avis compte pour nous ! :)";
     const feedbackColExactInSheet1 = scols.findIndex(
       (c) => normalize(c) === normalize(TARGET_FEEDBACK_TITLE),
@@ -363,21 +379,6 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           const targetName = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
           const targetEmail = (srow.c && srow.c[3] && srow.c[3].v != null) ? String(srow.c[3].v).trim().toLowerCase() : '';
 
-          // normalize helper to strip diacritics and collapse spaces for robust matching
-          function normalizeDiacritics(s: string) {
-            if (!s) return '';
-            try {
-              return s
-                .toString()
-                .normalize('NFD')
-                .replace(/\p{Diacritic}/gu, '')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .toLowerCase();
-            } catch (e) {
-              return s.toString().trim().toLowerCase();
-            }
-          }
 
           matchedMatriceRow = null;
           for (let ri = 0; ri < mrows.length; ri++) {
