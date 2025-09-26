@@ -5,7 +5,7 @@ import ChartOnly from "@/components/ChartOnly";
 import { useQuery } from "@tanstack/react-query";
 import type { ResortAveragesResponse } from "@shared/api";
 import { useSelectedResort } from "@/hooks/use-selected-resort";
-import { getResorts } from "@/lib/resorts";
+import useResorts from "@/hooks/use-resorts";
 import { safeFetch } from "@/lib/fetcher";
 import {
   ResponsiveContainer,
