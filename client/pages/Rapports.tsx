@@ -97,6 +97,20 @@ export default function Rapports() {
               un par un.
             </p>
           </div>
+
+          {exporting && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="bg-white p-6 rounded shadow max-w-md w-full">
+                <h3 className="text-lg font-semibold mb-2">Export en cours</h3>
+                <div className="text-sm text-muted-foreground mb-4">{exportCurrentKey ? `Hôtel: ${exportCurrentKey}` : "Préparation..."}</div>
+                <div className="w-full bg-gray-200 rounded h-3 overflow-hidden">
+                  <div className="bg-primary h-3" style={{ width: `${exportTotal ? Math.round((exportProgress / exportTotal) * 100) : 0}%` }} />
+                </div>
+                <div className="text-sm text-muted-foreground mt-2">{exportProgress} / {exportTotal}</div>
+              </div>
+            </div>
+          )}
+
         </main>
       </div>
     </div>
