@@ -59,8 +59,8 @@ export default function Analyses() {
   const allResortsQuery = useQuery({
     queryKey: ["all-resorts-averages"],
     queryFn: async () => {
-      const resorts = useResorts();
-      const promises = resorts.map(async (r) => {
+      const resortsList = resorts; // use the hook result captured in component scope
+      const promises = resortsList.map(async (r) => {
         try {
           const mod = await import("@/lib/sheets");
           const json = await mod.fetchAveragesFromSheet(r.sheetId, (r as any).gidMatrice);
