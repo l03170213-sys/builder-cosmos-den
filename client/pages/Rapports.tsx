@@ -34,7 +34,7 @@ export default function Rapports() {
       // Start export
       setExporting(true);
       setExportProgress(0);
-      setExportTotal(RESORTS.length);
+      setExportTotal(getResorts().length);
       await exportAllHotels({ mode, preCaptureMs: 1000, onProgress: (done, total, key) => {
         setExportProgress(done);
         setExportTotal(total);
