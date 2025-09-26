@@ -448,8 +448,8 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
 
   for (const r of resorts) {
     resortIndex++;
-    // report start of processing this resort
-    if (onProgress) try { onProgress(resortIndex - 1, totalResorts, r.name); } catch(e) {}
+    // report start of processing this resort (mark as current)
+    if (onProgress) try { onProgress(resortIndex, totalResorts, r.name); } catch(e) {}
     try {
       if (typeof window === "undefined") break;
       window.localStorage.setItem("selectedResort", r.key);
@@ -458,7 +458,8 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
       // Wait shortly for the UI to update
       await new Promise((r) => setTimeout(r, 150));
 
-      if (onProgress) try { onProgress(resortIndex-1, totalResorts, r.name); } catch(e) {}
+      // reaffirm current progress after UI update
+      if (onProgress) try { onProgress(resortIndex, totalResorts, r.name); } catch(e) {}
 
       if (mode === "both" || mode === "graphics") {
         // Try capture up to 3 times (initial wait + backoff) to allow UI to render
