@@ -642,6 +642,7 @@ export default function Repondants() {
                                 <button
                                   onClick={() => {
                                     setSelected(row);
+                                    setSelectedSnapshotName(row?.name || row?.label || row?.email || null);
                                     setDialogOpen(true);
                                   }}
                                   className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100"
