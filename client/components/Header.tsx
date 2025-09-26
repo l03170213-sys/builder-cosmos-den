@@ -22,7 +22,6 @@ export default function Header() {
     <header className="h-20 border-b sticky top-0 z-10" style={{ backgroundColor: "white", color: "var(--vm-primary)", borderColor: "rgba(0,0,0,0.05)" }}>
       <div className="h-full max-w-screen-2xl mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/butterfly.svg" alt="papillon" className="h-6 w-auto" style={{ marginRight: 8 }} />
           <div className="text-2xl font-extrabold tracking-tight" style={{ color: 'var(--vm-primary)' }}>{settings.appName}</div>
         </div>
 
