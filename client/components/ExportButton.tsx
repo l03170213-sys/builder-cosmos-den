@@ -110,7 +110,7 @@ function makeSummaryClone(summaryEl: HTMLElement) {
   right.style.alignItems = 'flex-end';
   right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
   const pap2 = document.createElement('img');
-  pap2.src = '/butterfly.svg';
+  pap2.src = 'https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F6fe54180faf14512a2c40bff421820cc?format=webp&width=800';
   pap2.alt = 'papillon';
   pap2.style.width = '36px';
   pap2.style.height = 'auto';
