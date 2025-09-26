@@ -454,7 +454,7 @@ export default function Repondants() {
       setRespondentNoteGeneral(selected?.note ?? null);
       setRespondentColumnLetter(null);
       try {
-        const capturedKey = getRowKey(selected);
+        const capturedSelId = selected?._selId || null;
         const params = new URLSearchParams();
         if (selected?.email) params.set("email", selected.email);
         if (selected?.name) params.set("name", selected.name);
