@@ -59,6 +59,17 @@ export const DEFAULT_SETTINGS: AppSettings = {
   retentionDays: 365,
   maxExportBatch: 100,
   autoExportOnSnapshot: false,
+
+  // survey-specific defaults
+  recommendationThreshold: 0.75,
+  removeGarbageChars: true,
+  pdfExportDelaySeconds: 1,
+  pdfExportRetries: 3,
+  exportPreCaptureMs: 1000,
+  exportCanvasScale: 1.5,
+  allowedEmailDomains: "",
+  adminContactEmail: "admin@example.com",
+  enableAnalytics: false,
 };
 
 export function loadSettings(): AppSettings {
