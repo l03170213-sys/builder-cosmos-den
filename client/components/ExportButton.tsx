@@ -33,7 +33,18 @@ function makePage2Clone(original: HTMLElement) {
   }
 
   const right = document.createElement("div");
+  right.style.display = 'flex';
+  right.style.flexDirection = 'column';
+  right.style.alignItems = 'flex-end';
   right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
+  // add papillon top-right
+  const pap = document.createElement('img');
+  pap.src = '/butterfly.svg';
+  pap.alt = 'papillon';
+  pap.style.width = '36px';
+  pap.style.height = 'auto';
+  pap.style.marginTop = '6px';
+  right.appendChild(pap);
 
   header.appendChild(left);
   header.appendChild(right);
@@ -94,7 +105,17 @@ function makeSummaryClone(summaryEl: HTMLElement) {
     left.innerHTML = `<h1 style="margin:0;font-size:22px;font-weight:800">VM Resort - Albanie</h1><div style="margin-top:6px;color:#475569">Rapport de satisfaction</div>`;
   }
   const right = document.createElement("div");
+  right.style.display = 'flex';
+  right.style.flexDirection = 'column';
+  right.style.alignItems = 'flex-end';
   right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
+  const pap2 = document.createElement('img');
+  pap2.src = '/butterfly.svg';
+  pap2.alt = 'papillon';
+  pap2.style.width = '36px';
+  pap2.style.height = 'auto';
+  pap2.style.marginTop = '6px';
+  right.appendChild(pap2);
   header.appendChild(left);
   header.appendChild(right);
   container.appendChild(header);
@@ -308,10 +329,25 @@ export default async function exportToPdf(options: {
       window.localStorage.getItem("selectedResort") || "vm-resort-albanie";
     const resorts = getResorts();
     const cfg = resorts.find((r: any) => r.key === selectedKey) || resorts[0];
-    header.innerHTML = `<div style="font-size:18px;font-weight:700">${cfg.name}</div>`;
+    const leftDiv = document.createElement('div');
+    leftDiv.style.fontSize = '18px';
+    leftDiv.style.fontWeight = '700';
+    leftDiv.textContent = cfg.name;
+    header.appendChild(leftDiv);
   } catch (e) {
-    header.innerHTML = `<div style="font-size:18px;font-weight:700">VM Resort</div>`;
+    const leftDiv = document.createElement('div');
+    leftDiv.style.fontSize = '18px';
+    leftDiv.style.fontWeight = '700';
+    leftDiv.textContent = 'VM Resort';
+    header.appendChild(leftDiv);
   }
+  // right: papillon
+  const rightImg = document.createElement('img');
+  rightImg.src = '/butterfly.svg';
+  rightImg.alt = 'papillon';
+  rightImg.style.width = '36px';
+  rightImg.style.height = 'auto';
+  header.appendChild(rightImg);
   chartContainer.appendChild(header);
 
   // Clone chart element into container
