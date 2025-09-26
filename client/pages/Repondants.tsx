@@ -307,6 +307,7 @@ export default function Repondants() {
   // respondent details query (poll while dialog open)
   // state to hold selected respondent and per-category values
   const [selected, setSelected] = React.useState<any>(null);
+  const [selectedSnapshotName, setSelectedSnapshotName] = React.useState<string | null>(null);
   const [categoriesByRespondent, setCategoriesByRespondent] = React.useState<
     { name: string; value: string }[] | null
   >(null);
