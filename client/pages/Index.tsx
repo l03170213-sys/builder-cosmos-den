@@ -58,17 +58,31 @@ export default function Index() {
         const selected = selectedResortKey;
         const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await safeFetch(url, { credentials: "same-origin" });
-        const text = await r.clone().text().catch(() => "");
-        if (!r.ok) {
-          console.warn("resort averages fetch returned non-ok", r.status, text);
-          return null;
+        if (r.ok) {
+          const text = await r.clone().text().catch(() => "");
+          try {
+            return JSON.parse(text) as ResortAveragesResponse;
+          } catch (e) {
+            console.warn("resort averages invalid json", e);
+            return null;
+          }
         }
-        try {
-          return JSON.parse(text) as ResortAveragesResponse;
-        } catch (e) {
-          console.warn("resort averages invalid json", e, text);
-          return null;
+
+        // fallback: try client-side sheet fetch for dynamic resorts
+        if (r.status === 404) {
+          try {
+            const cfg = getResorts().find((x) => x.key === selectedResortKey);
+            if (!cfg) return null;
+            const mod = await import("@/lib/sheets");
+            return await mod.fetchAveragesFromSheet(cfg.sheetId, (cfg as any).gidMatrice);
+          } catch (e) {
+            console.warn('Fallback client sheet fetch failed', e);
+            return null;
+          }
         }
+
+        console.warn("resort averages fetch returned non-ok", r.status);
+        return null;
       } catch (err: any) {
         console.warn("resort averages fetch failed", err && err.message ? err.message : err);
         return null;
@@ -399,7 +413,7 @@ export default function Index() {
                     Nombre de réponses
                   </div>
                   <div className="mt-2 text-2xl font-extrabold">
-                    {summary ? `${summary.respondents ?? "��"}` : "—"}
+                    {summary ? `${summary.respondents ?? "—"}` : "—"}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
                     Nombre de lignes (réponses)
