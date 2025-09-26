@@ -815,7 +815,7 @@ export default function Repondants() {
                       categoriesByRespondent &&
                       categoriesByRespondent.length === 0 && (
                         <div className="text-sm text-muted-foreground">
-                          Aucune donnée de catégories trouv��e pour ce
+                          Aucune donnée de catégories trouvée pour ce
                           répondant.
                         </div>
                       )}
