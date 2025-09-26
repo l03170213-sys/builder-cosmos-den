@@ -156,9 +156,34 @@ export default function Parametres() {
                   <input type="number" value={String(settings.maxExportBatch)} onChange={(e)=>update('maxExportBatch', Number(e.target.value || 0))} className="w-full rounded-md border px-3 py-2 mt-1" />
                 </div>
 
+                <div>
+                  <label className="text-sm">Pré-capture export (ms)</label>
+                  <input type="number" value={String(settings.exportPreCaptureMs)} onChange={(e)=>update('exportPreCaptureMs', Number(e.target.value || 0))} className="w-full rounded-md border px-3 py-2 mt-1" />
+                </div>
+
+                <div>
+                  <label className="text-sm">Export canvas scale</label>
+                  <input type="number" step="0.1" value={String(settings.exportCanvasScale)} onChange={(e)=>update('exportCanvasScale', Number(e.target.value || 1))} className="w-full rounded-md border px-3 py-2 mt-1" />
+                </div>
+
+                <div>
+                  <label className="text-sm">Adresse(s) e-mail autorisées (domaine)</label>
+                  <input value={settings.allowedEmailDomains || ''} onChange={(e)=>update('allowedEmailDomains', e.target.value)} className="w-full rounded-md border px-3 py-2 mt-1" placeholder="ex: example.com,another.com" />
+                </div>
+
+                <div>
+                  <label className="text-sm">Contact administrateur</label>
+                  <input value={settings.adminContactEmail || ''} onChange={(e)=>update('adminContactEmail', e.target.value)} className="w-full rounded-md border px-3 py-2 mt-1" />
+                </div>
+
                 <div className="col-span-1 md:col-span-2">
                   <label className="inline-flex items-center gap-2"><input type="checkbox" checked={settings.autoExportOnSnapshot} onChange={(e)=>update('autoExportOnSnapshot', e.target.checked)} /> Export automatique lors des snapshots</label>
                 </div>
+
+                <div>
+                  <label className="inline-flex items-center gap-2"><input type="checkbox" checked={settings.enableAnalytics} onChange={(e)=>update('enableAnalytics', e.target.checked)} /> Activer analytics</label>
+                </div>
+
               </div>
             </div>
 
