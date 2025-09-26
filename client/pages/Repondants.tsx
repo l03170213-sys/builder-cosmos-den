@@ -177,6 +177,7 @@ function formatAverage(raw: any) {
 export default function Repondants() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { resort: selectedResortKey } = useSelectedResort();
+  const resorts = useResorts();
   const [page, setPage] = React.useState(1);
   const [pageSize] = React.useState(10);
   const { data, isLoading, isError } = useQuery({
