@@ -430,7 +430,7 @@ export default function Repondants() {
     onError: (err) => {
       console.error("Failed to fetch respondent details:", err);
       // ensure only clear when still the same selected snapshot
-      if (getRowKey(selected) !== respondentKeyAtRender) return;
+      if ((selected?._selId || null) !== respondentSelIdAtRender) return;
       setCategoriesByRespondent(null);
       // preserve the note from the list row if present
       if (!selected?.note) setRespondentNoteGeneral(null);
