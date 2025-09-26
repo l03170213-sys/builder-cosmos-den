@@ -91,7 +91,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
     const PESTANA_CATEGORY_NAMES = [
       "🌟 APPRÉCIATION GLOBALE",
-      "✈️ TRANSPORTS Aérien",
+      "✈��� TRANSPORTS Aérien",
       "🚐 Car navette",
       "🏨 HÉBERGEMENT",
       "🛏️ CHAMBRES",
@@ -529,16 +529,60 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
           // try to find col label in matrice matching email or name and remember column index
           let respColIndex = -1;
+          // Normalize helper for column header comparison
+          function normHeader(s: string) {
+            return normalizeDiacritics((s || "").toString().trim().toLowerCase()).replace(/[^a-z0-9@]+/g, "");
+          }
+          const targetNameNorm = normalizeDiacritics(nameVal).replace(/\s+/g, "");
+          const targetEmailNorm = (emailVal || "").toString().trim().toLowerCase();
+
+          // First pass: direct contains match
           for (let ci = 0; ci < mcols.length; ci++) {
-            const lbl = (mcols[ci] || "").toString().trim().toLowerCase();
-            if (!lbl) continue;
-            if (emailVal && lbl.includes(emailVal)) {
+            const raw = (mcols[ci] || "").toString();
+            const lblNorm = normHeader(raw);
+            if (!lblNorm) continue;
+            if (targetEmailNorm && lblNorm.includes(targetEmailNorm)) {
               respColIndex = ci;
               break;
             }
-            if (nameVal && lbl.includes(nameVal)) {
+            if (targetNameNorm && lblNorm.includes(targetNameNorm)) {
               respColIndex = ci;
               break;
+            }
+          }
+
+          // Second pass: token matching (split name into parts)
+          if (respColIndex === -1 && targetNameNorm) {
+            const nameTokens = nameVal.split(/\s+/).map((t: string) => normalizeDiacritics(t).replace(/[^a-z0-9]+/g, "")).filter(Boolean);
+            for (let ci = 0; ci < mcols.length; ci++) {
+              const raw = (mcols[ci] || "").toString();
+              const lblNorm = normHeader(raw);
+              if (!lblNorm) continue;
+              let matchCount = 0;
+              for (const tk of nameTokens) if (lblNorm.includes(tk)) matchCount++;
+              if (nameTokens.length > 0 && matchCount >= Math.max(1, Math.floor(nameTokens.length / 2))) {
+                respColIndex = ci;
+                break;
+              }
+            }
+          }
+
+          // Third pass: try to find the respondent by scanning first row of matrice (header row could contain emails/names)
+          if (respColIndex === -1 && mrows && mrows.length > 0) {
+            const headerRow = mrows[0];
+            const headerCells = (headerRow && headerRow.c) || [];
+            for (let ci = 0; ci < headerCells.length; ci++) {
+              const val = cellToString(headerCells[ci] || "").toString().trim().toLowerCase();
+              if (!val) continue;
+              if (targetEmailNorm && val.includes(targetEmailNorm)) {
+                respColIndex = ci;
+                break;
+              }
+              const valNorm = normalizeDiacritics(val).replace(/\s+/g,"");
+              if (targetNameNorm && valNorm && (valNorm.includes(targetNameNorm) || targetNameNorm.includes(valNorm))) {
+                respColIndex = ci;
+                break;
+              }
             }
           }
 
