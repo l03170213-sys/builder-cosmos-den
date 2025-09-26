@@ -477,7 +477,7 @@ export default function Repondants() {
           const dataResp = await fetchJsonSafe(apiUrl, {
             credentials: "same-origin",
           });
-          if (mounted && getRowKey(selected) === capturedKey) {
+          if (mounted && (selected?._selId || null) === capturedSelId) {
             setCategoriesByRespondent(dataResp.categories || null);
             const overallResp = dataResp && (dataResp.overall ?? dataResp.overallAverage ?? dataResp.overallScore ?? dataResp.overall_score ?? dataResp.overall_value ?? null);
             // Do not overwrite the note coming from the list row; prefer selected.row note when present
