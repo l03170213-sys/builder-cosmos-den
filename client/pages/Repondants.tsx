@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { getResorts } from "@/lib/resorts";
+import useResorts from "@/hooks/use-resorts";
 import { toast } from "@/hooks/use-toast";
 
 function parseGviz(text: string) {
