@@ -3,6 +3,7 @@ import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import useResorts from "@/hooks/use-resorts";
 import { getResorts, addResort, removeResort, formatResortsArray, STATIC_RESORTS } from "@/lib/resorts";
+import { useSelectedResort } from "@/hooks/use-selected-resort";
 
 function parseSheetId(url: string) {
   try {
