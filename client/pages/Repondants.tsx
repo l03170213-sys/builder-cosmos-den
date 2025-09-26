@@ -653,7 +653,8 @@ export default function Repondants() {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => {
-                                    setSelected(row);
+                                    const selId = `${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+                                    setSelected({ ...row, __selId: selId });
                                     setSelectedSnapshotName(row?.name || row?.label || row?.email || null);
                                     setDialogOpen(true);
                                   }}
