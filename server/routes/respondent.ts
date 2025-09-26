@@ -496,121 +496,23 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         console.error('Error while determining respondent overall from matched matrice row:', e);
       }
 
-      // Now fetch matrice to determine 'overall' (Note général) from column L (index 11) mapped to this respondent
+      // Now fetch matrice and extract per-respondent category values in a robust, unified way
       try {
         const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
         const mr = await fetch(mgurl);
         if (mr.ok) {
           const mtext = await mr.text();
           const mjson = parseGviz(mtext);
-          const mcols: string[] = (mjson.table.cols || []).map((c: any) =>
-            (c.label || "").toString(),
-          );
+          const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || "").toString());
           const mrows: any[] = mjson.table.rows || [];
 
-          // attempt cols-as-respondents: find column whose header matches email or name
-          // Prefer email from sheet1 column D (index 3), else fall back to scanning
-          const emailCellPreferred =
-            srow.c && srow.c[3] && srow.c[3].v != null ? srow.c[3] : null;
-          const emailCellVal =
-            emailCellPreferred ||
-            (srow.c || []).find(
-              (c: any) => c && c.v && String(c.v).toString().includes("@"),
-            );
-          const emailVal = emailCellVal
-            ? String(emailCellVal.v).trim().toLowerCase()
-            : "";
-          // The respondent name is in sheet1 column E (index 4)
-          const nameVal =
-            srow.c && srow.c[4] && srow.c[4].v != null
-              ? String(srow.c[4].v).trim().toLowerCase()
-              : "";
+          const emailCellPreferred = srow.c && srow.c[3] && srow.c[3].v != null ? srow.c[3] : null;
+          const emailVal = emailCellPreferred ? String(emailCellPreferred.v).trim().toLowerCase() : "";
+          const nameVal = srow.c && srow.c[4] && srow.c[4].v != null ? String(srow.c[4].v).trim().toLowerCase() : "";
 
-          let overallVal: string | null = null;
-
-          // try to find col label in matrice matching email or name and remember column index
-          let respColIndex = -1;
-          // Normalize helper for column header comparison
-          function normHeader(s: string) {
-            return normalizeDiacritics((s || "").toString().trim().toLowerCase()).replace(/[^a-z0-9@]+/g, "");
-          }
-          const targetNameNorm = normalizeDiacritics(nameVal).replace(/\s+/g, "");
-          const targetEmailNorm = (emailVal || "").toString().trim().toLowerCase();
-
-          // First pass: direct contains match
-          for (let ci = 0; ci < mcols.length; ci++) {
-            const raw = (mcols[ci] || "").toString();
-            const lblNorm = normHeader(raw);
-            if (!lblNorm) continue;
-            if (targetEmailNorm && lblNorm.includes(targetEmailNorm)) {
-              respColIndex = ci;
-              break;
-            }
-            if (targetNameNorm && lblNorm.includes(targetNameNorm)) {
-              respColIndex = ci;
-              break;
-            }
-          }
-
-          // Second pass: token matching (split name into parts)
-          if (respColIndex === -1 && targetNameNorm) {
-            const nameTokens = nameVal.split(/\s+/).map((t: string) => normalizeDiacritics(t).replace(/[^a-z0-9]+/g, "")).filter(Boolean);
-            for (let ci = 0; ci < mcols.length; ci++) {
-              const raw = (mcols[ci] || "").toString();
-              const lblNorm = normHeader(raw);
-              if (!lblNorm) continue;
-              let matchCount = 0;
-              for (const tk of nameTokens) if (lblNorm.includes(tk)) matchCount++;
-              if (nameTokens.length > 0 && matchCount >= Math.max(1, Math.floor(nameTokens.length / 2))) {
-                respColIndex = ci;
-                break;
-              }
-            }
-          }
-
-          // Third pass: try to find the respondent by scanning first row of matrice (header row could contain emails/names)
-          if (respColIndex === -1 && mrows && mrows.length > 0) {
-            const headerRow = mrows[0];
-            const headerCells = (headerRow && headerRow.c) || [];
-            for (let ci = 0; ci < headerCells.length; ci++) {
-              const val = cellToString(headerCells[ci] || "").toString().trim().toLowerCase();
-              if (!val) continue;
-              if (targetEmailNorm && val.includes(targetEmailNorm)) {
-                respColIndex = ci;
-                break;
-              }
-              const valNorm = normalizeDiacritics(val).replace(/\s+/g,"");
-              if (targetNameNorm && valNorm && (valNorm.includes(targetNameNorm) || targetNameNorm.includes(valNorm))) {
-                respColIndex = ci;
-                break;
-              }
-            }
-          }
-
-          // Find last non-empty row in matrice (for Pestana this is the global averages row)
-          let lastRow: any = null;
-          for (let ri = mrows.length - 1; ri >= 0; ri--) {
-            const rr = mrows[ri];
-            const hasValue = (rr?.c ?? []).some(
-              (cell: any) => cell && cell.v != null && cell.v !== "",
-            );
-            if (hasValue) {
-              lastRow = rr;
-              break;
-            }
-          }
-          if (!lastRow) lastRow = mrows[mrows.length - 1];
-          const lastRowCells: any[] = lastRow?.c || [];
-          const overallIdx = lastRow
-            ? 11 < lastRowCells.length
-              ? 11
-              : Math.max(0, lastRowCells.length - 1)
-            : 11;
-
-          // If respColIndex found, build categories from rows B..K (indices 1..10) reading that column
           const fixedCategoryMapping = [
             { colIndex: 0, name: "Nom" },
-            { colIndex: 1, name: "�� APPRÉCIATION GLOBALE" },
+            { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
             { colIndex: 2, name: "✈️ TRANSPORTS Aérien" },
             { colIndex: 3, name: "🚐 Car navette" },
             { colIndex: 4, name: "🏨 HÉBERGEMENT" },
@@ -623,109 +525,148 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
           ];
 
+          const normHeader = (s: string) => normalizeDiacritics((s || "").toString().trim().toLowerCase()).replace(/[^a-z0-9@]+/g, "");
+          const targetNameNorm = normalizeDiacritics(nameVal).replace(/\s+/g, "");
+          const targetEmailNorm = (emailVal || "").toString().trim().toLowerCase();
+
+          // Build header lookup from mcols and first row if available
+          const headerIndexMap: Record<string, number> = {};
+          for (let ci = 0; ci < mcols.length; ci++) {
+            const key = normHeader(mcols[ci] || "");
+            if (key) headerIndexMap[key] = ci;
+          }
+          if (mrows && mrows.length > 0) {
+            const headerRow = mrows[0];
+            const headerCells = (headerRow && headerRow.c) || [];
+            for (let ci = 0; ci < headerCells.length; ci++) {
+              const raw = cellToString(headerCells[ci] || "");
+              const key = normalizeDiacritics(raw).replace(/[^a-z0-9@]+/g, "");
+              if (key && headerIndexMap[key] == null) headerIndexMap[key] = ci;
+            }
+          }
+
+          // Strategy A: columns-as-respondents — try to find respondent column index
+          let respColIndex = -1;
+          for (const lblKey of Object.keys(headerIndexMap)) {
+            if (targetEmailNorm && lblKey.includes(targetEmailNorm)) { respColIndex = headerIndexMap[lblKey]; break; }
+            if (targetNameNorm && lblKey.includes(targetNameNorm)) { respColIndex = headerIndexMap[lblKey]; break; }
+          }
+
+          // token matching on mcols labels if not found
+          if (respColIndex === -1 && mcols && mcols.length) {
+            const nameTokens = (nameVal || "").split(/\s+/).map(t => normalizeDiacritics(t).replace(/[^a-z0-9]+/g, "")).filter(Boolean);
+            for (let ci = 0; ci < mcols.length; ci++) {
+              const lbl = normHeader(mcols[ci] || "");
+              if (!lbl) continue;
+              if (targetEmailNorm && lbl.includes(targetEmailNorm)) { respColIndex = ci; break; }
+              let matchCount = 0;
+              for (const tk of nameTokens) if (lbl.includes(tk)) matchCount++;
+              if (nameTokens.length > 0 && matchCount >= Math.max(1, Math.floor(nameTokens.length / 2))) { respColIndex = ci; break; }
+            }
+          }
+
           const newCats: { name: string; value: string }[] = [];
 
           if (respColIndex !== -1) {
-            // For each category B..K (colIndex 1..10), find the row in mrows whose first cell matches the category name when possible
+            // columns-as-respondents: for each category, find its row and read the value at respColIndex
             for (let i = 1; i <= 10; i++) {
-              const catName =
-                fixedCategoryMapping.find((f) => f.colIndex === i)?.name ||
-                `Col ${i}`;
-              // try to find row by matching first cell text using normalize()
+              const catName = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
               let foundRow = -1;
               for (let ri = 0; ri < mrows.length; ri++) {
-                const first =
-                  mrows[ri] && mrows[ri].c && mrows[ri].c[0]
-                    ? cellToString(mrows[ri].c[0])
-                    : "";
-                if (first && normalize(first) === normalize(catName || "")) {
-                  foundRow = ri;
-                  break;
-                }
+                const first = mrows[ri] && mrows[ri].c && mrows[ri].c[0] ? cellToString(mrows[ri].c[0]) : "";
+                if (first && normalize(first) === normalize(catName || "")) { foundRow = ri; break; }
               }
-              // fallback to index-based row (i-1)
               if (foundRow === -1) foundRow = i - 1;
               const mrow = mrows[foundRow];
               let val = "";
               if (mrow && mrow.c) {
                 const cell = mrow.c[respColIndex];
                 if (cell && cell.v != null) val = parseRatingCell(cell);
-                else if (overallIdx != null && mrow.c[overallIdx] && mrow.c[overallIdx].v != null) val = parseRatingCell(mrow.c[overallIdx]);
               }
-              // fallback to sheet1 scells if present
-              if (!val && scells && scells[foundRow]) val = parseRatingCell(scells[foundRow]);
               newCats.push({ name: catName, value: val });
             }
 
-            // For Pestana, overall should be taken from last non-empty row column L (index 11)
+            // overall: look for a row with 'moyenne' or fallback to last non-empty row value
             let overallValFromMatrice: string | null = null;
-            if (isPestana) {
-              const c = lastRowCells[11];
-              overallValFromMatrice = c ? parseRatingCell(c) : null;
-            } else {
-              // for other resorts prefer respondent column at last row
-              const c = lastRow && lastRow.c && lastRow.c[respColIndex];
-              overallValFromMatrice = c ? parseRatingCell(c) : null;
+            for (let ri = 0; ri < mrows.length; ri++) {
+              const first = mrows[ri] && mrows[ri].c && mrows[ri].c[0] ? cellToString(mrows[ri].c[0]) : "";
+              if (first && normalize(first).includes('moyenne')) {
+                const c = mrows[ri].c && mrows[ri].c[respColIndex];
+                if (c && c.v != null) overallValFromMatrice = parseRatingCell(c);
+                break;
+              }
+            }
+            if (!overallValFromMatrice) {
+              // fallback to last non-empty row's value at respColIndex
+              for (let ri = mrows.length - 1; ri >= 0; ri--) {
+                const c = mrows[ri] && mrows[ri].c && mrows[ri].c[respColIndex];
+                if (c && c.v != null) { overallValFromMatrice = parseRatingCell(c); break; }
+              }
             }
 
-            result.categories = [
-              {
-                name: "Nom",
-                value:
-                  scells[4] && scells[4].v != null
-                    ? String(scells[4].v)
-                    : scells[0] && scells[0].v != null
-                      ? String(scells[0].v)
-                      : "",
-              },
-              ...newCats,
-            ];
+            result.categories = [ { name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : '' }, ...newCats ];
             result.overall = overallValFromMatrice || null;
-            result.column = respColIndex !== -1 ? String(respColIndex) : null;
+            result.column = String(respColIndex);
           } else {
-            // respColIndex not found
-            if (cfg.gidMatrice) {
-              // We have a matrice configured for this resort but couldn't find the respondent column.
-              // Do NOT fallback to sheet1 categories — return empty category values so the UI knows per-respondent averages are unavailable.
-              for (let i = 1; i <= 10; i++) {
-                const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
-                newCats.push({ name, value: '' });
-              }
-              result.categories = [
-                {
-                  name: 'Nom',
-                  value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : ''
-                },
-                ...newCats,
-              ];
-              // Do not set overall from sheet1 when matrice is configured — leave overall null to indicate no per-respondent average found
-              result.overall = null;
-            } else {
-              // No matrice configured: fallback to sheet1 per-respondent values (existing behavior)
+            // Strategy B: rows-as-respondents — find a row where any cell matches respondent name/email
+            let matchedRowIdx = -1;
+            const targetName = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
+            const targetEmail = (srow.c && srow.c[3] && srow.c[3].v != null) ? String(srow.c[3].v).trim().toLowerCase() : '';
+
+            for (let ri = 0; ri < mrows.length; ri++) {
+              const cells = (mrows[ri] && mrows[ri].c) || [];
+              const normCells = cells.map((c:any) => normalizeDiacritics(cellToString(c) || '').replace(/\s+/g,''));
+              if (targetEmail && normCells.some(v => v && v.includes(targetEmail))) { matchedRowIdx = ri; break; }
+              const targetNameD = normalizeDiacritics(targetName).replace(/\s+/g,'');
+              if (targetName && normCells.some(v => v && (v.includes(targetNameD) || targetNameD.includes(v)))) { matchedRowIdx = ri; break; }
+            }
+
+            if (matchedRowIdx !== -1) {
+              const mrow = mrows[matchedRowIdx];
+              // Determine for each fixed category the column index by matching headerIndexMap first, then fallback to expected colIndex
               for (const m of fixedCategoryMapping) {
-                let val = "";
-                if (m.colIndex === 0) {
-                  val =
-                    scells[4] && scells[4].v != null
-                      ? String(scells[4].v)
-                      : scells[0] && scells[0].v != null
-                        ? String(scells[0].v)
-                        : "";
-                } else if (m.colIndex === 11) {
-                  // overall: take from sheet1 column L when available; do not default to matrice overall (hotel average)
-                  val = scells[11] && scells[11].v != null ? String(scells[11].v) : "";
-                } else {
-                  // For other categories, prefer sheet1 cell at the expected index; do not use matrice overall row as fallback
-                  val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : "";
-                }
+                let readIdx: number | null = null;
+                const key = normalizeDiacritics(m.name).replace(/[^a-z0-9@]+/g,'');
+                if (key && headerIndexMap[key] != null) readIdx = headerIndexMap[key];
+                if (readIdx == null && m.colIndex != null) readIdx = m.colIndex;
+                let val = '';
+                if (mrow && mrow.c && readIdx != null && mrow.c[readIdx] && mrow.c[readIdx].v != null) val = parseRatingCell(mrow.c[readIdx]);
                 newCats.push({ name: m.name, value: val });
               }
-              result.categories = newCats;
-              // overall: prefer sheet1 column L if present, otherwise keep null (no hotel average fallback)
-              result.overall = scells[11] && scells[11].v != null ? String(scells[11].v) : null;
+              const overallCell = mrow && mrow.c && (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) ? (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) : null;
+              result.categories = [{ name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : '' }, ...newCats];
+              result.overall = overallCell && overallCell.v != null ? parseRatingCell(overallCell) : null;
+              result.column = null;
+            } else {
+              // No per-respondent data found in matrice
+              if (cfg.gidMatrice) {
+                // Matrice exists but no match — return empty category values to indicate absence
+                for (let i = 1; i <= 10; i++) {
+                  const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
+                  newCats.push({ name, value: '' });
+                }
+                result.categories = [{ name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : '' }, ...newCats];
+                result.overall = null;
+                result.column = null;
+              } else {
+                // No matrice configured: fallback to sheet1 per-respondent values
+                for (const m of fixedCategoryMapping) {
+                  let val = "";
+                  if (m.colIndex === 0) {
+                    val = scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : "";
+                  } else if (m.colIndex === 11) {
+                    val = scells[11] && scells[11].v != null ? String(scells[11].v) : "";
+                  } else {
+                    val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : "";
+                  }
+                  newCats.push({ name: m.name, value: val });
+                }
+                result.categories = newCats;
+                result.overall = scells[11] && scells[11].v != null ? String(scells[11].v) : null;
+                result.column = null;
+              }
             }
           }
-          result.overall = overallVal;
         }
       } catch (e) {
         console.error("Failed to fetch matrice for overall:", e);
