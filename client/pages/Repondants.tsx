@@ -376,7 +376,7 @@ export default function Repondants() {
     return () => { mounted = false; };
   }, [data, selectedResortKey]);
 
-  const respondentKeyAtRender = getRowKey(selected);
+  const respondentSelIdAtRender = selected?._selId || null;
   const respondentQuery = useQuery({
     queryKey: [
       "respondentDetails",
