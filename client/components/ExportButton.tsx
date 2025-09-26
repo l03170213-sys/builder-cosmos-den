@@ -25,7 +25,7 @@ function makePage2Clone(original: HTMLElement) {
   try {
     const selectedKey =
       window.localStorage.getItem("selectedResort") || "vm-resort-albanie";
-    const resorts = RESORTS;
+    const resorts = getResorts();
     const cfg = resorts.find((r: any) => r.key === selectedKey) || resorts[0];
     left.innerHTML = `<h2 style="margin:0;font-size:20px;font-weight:700">${cfg.name}</h2><div style="margin-top:8px;color:#475569">Rapport de satisfaction</div>`;
   } catch (e) {
@@ -87,7 +87,7 @@ function makeSummaryClone(summaryEl: HTMLElement) {
   try {
     const selectedKey =
       window.localStorage.getItem("selectedResort") || "vm-resort-albanie";
-    const resorts = RESORTS;
+    const resorts = getResorts();
     const cfg = resorts.find((r: any) => r.key === selectedKey) || resorts[0];
     left.innerHTML = `<h1 style="margin:0;font-size:22px;font-weight:800">${cfg.name}</h1><div style="margin-top:6px;color:#475569">Rapport de satisfaction</div>`;
   } catch (e) {
@@ -306,7 +306,7 @@ export default async function exportToPdf(options: {
   try {
     const selectedKey =
       window.localStorage.getItem("selectedResort") || "vm-resort-albanie";
-    const resorts = RESORTS;
+    const resorts = getResorts();
     const cfg = resorts.find((r: any) => r.key === selectedKey) || resorts[0];
     header.innerHTML = `<div style="font-size:18px;font-weight:700">${cfg.name}</div>`;
   } catch (e) {
@@ -397,7 +397,7 @@ function sanitizeFilename(name: string) {
 export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "official"; delayMs?: number; timeoutMs?: number; canvasScale?: number; preCaptureMs?: number; onProgress?: (done:number,total:number,key?:string)=>void }) {
   const settings = loadSettings();
   const { mode = "both", delayMs = settings.pdfExportDelaySeconds * 1000, timeoutMs = 8000, canvasScale = settings.exportCanvasScale, preCaptureMs = settings.exportPreCaptureMs, onProgress } = options || {} as any;
-  const resorts = RESORTS;
+  const resorts = getResorts();
   const original = typeof window !== "undefined" ? window.localStorage.getItem("selectedResort") || (resorts[0] && resorts[0].key) : null;
 
   const waitForElement = async (id: string, timeout = timeoutMs) => {
