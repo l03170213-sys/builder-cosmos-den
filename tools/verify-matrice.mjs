@@ -1,5 +1,3 @@
-import fetch from 'node-fetch';
-
 const BASE = process.env.BASE_URL || 'https://74e203eadb25449595dedfc10bccc18d-9cb45444228a4b0d9f1325d61.fly.dev';
 
 const resorts = [
