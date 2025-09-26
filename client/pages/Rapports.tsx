@@ -5,23 +5,48 @@ import { exportAllHotels } from "@/components/ExportButton";
 import { RESORTS } from "@/lib/resorts";
 
 export default function Rapports() {
+  const [exporting, setExporting] = React.useState(false);
+  const [exportProgress, setExportProgress] = React.useState(0);
+  const [exportTotal, setExportTotal] = React.useState(0);
+  const [exportCurrentKey, setExportCurrentKey] = React.useState<string | null>(null);
+
   const onExportAllGraphics = async () => {
     try {
-      await exportAllHotels({ mode: "graphics" });
-      alert("Export des graphiques lancé pour tous les hôtels.");
+      setExporting(true);
+      setExportProgress(0);
+      setExportTotal(RESORTS.length);
+      await exportAllHotels({ mode: "graphics", preCaptureMs: 1000, onProgress: (done, total, key) => {
+        setExportProgress(done);
+        setExportTotal(total);
+        setExportCurrentKey(key || null);
+      }});
+      alert("Export des graphiques terminé pour tous les hôtels.");
     } catch (err) {
       console.error(err);
       alert("Erreur lors de l'export des graphiques pour tous les hôtels.");
+    } finally {
+      setExporting(false);
+      setTimeout(() => { setExportProgress(0); setExportTotal(0); setExportCurrentKey(null); }, 1500);
     }
   };
 
   const onExportAllOfficial = async () => {
     try {
-      await exportAllHotels({ mode: "official" });
-      alert("Export officiel lancé pour tous les hôtels.");
+      setExporting(true);
+      setExportProgress(0);
+      setExportTotal(RESORTS.length);
+      await exportAllHotels({ mode: "official", preCaptureMs: 1000, onProgress: (done, total, key) => {
+        setExportProgress(done);
+        setExportTotal(total);
+        setExportCurrentKey(key || null);
+      }});
+      alert("Export officiel terminé pour tous les hôtels.");
     } catch (err) {
       console.error(err);
       alert("Erreur lors de l'export officiel pour tous les hôtels.");
+    } finally {
+      setExporting(false);
+      setTimeout(() => { setExportProgress(0); setExportTotal(0); setExportCurrentKey(null); }, 1500);
     }
   };
 
