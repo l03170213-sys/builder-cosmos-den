@@ -343,7 +343,7 @@ export default async function exportToPdf(options: {
   }
   // right: papillon
   const rightImg = document.createElement('img');
-  rightImg.src = '/butterfly.svg';
+  rightImg.src = 'https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F6fe54180faf14512a2c40bff421820cc?format=webp&width=800';
   rightImg.alt = 'papillon';
   rightImg.style.width = '36px';
   rightImg.style.height = 'auto';
