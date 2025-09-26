@@ -343,8 +343,9 @@ export default function Repondants() {
 
   const getRowKey = (row: any) => {
     if (!row) return "";
+    if (row.id != null) return `id:${row.id}`;
+    if (row.email && row.date) return `e:${String(row.email).toLowerCase()}|d:${String(row.date)}`;
     if (row.email) return `e:${String(row.email).toLowerCase()}`;
-    if (row.id) return `id:${row.id}`;
     return `n:${String(row.name || "").trim().toLowerCase()}|${String(row.date || "")}`;
   };
 
