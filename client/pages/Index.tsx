@@ -16,7 +16,7 @@ import {
 import type { ResortAveragesResponse } from "@shared/api";
 import { useQuery } from "@tanstack/react-query";
 import { useChartType } from "@/hooks/useChartType";
-import { getResorts } from "@/lib/resorts";
+import useResorts from "@/hooks/use-resorts";
 import { useSelectedResort } from "@/hooks/use-selected-resort";
 import { safeFetch } from "@/lib/fetcher";
 
