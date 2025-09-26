@@ -240,9 +240,23 @@ export default function Index() {
                         try {
                           const exportFn = (await import("@/components/ExportButton")).default;
                           const sanitize = (s: string) => s.replace(/[^\w\d\-_. ]+/g, "").replace(/\s+/g, "_").toLowerCase();
-                          // wait 5s to let charts render fully
-                          await new Promise((r) => setTimeout(r, 5000));
-                          await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", filename: `${sanitize(currentResort.name)}-graphique.pdf` });
+                          const filename = `${sanitize(currentResort.name)}-graphique.pdf`;
+
+                          // attempt up to 3 times with initial 1s delay and backoff
+                          let lastErr: any = null;
+                          for (let attempt = 0; attempt < 3; attempt++) {
+                            const waitMs = 1000 + attempt * 700;
+                            await new Promise((r) => setTimeout(r, waitMs));
+                            try {
+                              await exportFn({ chartId: "chart-wrapper", listId: "list-wrapper", filename, preCaptureMs: 1000 });
+                              lastErr = null;
+                              break;
+                            } catch (e) {
+                              lastErr = e;
+                              console.warn('Export graphique attempt failed', attempt, e);
+                            }
+                          }
+                          if (lastErr) throw lastErr;
                         } catch (e) {
                           console.error(e);
                           alert("Erreur lors de l'export du graphique");
@@ -267,15 +281,27 @@ export default function Index() {
                         const exportFn = (
                           await import("@/components/ExportButton")
                         ).default;
-                        // wait 5s to allow summary to render fully
-                        await new Promise((r) => setTimeout(r, 5000));
-                        // Official export: uses the pdf-summary content and list-wrapper to build a 2-page PDF matching the provided template
-                        await exportFn({
-                          chartId: "chart-wrapper",
-                          listId: "list-wrapper",
-                          summaryId: "pdf-summary",
-                          filename: "vm-resort-officiel.pdf",
-                        });
+                        const filename = "vm-resort-officiel.pdf";
+                        let lastErr: any = null;
+                        for (let attempt = 0; attempt < 3; attempt++) {
+                          const waitMs = 1000 + attempt * 700;
+                          await new Promise((r) => setTimeout(r, waitMs));
+                          try {
+                            await exportFn({
+                              chartId: "chart-wrapper",
+                              listId: "list-wrapper",
+                              summaryId: "pdf-summary",
+                              filename,
+                              preCaptureMs: 1000,
+                            });
+                            lastErr = null;
+                            break;
+                          } catch (e) {
+                            lastErr = e;
+                            console.warn('Export officiel attempt failed', attempt, e);
+                          }
+                        }
+                        if (lastErr) throw lastErr;
                       } catch (err) {
                         console.error(err);
                         alert("Erreur lors de l'export PDF (format officiel)");
