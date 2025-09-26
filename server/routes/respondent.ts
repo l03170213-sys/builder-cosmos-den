@@ -610,7 +610,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           // If respColIndex found, build categories from rows B..K (indices 1..10) reading that column
           const fixedCategoryMapping = [
             { colIndex: 0, name: "Nom" },
-            { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
+            { colIndex: 1, name: "�� APPRÉCIATION GLOBALE" },
             { colIndex: 2, name: "✈️ TRANSPORTS Aérien" },
             { colIndex: 3, name: "🚐 Car navette" },
             { colIndex: 4, name: "🏨 HÉBERGEMENT" },
@@ -681,6 +681,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               ...newCats,
             ];
             result.overall = overallValFromMatrice || null;
+            result.column = respColIndex !== -1 ? String(respColIndex) : null;
           } else {
             // respColIndex not found
             if (cfg.gidMatrice) {
