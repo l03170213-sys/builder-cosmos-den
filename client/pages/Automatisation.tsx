@@ -69,6 +69,35 @@ export default function Automatisation() {
     setShowGenerated(true);
   };
 
+  const onSaveLocal = () => {
+    setMessage(null);
+    if (!hotelName.trim()) {
+      setMessage("Le nom de l'hôtel est requis.");
+      return;
+    }
+    const sheetId = parseSheetId(feuille1) || parseSheetId(matrice);
+    if (!sheetId) {
+      setMessage("Impossible d'extraire l'ID de feuille depuis l'un des liens.");
+      return;
+    }
+    const gidM = parseGid(matrice) || "0";
+    let key = slugify(hotelName);
+    const existing = getResorts();
+    if (existing.some((r) => r.key === key)) {
+      key = `${key}-${Date.now().toString().slice(-4)}`;
+    }
+    const resortObj = { key, name: hotelName.trim(), sheetId, gidMatrice: gidM };
+    try {
+      addResort(resortObj as any);
+      setMessage("Hôtel ajouté et enregistré localement.");
+      setHotelName(""); setFeuille1(""); setMatrice("");
+      setTimeout(() => setMessage(null), 2500);
+    } catch (e) {
+      console.error(e);
+      setMessage("Erreur lors de l'ajout de l'hôtel.");
+    }
+  };
+
   const onCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
