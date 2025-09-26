@@ -240,7 +240,7 @@ export default function Analyses() {
                         <PolarRadiusAxis angle={30} domain={[0, 5]} />
                         {selectedKeys.map((k, idx) => {
                           const color = ["#3b82f6", "#06b6d4", "#ef4444", "#f59e0b", "#10b981", "#7c3aed", "#f97316", "#8b5cf6"][idx % 8];
-                          return <Radar key={k} name={RESORTS.find((x) => x.key === k)?.name || k} dataKey={k} stroke={color} fill={color} fillOpacity={0.4} />;
+                          return <Radar key={k} name={getResorts().find((x) => x.key === k)?.name || k} dataKey={k} stroke={color} fill={color} fillOpacity={0.4} />;
                         })}
                         <Legend />
                         <Tooltip />
