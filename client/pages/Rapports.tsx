@@ -11,6 +11,7 @@ export default function Rapports() {
   const [exportCurrentKey, setExportCurrentKey] = React.useState<string | null>(null);
   const [waiting, setWaiting] = React.useState(false);
   const [countdown, setCountdown] = React.useState<number>(0);
+  const resorts = useResorts();
 
   const runExportWithCountdown = async (mode: "graphics" | "official") => {
     try {
