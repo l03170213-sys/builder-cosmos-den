@@ -88,7 +88,7 @@ function sanitizeText(s: any) {
         'Ø=ÞÏþ\u000F',
         'Ø<ßÊ',
         'Ø<ß‰',
-        'Ø=Üe',
+        '��=Üe',
         'Ø>Ý\u001D',
         'Ø<ß',
       ];
@@ -229,13 +229,15 @@ export async function exportRespondentPdf(resortKey: string, respondent: any) {
 }
 
 export async function exportAllRespondentsPdf(resortKey: string, allRespondents: any[], onProgress?: (done: number, total: number) => void) {
-  // wait 5s before starting
-  await pause(5000);
+  const settings = typeof window !== 'undefined' ? loadSettings() : null;
+  const initialDelayMs = settings ? (settings.pdfExportDelaySeconds || 1) * 1000 : 1000;
+  await pause(initialDelayMs);
   const doc = new jsPDF();
   let added = 0;
   const total = allRespondents.length;
 
-  const perRespondentDelayMs = 700; // short delay between respondents to allow server to stabilize
+  const perRespondentDelayMs = settings ? (settings.pdfExportDelaySeconds || 1) * 1000 : 700; // short delay between respondents to allow server to stabilize
+  const maxAttempts = settings ? Math.max(1, settings.pdfExportRetries || 3) : 3;
   for (let i = 0; i < total; i++) {
     const r = allRespondents[i];
     // small delay before processing each respondent
@@ -248,9 +250,9 @@ export async function exportAllRespondentsPdf(resortKey: string, allRespondents:
       if (r.date) params.set("date", r.date);
       const url = `/api/resort/${resortKey}/respondent?${params.toString()}`;
 
-      // try a couple of times if the server hasn't populated the details yet
+      // try a number of times if the server hasn't populated the details yet
       let details: any = null;
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (attempt > 0) await pause(500 + attempt * 300);
         try {
           details = await fetchJsonSafe(url, { credentials: "same-origin" }).catch(() => null);
