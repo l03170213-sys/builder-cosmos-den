@@ -139,6 +139,7 @@ export default function Automatisation() {
 
               <div className="flex items-center gap-2">
                 <button onClick={onAdd} className="px-3 py-2 rounded-md border bg-primary text-white">Ajouter l'hôtel</button>
+                <button onClick={onSaveLocal} className="px-3 py-2 rounded-md border text-sm">Enregistrer localement</button>
                 {showGenerated && (
                   <button onClick={() => onCopy(generatedSnippet)} className="px-3 py-2 rounded-md border text-sm">Copier l'objet</button>
                 )}
