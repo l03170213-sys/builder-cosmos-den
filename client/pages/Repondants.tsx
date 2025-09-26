@@ -472,7 +472,10 @@ export default function Repondants() {
           if (mounted) {
             setCategoriesByRespondent(dataResp.categories || null);
             const overallResp = dataResp && (dataResp.overall ?? dataResp.overallAverage ?? dataResp.overallScore ?? dataResp.overall_score ?? dataResp.overall_value ?? null);
-            setRespondentNoteGeneral(overallResp != null ? overallResp : null);
+            // Do not overwrite the note coming from the list row; prefer selected.row note when present
+            if (!selected?.note) {
+              setRespondentNoteGeneral(overallResp != null ? overallResp : null);
+            }
             setRespondentColumnLetter(dataResp.column ?? null);
             setRespondentFeedback(dataResp.feedback ?? null);
           }
