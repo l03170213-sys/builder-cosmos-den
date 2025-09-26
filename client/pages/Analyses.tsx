@@ -85,6 +85,26 @@ export default function Analyses() {
     queryFn: async () => {
       const resortsList = resorts; // use the hook result captured in component scope
       const promises = resortsList.map(async (r) => {
+        // try server API first
+        try {
+          const apiUrl = `/api/resort/${r.key}/averages`;
+          const resp = await safeFetch(apiUrl, { credentials: 'same-origin' });
+          if (resp.ok) {
+            const text = await resp.clone().text().catch(() => "");
+            try {
+              const json = JSON.parse(text);
+              return { key: r.key, name: r.name, overall: json.overallAverage, categories: json.categories };
+            } catch (e) {
+              console.warn('allResortsQuery: invalid json from api for', r.key, e);
+            }
+          } else {
+            console.debug('allResortsQuery: api returned', resp.status, 'for', r.key);
+          }
+        } catch (e) {
+          console.warn('allResortsQuery: api fetch failed for', r.key, e && (e as any).message ? (e as any).message : e);
+        }
+
+        // fallback to client-side sheets
         try {
           const mod = await import("@/lib/sheets");
           const json = await mod.fetchAveragesFromSheet(r.sheetId, (r as any).gidMatrice);
