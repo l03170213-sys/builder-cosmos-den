@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useChartType } from "@/hooks/useChartType";
 import useResorts from "@/hooks/use-resorts";
 import { useSelectedResort } from "@/hooks/use-selected-resort";
+import { getResorts } from "@/lib/resorts";
 import { safeFetch } from "@/lib/fetcher";
 
 export default function Index() {
