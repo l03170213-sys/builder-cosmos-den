@@ -455,8 +455,16 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
       window.localStorage.setItem("selectedResort", r.key);
       window.dispatchEvent(new CustomEvent("resort-change"));
 
+      // Ensure app route is root so Index components render (chart/list exist)
+      try {
+        if (window.location.pathname !== '/') {
+          window.history.pushState({}, '', '/');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
+      } catch (e) {}
+
       // Wait shortly for the UI to update
-      await new Promise((r) => setTimeout(r, 150));
+      await new Promise((r) => setTimeout(r, 300));
 
       // reaffirm current progress after UI update
       if (onProgress) try { onProgress(resortIndex, totalResorts, r.name); } catch(e) {}
@@ -466,9 +474,10 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
         let capturedGraphics = false;
         const settings = loadSettings();
         const maxAttempts = Math.max(1, settings.pdfExportRetries || 3);
+        const elementTimeout = Math.max(timeoutMs, 15000);
         for (let attempt = 0; attempt < maxAttempts && !capturedGraphics; attempt++) {
-          const chartEl = await waitForElement("chart-wrapper", timeoutMs);
-          const listEl = await waitForElement("list-wrapper", timeoutMs);
+          const chartEl = await waitForElement("chart-wrapper", elementTimeout);
+          const listEl = await waitForElement("list-wrapper", elementTimeout);
           if (chartEl && listEl) {
             try {
               // allow UI to fully render charts
