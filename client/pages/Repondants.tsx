@@ -676,7 +676,7 @@ export default function Repondants() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-100">
                         {(data.items || []).map((row: any, i: number) => (
-                          <tr key={getRowKey(row) || i} className="hover:bg-gray-50">
+                          <tr key={row && row.id != null ? `id:${row.id}` : (getRowKey(row) || `${i}-${String(row.email||row.name||'')}`)} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-600">
                               {row.name || row.label || row.email}
                             </td>
