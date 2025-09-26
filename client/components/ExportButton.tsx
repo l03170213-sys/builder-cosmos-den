@@ -526,24 +526,35 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
       }
 
       if (mode === "both" || mode === "official") {
-        const summaryEl = await waitForElement("pdf-summary", timeoutMs);
-        const listEl = await waitForElement("list-wrapper", timeoutMs);
-        if (summaryEl && listEl) {
-          // allow UI to finish rendering before capture
-          await new Promise((res) => setTimeout(res, preCaptureMs));
-          const summaryContainer = makeSummaryClone(summaryEl as HTMLElement);
-          summaryContainer.style.position = "fixed";
-          summaryContainer.style.left = "-9999px";
-          document.body.appendChild(summaryContainer);
-          const summaryCanvas = await html2canvas(summaryContainer, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
-          document.body.removeChild(summaryContainer);
-          const summaryImg = summaryCanvas.toDataURL("image/png");
-          await addScaledImage(final, summaryImg, "landscape");
+        const settings2 = loadSettings();
+        const maxAttempts2 = Math.max(1, settings2.pdfExportRetries || 3);
+        let capturedSummary = false;
+        for (let attempt = 0; attempt < maxAttempts2 && !capturedSummary; attempt++) {
+          const summaryEl = await waitForElement("pdf-summary", timeoutMs);
+          const listEl = await waitForElement("list-wrapper", timeoutMs);
+          if (summaryEl && listEl) {
+            try {
+              const waitMs = preCaptureMs + attempt * 700;
+              await new Promise((res) => setTimeout(res, waitMs));
+              const summaryContainer = makeSummaryClone(summaryEl as HTMLElement);
+              summaryContainer.style.position = "fixed";
+              summaryContainer.style.left = "-9999px";
+              document.body.appendChild(summaryContainer);
+              const summaryCanvas = await html2canvas(summaryContainer, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+              document.body.removeChild(summaryContainer);
+              const summaryImg = summaryCanvas.toDataURL("image/png");
+              await addScaledImage(final, summaryImg, "landscape");
 
-          await new Promise((r) => setTimeout(r, delayMs));
-        } else {
-          console.warn(`Skipping official page for ${r.key} - elements not found`);
+              capturedSummary = true;
+            } catch (err) {
+              console.warn(`Attempt ${attempt} failed capturing official for ${r.key}:`, err);
+            }
+          } else {
+            console.warn(`Elements not found for official attempt ${attempt} on ${r.key}`);
+          }
+          if (!capturedSummary) await new Promise((res) => setTimeout(res, 500 + attempt * 300));
         }
+        if (!capturedSummary) console.warn(`Skipping official page for ${r.key} after retries`);
       }
     } catch (err) {
       console.error("Error exporting resort", r.key, err);
