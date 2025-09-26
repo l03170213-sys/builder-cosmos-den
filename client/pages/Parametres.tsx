@@ -86,6 +86,26 @@ export default function Parametres() {
                   <label className="inline-flex items-center gap-2"><input type="checkbox" checked={settings.enableSnapshots} onChange={(e) => update('enableSnapshots', e.target.checked)} /> Activer</label>
                 </div>
               </div>
+
+              <div>
+                <label className="text-sm">Seuil recommandation (0-100%)</label>
+                <input type="number" value={Math.round(settings.recommendationThreshold * 100)} onChange={(e) => update('recommendationThreshold', Math.max(0, Math.min(100, Number(e.target.value || 0))) / 100)} className="w-full rounded-md border px-3 py-2 mt-1" />
+              </div>
+
+              <div>
+                <label className="text-sm">Nettoyage caractères indésirables</label>
+                <div className="mt-1"><label className="inline-flex items-center gap-2"><input type="checkbox" checked={settings.removeGarbageChars} onChange={(e)=>update('removeGarbageChars', e.target.checked)} /> Activer</label></div>
+              </div>
+
+              <div>
+                <label className="text-sm">PDF export - délai initial (s)</label>
+                <input type="number" value={settings.pdfExportDelaySeconds} onChange={(e)=>update('pdfExportDelaySeconds', Number(e.target.value || 0))} className="w-full rounded-md border px-3 py-2 mt-1" />
+              </div>
+
+              <div>
+                <label className="text-sm">PDF export - tentatives</label>
+                <input type="number" value={settings.pdfExportRetries} onChange={(e)=>update('pdfExportRetries', Math.max(0, Number(e.target.value || 0)))} className="w-full rounded-md border px-3 py-2 mt-1" />
+              </div>
             </div>
 
             <div className="bg-gray-50 rounded-md p-3 border">
