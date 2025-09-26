@@ -1,4 +1,4 @@
-export const RESORTS = [
+export const STATIC_RESORTS = [
   {
     key: "vm-resort-albanie",
     name: "VM Resort - Albanie",
@@ -96,3 +96,55 @@ export const RESORTS = [
     gidMatrice: "578780649",
   },
 ];
+
+const STORAGE_KEY = "customResorts";
+
+export type Resort = { key: string; name: string; sheetId: string; gidMatrice: string };
+
+export function getStoredResorts(): Resort[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch (e) {
+    console.warn("Failed to read stored resorts", e);
+    return [];
+  }
+}
+
+export function saveStoredResorts(list: Resort[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    window.dispatchEvent(new CustomEvent("resorts-changed"));
+  } catch (e) {
+    console.warn("Failed to save stored resorts", e);
+  }
+}
+
+export function getResorts(): Resort[] {
+  const stored = getStoredResorts();
+  return [...STATIC_RESORTS, ...stored];
+}
+
+export function addResort(resort: Resort) {
+  const stored = getStoredResorts();
+  // avoid duplicates by key
+  if (stored.some((r) => r.key === resort.key)) return;
+  stored.push(resort);
+  saveStoredResorts(stored);
+}
+
+export function removeResort(key: string) {
+  const stored = getStoredResorts();
+  const remaining = stored.filter((r) => r.key !== key);
+  saveStoredResorts(remaining);
+}
+
+export function formatResortsArray(arr: Resort[]) {
+  const lines = arr.map((r) => `  {\n    key: \"${r.key}\",\n    name: \"${r.name.replace(/\"/g, '\\\"')}\",\n    sheetId: \"${r.sheetId}\",\n    gidMatrice: \"${r.gidMatrice}\",\n  },`);
+  return `export const RESORTS = [\n${lines.join("\n\n")}\n];`;
+}
