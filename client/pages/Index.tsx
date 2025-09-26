@@ -173,7 +173,7 @@ export default function Index() {
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground">
                   {summary?.recommendationRate != null
-                    ? `Bas�� sur ${summary?.respondents || 0} répondants`
+                    ? `Basé sur ${summary?.respondents || 0} répondants`
                     : "Colonne 'recommand' introuvable"}
                 </div>
               </CardContent>
@@ -395,7 +395,7 @@ export default function Index() {
                   style={{ borderColor: "#e6edf3" }}
                 >
                   <div className="text-xs text-muted-foreground">
-                    Nombre de r��ponses
+                    Nombre de réponses
                   </div>
                   <div className="mt-2 text-2xl font-extrabold">
                     {summary ? `${summary.respondents ?? "—"}` : "—"}
