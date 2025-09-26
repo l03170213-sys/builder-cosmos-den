@@ -313,7 +313,7 @@ export default function Analyses() {
 
           <Dialog open={modalOpen} onOpenChange={(open) => { if (!open) closeModal(); setModalOpen(open); }}>
             <DialogContent>
-              <DialogTitle>{getResorts().find(r => r.key === modalResortKey)?.name || 'Hôtel'}</DialogTitle>
+              <DialogTitle>{useResorts().find(r => r.key === modalResortKey)?.name || 'Hôtel'}</DialogTitle>
               <DialogDescription>
                 {modalQuery.isLoading ? (
                   <div className="h-64 animate-pulse bg-gray-200 rounded" />
