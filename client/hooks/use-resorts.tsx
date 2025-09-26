@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getResorts } from "@/lib/resorts";
 
 export default function useResorts() {
