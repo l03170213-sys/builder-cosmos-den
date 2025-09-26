@@ -122,13 +122,18 @@ export default async function exportToPdf(options: {
   listId: string;
   summaryId?: string;
   filename?: string;
+  preCaptureMs?: number;
+  canvasScale?: number;
 }) {
+  const settings = loadSettings();
   const {
     chartId,
     listId,
     summaryId,
     filename = "vm-resort-report.pdf",
-  } = options;
+    preCaptureMs = settings.exportPreCaptureMs,
+    canvasScale = settings.exportCanvasScale,
+  } = options as any;
   const chartEl = chartId ? document.getElementById(chartId) : null;
   const listEl = document.getElementById(listId);
   if (!listEl) throw new Error("List element not found");
