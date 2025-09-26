@@ -548,7 +548,7 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
     }
     // report progress after each resort (whether succeeded or not)
     try {
-      if (onProgress) onProgress(resortIndex, totalResorts, r.key);
+      if (onProgress) onProgress(resortIndex, totalResorts, r.name);
     } catch (e) {}
   }
 
