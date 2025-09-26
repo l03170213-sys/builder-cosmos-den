@@ -68,7 +68,10 @@ function addRespondentPage(doc: any, idx: number, total: number, name: string, o
   // meta info line
   doc.setFontSize(11);
   const metaParts: string[] = [];
-  if (meta?.date) metaParts.push(`Date: ${sanitizeText(meta.date)}`);
+  if (meta?.date) {
+    const formatted = formatDateForPdf(meta.date);
+    metaParts.push(`Date: ${formatted != null ? formatted : sanitizeText(meta.date)}`);
+  }
   if (meta?.age) metaParts.push(`Âge: ${sanitizeText(meta.age)}`);
   if (meta?.postal) metaParts.push(`Code postal: ${sanitizeText(meta.postal)}`);
   if (meta?.duration) metaParts.push(`Durée: ${sanitizeText(meta.duration)}`);
