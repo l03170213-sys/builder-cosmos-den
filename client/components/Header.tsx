@@ -33,7 +33,7 @@ export default function Header() {
               className="rounded-md px-3 py-2 text-sm"
               style={{ backgroundColor: 'var(--vm-primary)', color: 'white', border: '1px solid rgba(0,0,0,0.08)' }}
             >
-              {RESORTS.map((r) => (
+              {resorts.map((r) => (
                 <option key={r.key} value={r.key}>{r.name}</option>
               ))}
             </select>
