@@ -85,6 +85,6 @@ export const RESORTS: Record<
   "resort-1jjfeeau1d5n": {
     sheetId: "1JjFeeAu1D5nFccACgE4Z8BDrBr5OS8by7LtYejsTiLY",
     gidMatrice: "1146096914",
-    name: "Hôtel 1JjFeeAu1D5nFccACgE4Z8BDrBr5OS8by7LtYejsTiLY",
+    name: "Hôtel Baia Malva - Italie",
   },
 };
