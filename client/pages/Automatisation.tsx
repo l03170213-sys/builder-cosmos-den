@@ -33,6 +33,7 @@ function slugify(s: string) {
 export default function Automatisation() {
   const open = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
   const resorts = useResorts();
+  const { setSelected } = useSelectedResort();
 
   const [hotelName, setHotelName] = useState("");
   const [feuille1, setFeuille1] = useState("");
