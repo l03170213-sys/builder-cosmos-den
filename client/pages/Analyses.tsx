@@ -34,7 +34,7 @@ export default function Analyses() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
+        const url = `/api/resort/${selected}/averages`;
         const r = await safeFetch(url, { credentials: "same-origin" });
         const text = await r.clone().text().catch(() => "");
         if (r.ok) {
@@ -123,7 +123,7 @@ export default function Analyses() {
     queryFn: async () => {
       try {
         if (!modalResortKey) return null;
-        const url = new URL(`/api/resort/${modalResortKey}/averages`, window.location.origin).toString();
+        const url = `/api/resort/${modalResortKey}/averages`;
         const r = await safeFetch(url, { credentials: "same-origin" });
         const text = await r.clone().text().catch(() => "");
         if (r.ok) {
