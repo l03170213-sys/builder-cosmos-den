@@ -186,16 +186,30 @@ function addRespondentPage(doc: any, idx: number, total: number, name: string, o
 }
 
 export async function exportRespondentPdf(resortKey: string, respondent: any) {
-  // wait for data to stabilize (per request)
-  await pause(5000);
-  // fetch details
+  const settings = typeof window !== 'undefined' ? loadSettings() : null;
+  const initialDelayMs = settings ? (settings.pdfExportDelaySeconds || 1) * 1000 : 1000;
+  const maxAttempts = settings ? Math.max(1, settings.pdfExportRetries || 3) : 3;
+
+  // wait for data to stabilize (per settings)
+  await pause(initialDelayMs);
+  // fetch details with retries
   try {
     const params = new URLSearchParams();
     if (respondent.email) params.set("email", respondent.email);
     if (respondent.name) params.set("name", respondent.name);
     if (respondent.date) params.set("date", respondent.date);
     const url = `/api/resort/${resortKey}/respondent?${params.toString()}`;
-    const details = await fetchJsonSafe(url, { credentials: "same-origin" }).catch(() => null);
+
+    let details: any = null;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      if (attempt > 0) await pause(500 + attempt * 300);
+      try {
+        details = await fetchJsonSafe(url, { credentials: "same-origin" }).catch(() => null);
+      } catch (e) {
+        details = null;
+      }
+      if (details) break;
+    }
 
     const doc = new jsPDF();
     addRespondentPage(
