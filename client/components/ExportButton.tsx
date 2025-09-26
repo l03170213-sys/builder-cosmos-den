@@ -389,7 +389,7 @@ function sanitizeFilename(name: string) {
 }
 
 export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "official"; delayMs?: number; timeoutMs?: number; canvasScale?: number; preCaptureMs?: number }) {
-  const { mode = "both", delayMs = 200, timeoutMs = 8000, canvasScale = 1.5, preCaptureMs = 5000 } = options || {};
+  const { mode = "both", delayMs = 200, timeoutMs = 8000, canvasScale = 1.5, preCaptureMs = 1000 } = options || {};
   const resorts = RESORTS;
   const original = typeof window !== "undefined" ? window.localStorage.getItem("selectedResort") || (resorts[0] && resorts[0].key) : null;
 
