@@ -81,6 +81,88 @@ export async function fetchAveragesFromSheet(sheetId: string, gidMatrice?: strin
   };
 }
 
+export async function fetchRespondentOverallFromMatrice(sheetId: string, gidMatrice?: string, params?: { email?: string; name?: string; date?: string }) {
+  const GID = gidMatrice || "0";
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?gid=${GID}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("Unable to fetch matrice sheet");
+  const text = await r.text();
+  const data = parseGviz(text);
+  const mrows: any[] = data.table.rows || [];
+
+  const emailKey = (params?.email || "").toString().trim().toLowerCase();
+  const nameKey = (params?.name || "").toString().trim().toLowerCase();
+
+  const cellToStr = (cell: any) => {
+    if (!cell) return "";
+    if (typeof cell === "string") return cell;
+    if (typeof cell === "number") return String(cell);
+    if (cell && typeof cell === "object" && cell.v != null) return String(cell.v);
+    return "";
+  };
+
+  for (let ri = 0; ri < mrows.length; ri++) {
+    const cells = (mrows[ri].c || []) as any[];
+    const normCells = cells.map((c: any) => (cellToStr(c) || "").toString().trim().toLowerCase());
+
+    // priority 1: match name against first cell
+    if (nameKey) {
+      const firstCell = normCells[0] || "";
+      if (firstCell && (firstCell === nameKey || firstCell.includes(nameKey) || nameKey.includes(firstCell))) {
+        const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+        const overallCell = cells[overallIdx];
+        if (overallCell && overallCell.v != null) return String(overallCell.v);
+      }
+    }
+
+    // priority 2: exact email match anywhere
+    if (emailKey) {
+      for (const txt of normCells) {
+        if (!txt) continue;
+        if (txt === emailKey) {
+          const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+          const overallCell = cells[overallIdx];
+          if (overallCell && overallCell.v != null) return String(overallCell.v);
+        }
+      }
+    }
+
+    // priority 3: partial email or name match
+    if (emailKey) {
+      for (const txt of normCells) {
+        if (!txt) continue;
+        if (txt.includes(emailKey) || emailKey.includes(txt)) {
+          const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+          const overallCell = cells[overallIdx];
+          if (overallCell && overallCell.v != null) return String(overallCell.v);
+        }
+      }
+    }
+
+    if (nameKey) {
+      for (const txt of normCells) {
+        if (!txt) continue;
+        if (txt.includes(nameKey) || nameKey.includes(txt)) {
+          const overallIdx = 11 < cells.length ? 11 : Math.max(0, cells.length - 1);
+          const overallCell = cells[overallIdx];
+          if (overallCell && overallCell.v != null) return String(overallCell.v);
+        }
+      }
+    }
+  }
+
+  // fallback: map by row index using last row overall
+  try {
+    const lastRow = mrows[mrows.length - 1];
+    if (lastRow && lastRow.c) {
+      // try to find a column where header matches email/name? skip - return null
+    }
+  } catch (e) {
+    // ignore
+  }
+  return null;
+}
+
 export async function fetchSummaryFromSheet(sheetId: string) {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq`;
   const r = await fetch(url);
