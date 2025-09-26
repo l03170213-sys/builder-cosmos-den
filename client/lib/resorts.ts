@@ -97,6 +97,8 @@ export const STATIC_RESORTS = [
   },
 ];
 
+export const RESORTS = STATIC_RESORTS;
+
 const STORAGE_KEY = "customResorts";
 
 export type Resort = { key: string; name: string; sheetId: string; gidMatrice: string };
