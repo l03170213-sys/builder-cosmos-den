@@ -24,7 +24,7 @@ export default function Index() {
   const chartType = useChartType("bar");
   const [showValues, setShowValues] = React.useState(false);
   const { resort: selectedResortKey } = useSelectedResort();
-  const resorts = getResorts();
+  const resorts = useResorts();
   const currentResort =
     resorts.find((r) => r.key === selectedResortKey) || resorts[0];
 
@@ -399,7 +399,7 @@ export default function Index() {
                     Nombre de réponses
                   </div>
                   <div className="mt-2 text-2xl font-extrabold">
-                    {summary ? `${summary.respondents ?? "—"}` : "—"}
+                    {summary ? `${summary.respondents ?? "��"}` : "—"}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
                     Nombre de lignes (réponses)
