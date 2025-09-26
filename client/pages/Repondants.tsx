@@ -757,9 +757,6 @@ export default function Repondants() {
                       ? `Colonne ${respondentColumnLetter} de la fiche matrice (correspondant au répondant)`
                       : "Colonne L de la fiche matrice (correspondant au répondant) / 5"}
                   </div>
-                  {averages && (averages as any).overallAverage && (
-                    <div className="mt-1 text-xs text-muted-foreground">Moyenne hôtel: {formatAverage((averages as any).overallAverage)}/5</div>
-                  )}
                 </div>
 
                 <div
