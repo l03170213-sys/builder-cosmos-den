@@ -434,7 +434,10 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
     isFirstPage = false;
   };
 
+  const totalResorts = resorts.length;
+  let resortIndex = 0;
   for (const r of resorts) {
+    resortIndex++;
     try {
       if (typeof window === "undefined") break;
       window.localStorage.setItem("selectedResort", r.key);
