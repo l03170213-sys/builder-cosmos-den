@@ -726,8 +726,17 @@ export default function Repondants() {
               className="max-w-3xl max-h-[80vh] overflow-auto"
               aria-describedby="respondent-dialog-desc"
             >
+              {
+                // Resolve the displayed row by looking up the latest row in the current page by key.
+                // This prevents mismatches when React reuses DOM nodes or data updates reorder items.
+              }
               <DialogTitle>
-                {selected?.name ? selected.name : "Anonyme"}
+                {(() => {
+                  const key = getRowKey(selected);
+                  const live = (data && (data as any).items || []).find((r: any) => getRowKey(r) === key);
+                  const rowToShow = live || selected;
+                  return rowToShow?.name || rowToShow?.label || rowToShow?.email || "Anonyme";
+                })()}
               </DialogTitle>
               <DialogDescription id="respondent-dialog-desc">
                 Détails et moyennes pour le répondant sélectionné
