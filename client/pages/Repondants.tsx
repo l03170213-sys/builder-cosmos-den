@@ -587,6 +587,24 @@ export default function Repondants() {
                   <div />
                   <div className="flex items-center gap-2">
                     <button id="export-all-btn" onClick={async () => { /* placeholder, will be wired below */ }} className="px-3 py-2 rounded-md bg-primary text-white">Exporter tous les répondants (PDF)</button>
+                    <button onClick={async () => {
+                      const qc = useQueryClient();
+                      const id = toast({ title: 'Actualisation', description: 'Récupération des données depuis Google Sheets…' });
+                      try {
+                        // Invalidate and refetch relevant queries for the currently selected resort
+                        await qc.invalidateQueries(["repondants", selectedResortKey]);
+                        await qc.invalidateQueries(["resortSummary", selectedResortKey]);
+                        await qc.invalidateQueries(["resortAverages", selectedResortKey]);
+                        // Trigger refetch
+                        await qc.refetchQueries({ queryKey: ["repondants", selectedResortKey], exact: false });
+                        await qc.refetchQueries({ queryKey: ["resortSummary", selectedResortKey], exact: false });
+                        await qc.refetchQueries({ queryKey: ["resortAverages", selectedResortKey], exact: false });
+                        toast({ title: 'Actualisation terminée', description: 'Les données ont été mises à jour.' });
+                      } catch (e) {
+                        console.error('Refresh failed', e);
+                        toast({ title: 'Erreur', description: 'Impossible d\'actualiser les données.' , variant: 'destructive' as any});
+                      }
+                    }} className="px-3 py-2 rounded-md border text-sm">Actualiser</button>
                   </div>
                 </div>
                 {isLoading && <div>Chargement…</div>}
