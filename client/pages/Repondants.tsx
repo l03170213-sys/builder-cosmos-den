@@ -831,7 +831,14 @@ export default function Repondants() {
                                 {c.name}
                               </div>
                               <div className="text-sm font-medium text-gray-900">
-                                {c.value ? formatAverage(c.value) : "—"}
+                                {(() => {
+                                  const nameKeys = /^(nom|name|client)$/i;
+                                  const isNameCategory = c.name && nameKeys.test(String(c.name).trim());
+                                  if (isNameCategory) {
+                                    return selectedSnapshotName || selected?.name || selected?.label || selected?.email || "—";
+                                  }
+                                  return c.value ? formatAverage(c.value) : "—";
+                                })()}
                               </div>
                             </div>
                           ))}
