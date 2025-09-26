@@ -70,6 +70,8 @@ export default function Automatisation() {
       setShowGenerated(true);
       setMessage("Hôtel ajouté et enregistré localement.");
       setHotelName(""); setFeuille1(""); setMatrice("");
+      // select the newly added resort so UI refreshes and queries run
+      try { setSelected(resortObj.key); } catch (e) {}
       setTimeout(() => setMessage(null), 2500);
     } catch (e) {
       console.error(e);
