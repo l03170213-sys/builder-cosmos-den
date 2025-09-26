@@ -58,7 +58,8 @@ export default function Automatisation() {
     }
     const gidM = parseGid(matrice) || "0";
     let key = slugify(hotelName);
-    if (RESORTS.some((r) => r.key === key)) {
+    const existing = getResorts();
+    if (existing.some((r) => r.key === key)) {
       key = `${key}-${Date.now().toString().slice(-4)}`;
     }
 
