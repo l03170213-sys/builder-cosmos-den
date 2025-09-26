@@ -682,28 +682,47 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             ];
             result.overall = overallValFromMatrice || null;
           } else {
-            // respColIndex not found: prefer values from sheet1 (per-respondent row) instead of using matrice last-row (hotel averages).
-            for (const m of fixedCategoryMapping) {
-              let val = "";
-              if (m.colIndex === 0) {
-                val =
-                  scells[4] && scells[4].v != null
-                    ? String(scells[4].v)
-                    : scells[0] && scells[0].v != null
-                      ? String(scells[0].v)
-                      : "";
-              } else if (m.colIndex === 11) {
-                // overall: take from sheet1 column L when available; do not default to matrice overall (hotel average)
-                val = scells[11] && scells[11].v != null ? String(scells[11].v) : "";
-              } else {
-                // For other categories, prefer sheet1 cell at the expected index; do not use matrice overall row as fallback
-                val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : "";
+            // respColIndex not found
+            if (cfg.gidMatrice) {
+              // We have a matrice configured for this resort but couldn't find the respondent column.
+              // Do NOT fallback to sheet1 categories — return empty category values so the UI knows per-respondent averages are unavailable.
+              for (let i = 1; i <= 10; i++) {
+                const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
+                newCats.push({ name, value: '' });
               }
-              newCats.push({ name: m.name, value: val });
+              result.categories = [
+                {
+                  name: 'Nom',
+                  value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : ''
+                },
+                ...newCats,
+              ];
+              // Do not set overall from sheet1 when matrice is configured — leave overall null to indicate no per-respondent average found
+              result.overall = null;
+            } else {
+              // No matrice configured: fallback to sheet1 per-respondent values (existing behavior)
+              for (const m of fixedCategoryMapping) {
+                let val = "";
+                if (m.colIndex === 0) {
+                  val =
+                    scells[4] && scells[4].v != null
+                      ? String(scells[4].v)
+                      : scells[0] && scells[0].v != null
+                        ? String(scells[0].v)
+                        : "";
+                } else if (m.colIndex === 11) {
+                  // overall: take from sheet1 column L when available; do not default to matrice overall (hotel average)
+                  val = scells[11] && scells[11].v != null ? String(scells[11].v) : "";
+                } else {
+                  // For other categories, prefer sheet1 cell at the expected index; do not use matrice overall row as fallback
+                  val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : "";
+                }
+                newCats.push({ name: m.name, value: val });
+              }
+              result.categories = newCats;
+              // overall: prefer sheet1 column L if present, otherwise keep null (no hotel average fallback)
+              result.overall = scells[11] && scells[11].v != null ? String(scells[11].v) : null;
             }
-            result.categories = newCats;
-            // overall: prefer sheet1 column L if present, otherwise keep null (no hotel average fallback)
-            result.overall = scells[11] && scells[11].v != null ? String(scells[11].v) : null;
           }
           result.overall = overallVal;
         }
