@@ -215,7 +215,7 @@ export default function Analyses() {
             <div className="bg-white rounded-md p-4 shadow-sm">
               <h3 className="text-lg font-semibold mb-3">Sélectionner des hôtels à comparer (max 8)</h3>
               <div className="flex flex-wrap gap-2">
-                {useResorts().map((r) => (
+                {resorts.map((r) => (
                   <button
                     key={r.key}
                     onClick={() => toggleSelect(r.key)}
