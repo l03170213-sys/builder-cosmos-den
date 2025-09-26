@@ -586,27 +586,37 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               newCats.push({ name: catName, value: val });
             }
 
-            // overall: look for a row with 'moyenne' or fallback to last non-empty row value
-            let overallValFromMatrice: string | null = null;
-            for (let ri = 0; ri < mrows.length; ri++) {
-              const first = mrows[ri] && mrows[ri].c && mrows[ri].c[0] ? cellToString(mrows[ri].c[0]) : "";
-              if (first && normalize(first).includes('moyenne')) {
-                const c = mrows[ri].c && mrows[ri].c[respColIndex];
-                if (c && c.v != null) overallValFromMatrice = parseRatingCell(c);
-                break;
+            // Validate that most extracted values are numeric; otherwise this respColIndex is likely incorrect
+            const numericCount = newCats.reduce((acc, c) => acc + (/^-?\d+(?:[.,]\d+)?$/.test(String(c.value || '').trim()) ? 1 : 0), 0);
+            if (numericCount < Math.max(1, Math.floor(newCats.length * 0.6))) {
+              // fallback to rows-as-respondents handling below
+              // clear newCats and let rows-as-respondents logic run
+              newCats.length = 0;
+              // set respColIndex to -1 so the else branch (rows-as-respondents) executes
+              respColIndex = -1;
+            } else {
+              // overall: look for a row with 'moyenne' or fallback to last non-empty row value
+              let overallValFromMatrice: string | null = null;
+              for (let ri = 0; ri < mrows.length; ri++) {
+                const first = mrows[ri] && mrows[ri].c && mrows[ri].c[0] ? cellToString(mrows[ri].c[0]) : "";
+                if (first && normalize(first).includes('moyenne')) {
+                  const c = mrows[ri].c && mrows[ri].c[respColIndex];
+                  if (c && c.v != null) overallValFromMatrice = parseRatingCell(c);
+                  break;
+                }
               }
-            }
-            if (!overallValFromMatrice) {
-              // fallback to last non-empty row's value at respColIndex
-              for (let ri = mrows.length - 1; ri >= 0; ri--) {
-                const c = mrows[ri] && mrows[ri].c && mrows[ri].c[respColIndex];
-                if (c && c.v != null) { overallValFromMatrice = parseRatingCell(c); break; }
+              if (!overallValFromMatrice) {
+                // fallback to last non-empty row's value at respColIndex
+                for (let ri = mrows.length - 1; ri >= 0; ri--) {
+                  const c = mrows[ri] && mrows[ri].c && mrows[ri].c[respColIndex];
+                  if (c && c.v != null) { overallValFromMatrice = parseRatingCell(c); break; }
+                }
               }
-            }
 
-            result.categories = [ { name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : '' }, ...newCats ];
-            result.overall = overallValFromMatrice || null;
-            result.column = String(respColIndex);
+              result.categories = [ { name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : '' }, ...newCats ];
+              result.overall = overallValFromMatrice || null;
+              result.column = String(respColIndex);
+            }
           } else {
             // Strategy B: rows-as-respondents — find a row where any cell matches respondent name/email
             let matchedRowIdx = -1;
