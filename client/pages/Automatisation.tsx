@@ -178,7 +178,7 @@ export default function Automatisation() {
             </div>
 
             <div className="space-y-3">
-              {RESORTS.map((r) => {
+              {getResorts().map((r) => {
                 const sheetEditBase = `https://docs.google.com/spreadsheets/d/${r.sheetId}`;
                 const sheet1Edit = `${sheetEditBase}/edit#gid=0`;
                 const matriceEdit = `${sheetEditBase}/edit#gid=${r.gidMatrice}`;
