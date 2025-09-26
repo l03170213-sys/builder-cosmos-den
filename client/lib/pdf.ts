@@ -1,5 +1,7 @@
 import jsPDF from "jspdf";
+import jsPDF from "jspdf";
 import { fetchJsonSafe } from "@/lib/fetcher";
+import { loadSettings } from "@/lib/settings";
 
 function formatDateForPdf(raw: any) {
   if (!raw && raw !== 0) return null;
