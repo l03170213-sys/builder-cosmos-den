@@ -13,6 +13,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { RESORTS } from "@/lib/resorts";
+import { toast } from "@/hooks/use-toast";
 
 function parseGviz(text: string) {
   const start = text.indexOf("(");
