@@ -2,7 +2,7 @@ import React from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { exportAllHotels } from "@/components/ExportButton";
-import { RESORTS } from "@/lib/resorts";
+import { getResorts } from "@/lib/resorts";
 
 export default function Rapports() {
   const [exporting, setExporting] = React.useState(false);
