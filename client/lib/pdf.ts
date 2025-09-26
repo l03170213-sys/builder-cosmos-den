@@ -70,7 +70,10 @@ function sanitizeText(s: any) {
     // remove invisible/control/other characters
     str = str.replace(/\p{C}/gu, '');
 
-    // Remove specific problematic sequences provided by user
+    // Remove replacement character if present
+    str = str.replace(/\uFFFD/g, '');
+
+    // Remove specific problematic sequences provided by user (literal attempts)
     const unwantedSequences = [
       'Ø<ß\u001F',
       "'\u0008þ\u000F",
@@ -84,24 +87,32 @@ function sanitizeText(s: any) {
       'Ø<ß',
     ];
     for (const seq of unwantedSequences) {
-      // remove all occurrences
       str = str.split(seq).join('');
     }
 
-    // Also remove any remaining isolated "Ø", "Þ", "Ý" sequences that often appear as garbage
-    str = str.replace(/[ØÞÝ]/g, '');
+    // Remove common spurious Latin-1 symbols that appear in the data
+    str = str.replace(/[ØÞÝß×÷=•<>¤]/g, '');
+
+    // Remove low-level control bytes that may remain
+    str = str.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+
+    // If there are leading non-letter/digit characters, strip them
+    str = str.replace(/^[^\p{L}\p{N}]+/u, '');
 
     // Collapse multiple whitespace
     str = str.replace(/\s+/g, ' ').trim();
+
     // Collapse digits separated by spaces (e.g. '2 . 5 4' => '2.54')
     str = str.replace(/(\d)\s+\.\s+(\d)/g, '$1.$2');
     str = str.replace(/(\d)\s+(\d)/g, '$1$2');
+
     // If string looks like letters separated by spaces (e.g. 'T R A N S P O R T S'), glue them
     const tokens = str.split(' ');
     const singleLetterCount = tokens.filter((t) => t.length === 1).length;
-    if (tokens.length >= 6 && singleLetterCount / tokens.length > 0.6) {
+    if (tokens.length >= 4 && singleLetterCount / tokens.length > 0.5) {
       str = tokens.join('');
     }
+
     // Trim again
     str = str.replace(/\s+/g, ' ').trim();
     return str;
