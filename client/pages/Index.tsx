@@ -38,7 +38,7 @@ export default function Index() {
     let mounted = true;
     (async () => {
       try {
-        const url = new URL("/api/ping", window.location.origin).toString();
+        const url = "/api/ping";
         const r = await safeFetch(url, { credentials: "same-origin" });
         if (!mounted) return;
         setServerAvailable(r.ok);
@@ -57,7 +57,7 @@ export default function Index() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
+        const url = `/api/resort/${selected}/averages`;
         const r = await safeFetch(url, { credentials: "same-origin" });
         if (r.ok) {
           const text = await r.clone().text().catch(() => "");
@@ -103,7 +103,7 @@ export default function Index() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const url = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
+        const url = `/api/resort/${selected}/summary`;
         const r = await safeFetch(url, { credentials: "same-origin" });
         if (r.ok) {
           const text = await r.clone().text().catch(() => "");
