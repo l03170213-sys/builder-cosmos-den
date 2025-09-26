@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import useResorts from "@/hooks/use-resorts";
 import { getResorts, addResort, removeResort, formatResortsArray, STATIC_RESORTS } from "@/lib/resorts";
 
 function parseSheetId(url: string) {
