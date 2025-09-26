@@ -37,18 +37,42 @@ export default function Analyses() {
         const url = new URL(`/api/resort/${selected}/averages`, window.location.origin).toString();
         const r = await safeFetch(url, { credentials: "same-origin" });
         const text = await r.clone().text().catch(() => "");
-        if (!r.ok) {
-          console.warn("resort averages fetch returned non-ok", r.status, text);
-          return null;
+        if (r.ok) {
+          try {
+            return JSON.parse(text) as ResortAveragesResponse;
+          } catch (e) {
+            console.warn("resort averages invalid json", e, text);
+            return null;
+          }
         }
+
+        // Server returned non-ok (likely unknown resort). Try client-side sheets fallback for locally added resorts.
         try {
-          return JSON.parse(text) as ResortAveragesResponse;
+          const cfg = resorts.find((rr) => rr.key === selectedResortKey);
+          if (cfg && (cfg as any).sheetId) {
+            const mod = await import("@/lib/sheets");
+            const json = await mod.fetchAveragesFromSheet((cfg as any).sheetId, (cfg as any).gidMatrice);
+            return { resort: selectedResortKey, updatedAt: json.updatedAt, overallAverage: json.overallAverage, categories: json.categories } as any;
+          }
         } catch (e) {
-          console.warn("resort averages invalid json", e, text);
-          return null;
+          console.warn("Client-side fallback for averages failed", e);
         }
+
+        console.warn("resort averages fetch returned non-ok", r.status, text);
+        return null;
       } catch (err: any) {
         console.warn("resort averages fetch failed", err && err.message ? err.message : err);
+        // Try client-side fallback as last resort
+        try {
+          const cfg = resorts.find((rr) => rr.key === selectedResortKey);
+          if (cfg && (cfg as any).sheetId) {
+            const mod = await import("@/lib/sheets");
+            const json = await mod.fetchAveragesFromSheet((cfg as any).sheetId, (cfg as any).gidMatrice);
+            return { resort: selectedResortKey, updatedAt: json.updatedAt, overallAverage: json.overallAverage, categories: json.categories } as any;
+          }
+        } catch (e) {
+          // ignore
+        }
         return null;
       }
     },
@@ -102,18 +126,42 @@ export default function Analyses() {
         const url = new URL(`/api/resort/${modalResortKey}/averages`, window.location.origin).toString();
         const r = await safeFetch(url, { credentials: "same-origin" });
         const text = await r.clone().text().catch(() => "");
-        if (!r.ok) {
-          console.warn("modal resort fetch non-ok", r.status, text);
-          return null;
+        if (r.ok) {
+          try {
+            return JSON.parse(text) as ResortAveragesResponse;
+          } catch (e) {
+            console.warn("modal resort invalid json", e, text);
+            return null;
+          }
         }
+
+        // server returned non-ok -> attempt client-side sheet fetch for this resort
         try {
-          return JSON.parse(text) as ResortAveragesResponse;
+          const cfg = resorts.find((rr) => rr.key === modalResortKey);
+          if (cfg && (cfg as any).sheetId) {
+            const mod = await import("@/lib/sheets");
+            const json = await mod.fetchAveragesFromSheet((cfg as any).sheetId, (cfg as any).gidMatrice);
+            return { resort: modalResortKey, updatedAt: json.updatedAt, overallAverage: json.overallAverage, categories: json.categories } as any;
+          }
         } catch (e) {
-          console.warn("modal resort invalid json", e, text);
-          return null;
+          console.warn("modal client-side fallback failed", e);
         }
+
+        console.warn("modal resort fetch non-ok", r.status, text);
+        return null;
       } catch (err: any) {
         console.warn("modal resort fetch failed", err && err.message ? err.message : err);
+        // try client-side fallback
+        try {
+          const cfg = resorts.find((rr) => rr.key === modalResortKey);
+          if (cfg && (cfg as any).sheetId) {
+            const mod = await import("@/lib/sheets");
+            const json = await mod.fetchAveragesFromSheet((cfg as any).sheetId, (cfg as any).gidMatrice);
+            return { resort: modalResortKey, updatedAt: json.updatedAt, overallAverage: json.overallAverage, categories: json.categories } as any;
+          }
+        } catch (e) {
+          // ignore
+        }
         return null;
       }
     },
