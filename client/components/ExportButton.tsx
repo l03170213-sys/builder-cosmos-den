@@ -414,11 +414,24 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
 
   const waitForElement = async (id: string, timeout = timeoutMs) => {
     const start = Date.now();
+    let attempts = 0;
+    const interval = 200;
     while (Date.now() - start < timeout) {
-      const el = document.getElementById(id);
-      if (el) return el;
-      await new Promise((r) => setTimeout(r, 150));
+      const el = document.getElementById(id) || document.querySelector(`#${id}`);
+      if (el) {
+        if (attempts > 0) console.debug(`waitForElement: found ${id} after ${attempts} attempts`);
+        return el as HTMLElement;
+      }
+      attempts++;
+      await new Promise((r) => setTimeout(r, interval));
     }
+    console.warn(`waitForElement: timeout waiting for "${id}" after ${attempts} attempts (${timeout}ms)`);
+    try {
+      const ids = Array.from(document.querySelectorAll('[id]'))
+        .slice(0, 50)
+        .map((el: Element) => (el as HTMLElement).id);
+      console.warn('Available element ids (first 50):', ids.join(','));
+    } catch (e) {}
     return null;
   };
 
@@ -488,8 +501,10 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
         const maxAttempts = Math.max(1, settings.pdfExportRetries || 3);
         const elementTimeout = Math.max(timeoutMs, 15000);
         for (let attempt = 0; attempt < maxAttempts && !capturedGraphics; attempt++) {
-          const chartEl = await waitForElement("chart-wrapper", elementTimeout);
-          const listEl = await waitForElement("list-wrapper", elementTimeout);
+          const [chartEl, listEl] = await Promise.all([
+            waitForElement("chart-wrapper", elementTimeout),
+            waitForElement("list-wrapper", elementTimeout),
+          ]);
           if (chartEl && listEl) {
             try {
               // allow UI to fully render charts
@@ -557,8 +572,10 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
         const maxAttempts2 = Math.max(1, settings2.pdfExportRetries || 3);
         let capturedSummary = false;
         for (let attempt = 0; attempt < maxAttempts2 && !capturedSummary; attempt++) {
-          const summaryEl = await waitForElement("pdf-summary", timeoutMs);
-          const listEl = await waitForElement("list-wrapper", timeoutMs);
+          const [summaryEl, listEl] = await Promise.all([
+            waitForElement("pdf-summary", timeoutMs),
+            waitForElement("list-wrapper", timeoutMs),
+          ]);
           if (summaryEl && listEl) {
             try {
               const waitMs = preCaptureMs + attempt * 700;
