@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import { RESORTS } from "@/lib/resorts";
+import { getResorts } from "@/lib/resorts";
 import { useSelectedResort } from "@/hooks/use-selected-resort";
 import React from "react";
 import { loadSettings } from "@/lib/settings";
