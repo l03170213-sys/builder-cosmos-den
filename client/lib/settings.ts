@@ -36,6 +36,7 @@ export type AppSettings = {
 };
 
 const STORAGE_KEY = "vm_app_settings_v1";
+const VERSIONS_KEY = "vm_app_settings_versions_v1";
 
 export const DEFAULT_SETTINGS: AppSettings = {
   appName: "TRAVELSAT APPLICATION",
@@ -69,6 +70,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
   allowedEmailDomains: "",
   adminContactEmail: "admin@example.com",
   enableAnalytics: false,
+};
+
+type StoredVersion = {
+  name: string;
+  ts: number; // epoch millis
+  settings: AppSettings;
 };
 
 export function loadSettings(): AppSettings {
@@ -123,5 +130,80 @@ function hexToRgb(hex: string) {
     return `${r}, ${g}, ${b}`;
   } catch (e) {
     return '47, 183, 168';
+  }
+}
+
+// Versioning helpers
+function readVersions(): StoredVersion[] {
+  try {
+    const raw = window.localStorage.getItem(VERSIONS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as StoredVersion[];
+    // basic validation
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(v => v && v.name && v.ts && v.settings);
+  } catch (e) {
+    return [];
+  }
+}
+
+function writeVersions(vs: StoredVersion[]) {
+  try {
+    window.localStorage.setItem(VERSIONS_KEY, JSON.stringify(vs));
+  } catch (e) {
+    // noop
+  }
+}
+
+export function listVersions(): { name: string; ts: number }[] {
+  return readVersions().map(v => ({ name: v.name, ts: v.ts })).sort((a,b)=>b.ts-a.ts);
+}
+
+export function saveVersion(name: string, s?: AppSettings) {
+  try {
+    const settings = s || loadSettings();
+    const vs = readVersions();
+    const existing = vs.findIndex(v => v.name === name);
+    const entry: StoredVersion = { name, ts: Date.now(), settings };
+    if (existing >= 0) {
+      vs[existing] = entry;
+    } else {
+      vs.push(entry);
+    }
+    // keep at most 50 versions
+    const trimmed = vs.slice(-50);
+    writeVersions(trimmed);
+  } catch (e) {
+    // noop
+  }
+}
+
+export function loadVersion(name: string): AppSettings | null {
+  try {
+    const vs = readVersions();
+    const found = vs.find(v => v.name === name);
+    return found ? found.settings : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function removeVersion(name: string) {
+  try {
+    const vs = readVersions().filter(v => v.name !== name);
+    writeVersions(vs);
+  } catch (e) {
+    // noop
+  }
+}
+
+export function applyVersion(name: string): AppSettings | null {
+  try {
+    const s = loadVersion(name);
+    if (!s) return null;
+    saveSettings(s);
+    return s;
+  } catch (e) {
+    return null;
   }
 }
