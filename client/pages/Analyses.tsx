@@ -61,14 +61,12 @@ export default function Analyses() {
     queryFn: async () => {
       const resorts = useResorts();
       const promises = resorts.map(async (r) => {
-        const url = new URL(`/api/resort/${r.key}/averages`, window.location.origin).toString();
         try {
-          const resp = await safeFetch(url, { credentials: "same-origin" });
-          if (!resp.ok) return { key: r.key, name: r.name, error: true };
-          const json = (await resp.json()) as ResortAveragesResponse;
+          const mod = await import("@/lib/sheets");
+          const json = await mod.fetchAveragesFromSheet(r.sheetId, (r as any).gidMatrice);
           return { key: r.key, name: r.name, overall: json.overallAverage, categories: json.categories };
         } catch (e) {
-          console.warn("allResortsQuery: fetch failed for", r.key, e && e.message ? e.message : e);
+          console.warn("allResortsQuery: client fetch failed for", r.key, e && (e as any).message ? (e as any).message : e);
           return { key: r.key, name: r.name, error: true };
         }
       });
