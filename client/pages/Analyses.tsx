@@ -59,7 +59,8 @@ export default function Analyses() {
   const allResortsQuery = useQuery({
     queryKey: ["all-resorts-averages"],
     queryFn: async () => {
-      const promises = RESORTS.map(async (r) => {
+      const resorts = getResorts();
+      const promises = resorts.map(async (r) => {
         const url = new URL(`/api/resort/${r.key}/averages`, window.location.origin).toString();
         try {
           const resp = await safeFetch(url, { credentials: "same-origin" });
