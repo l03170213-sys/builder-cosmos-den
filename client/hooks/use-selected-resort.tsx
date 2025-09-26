@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { RESORTS } from "@/lib/resorts";
+import { getResorts } from "@/lib/resorts";
 
 const STORAGE_KEY = "selectedResort";
 
