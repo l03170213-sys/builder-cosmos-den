@@ -489,7 +489,7 @@ export default function Repondants() {
           }
         } catch (err: any) {
           if (err && err.status === 404) {
-            if (mounted && getRowKey(selected) === capturedKey) {
+            if (mounted && (selected?._selId || null) === capturedSelId) {
               setCategoriesByRespondent(null);
               // keep the selected row's note if it exists
               setRespondentNoteGeneral(selected?.note ?? null);
