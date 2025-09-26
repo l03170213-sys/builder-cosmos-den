@@ -458,7 +458,9 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
       if (mode === "both" || mode === "graphics") {
         // Try capture up to 3 times (initial wait + backoff) to allow UI to render
         let capturedGraphics = false;
-        for (let attempt = 0; attempt < 3 && !capturedGraphics; attempt++) {
+        const settings = loadSettings();
+        const maxAttempts = Math.max(1, settings.pdfExportRetries || 3);
+        for (let attempt = 0; attempt < maxAttempts && !capturedGraphics; attempt++) {
           const chartEl = await waitForElement("chart-wrapper", timeoutMs);
           const listEl = await waitForElement("list-wrapper", timeoutMs);
           if (chartEl && listEl) {
