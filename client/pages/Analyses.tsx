@@ -26,7 +26,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogClose } fr
 
 export default function Analyses() {
   const { resort: selectedResortKey, setSelected } = useSelectedResort();
-  const resorts = getResorts();
+  const resorts = useResorts();
   const currentResort = resorts.find((r) => r.key === selectedResortKey) || resorts[0];
 
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse | null>({
