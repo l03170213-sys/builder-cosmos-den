@@ -1,5 +1,64 @@
 import jsPDF from "jspdf";
 import { fetchJsonSafe } from "@/lib/fetcher";
+import jsPDF from "jspdf";
+
+function formatDateForPdf(raw: any) {
+  if (!raw && raw !== 0) return null;
+  let s = String(raw).toString().trim();
+  // normalize control chars
+  s = s.replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // Handle Google/Sheets Date(YYYY,M,D,...) format
+  const sheetsDate = s.match(/^Date\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/);
+  if (sheetsDate) {
+    const year = Number(sheetsDate[1]);
+    const monthIndex = Number(sheetsDate[2]);
+    const day = Number(sheetsDate[3]);
+    const dt = new Date(year, monthIndex, day);
+    const d = String(dt.getDate()).padStart(2, '0');
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const y = dt.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
+  // dd/mm/yyyy or dd.mm.yyyy or dd-mm-yyyy
+  const dmY = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})/);
+  if (dmY) {
+    const d = dmY[1].padStart(2, '0');
+    const m = dmY[2].padStart(2, '0');
+    let y = dmY[3];
+    if (y.length === 2) y = '20' + y;
+    return `${d}/${m}/${y}`;
+  }
+
+  // ISO date YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  }
+
+  // Try JS Date parse
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) {
+    const d = String(dt.getDate()).padStart(2, '0');
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const y = dt.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
+  // Excel serial number
+  const num = Number(s);
+  if (!Number.isNaN(num) && num > 0) {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const dt2 = new Date(excelEpoch.getTime() + Math.round(num) * 24 * 60 * 60 * 1000);
+    const d = String(dt2.getUTCDate()).padStart(2, '0');
+    const m = String(dt2.getUTCMonth() + 1).padStart(2, '0');
+    const y = dt2.getUTCFullYear();
+    return `${d}/${m}/${y}`;
+  }
+
+  return null;
+}
 
 function pause(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
