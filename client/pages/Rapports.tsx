@@ -100,7 +100,7 @@ export default function Rapports() {
           <div className="bg-white rounded-md p-4 shadow-sm">
             <p className="text-sm text-muted-foreground">
               Cliquez sur un des boutons ci-dessus pour lancer l'export de tous
-              les hôtels ({RESORTS.length}). Les fichiers PDF seront téléchargés
+              les hôtels ({getResorts().length}). Les fichiers PDF seront téléchargés
               un par un.
             </p>
           </div>
