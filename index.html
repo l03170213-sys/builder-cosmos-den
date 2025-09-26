@@ -9,6 +9,32 @@
   <body>
     <div id="root"></div>
 
+    <!-- Initial loader: shows top-right logo + spinner until React mounts -->
+    <div id="initial-loader" style="position:fixed;top:12px;right:12px;z-index:99999;display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,0.95);border-radius:999px;box-shadow:0 6px 18px rgba(12,12,13,0.08);">
+      <img id="initial-loader-logo" src="https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2Fc4dfccf922984678bdcd751669adb5da?format=webp&width=800" alt="logo" style="height:28px;width:auto;object-fit:contain;border-radius:4px;" />
+      <div id="initial-loader-spinner" style="width:18px;height:18px;border-radius:50%;border:3px solid rgba(0,0,0,0.08);border-top-color:var(--vm-primary, #2fb7a8);animation:spin 1s linear infinite"></div>
+    </div>
+
+    <script>
+      // allow customization of the loader logo based on local settings before React mounts
+      (function(){
+        try{
+          var raw = localStorage.getItem('vm_app_settings_v1');
+          if (raw){
+            var parsed = JSON.parse(raw);
+            if (parsed && parsed.logoUrl){
+              var img = document.getElementById('initial-loader-logo');
+              if (img) img.src = parsed.logoUrl;
+            }
+          }
+        }catch(e){/*ignore*/}
+      })();
+      // spinner keyframes
+      var style = document.createElement('style');
+      style.innerHTML = '@keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }';
+      document.head.appendChild(style);
+    </script>
+
     <script type="module" src="/client/main.tsx"></script>
   </body>
 </html>
