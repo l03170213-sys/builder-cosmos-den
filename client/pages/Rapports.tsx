@@ -9,46 +9,53 @@ export default function Rapports() {
   const [exportProgress, setExportProgress] = React.useState(0);
   const [exportTotal, setExportTotal] = React.useState(0);
   const [exportCurrentKey, setExportCurrentKey] = React.useState<string | null>(null);
+  const [waiting, setWaiting] = React.useState(false);
+  const [countdown, setCountdown] = React.useState<number>(0);
 
-  const onExportAllGraphics = async () => {
+  const runExportWithCountdown = async (mode: "graphics" | "official") => {
     try {
+      // Start waiting period of 120s
+      setWaiting(true);
+      setCountdown(120);
+      await new Promise<void>((resolve) => {
+        const iv = setInterval(() => {
+          setCountdown((c) => {
+            if (c <= 1) {
+              clearInterval(iv);
+              resolve();
+              return 0;
+            }
+            return c - 1;
+          });
+        }, 1000);
+      });
+      setWaiting(false);
+
+      // Start export
       setExporting(true);
       setExportProgress(0);
       setExportTotal(RESORTS.length);
-      await exportAllHotels({ mode: "graphics", preCaptureMs: 1000, onProgress: (done, total, key) => {
+      await exportAllHotels({ mode, preCaptureMs: 1000, onProgress: (done, total, key) => {
         setExportProgress(done);
         setExportTotal(total);
         setExportCurrentKey(key || null);
       }});
-      alert("Export des graphiques terminé pour tous les hôtels.");
+
+      if (mode === "graphics") alert("Export des graphiques terminé pour tous les hôtels.");
+      else alert("Export officiel terminé pour tous les hôtels.");
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de l'export des graphiques pour tous les hôtels.");
+      if (mode === "graphics") alert("Erreur lors de l'export des graphiques pour tous les hôtels.");
+      else alert("Erreur lors de l'export officiel pour tous les hôtels.");
     } finally {
       setExporting(false);
+      setWaiting(false);
       setTimeout(() => { setExportProgress(0); setExportTotal(0); setExportCurrentKey(null); }, 1500);
     }
   };
 
-  const onExportAllOfficial = async () => {
-    try {
-      setExporting(true);
-      setExportProgress(0);
-      setExportTotal(RESORTS.length);
-      await exportAllHotels({ mode: "official", preCaptureMs: 1000, onProgress: (done, total, key) => {
-        setExportProgress(done);
-        setExportTotal(total);
-        setExportCurrentKey(key || null);
-      }});
-      alert("Export officiel terminé pour tous les hôtels.");
-    } catch (err) {
-      console.error(err);
-      alert("Erreur lors de l'export officiel pour tous les hôtels.");
-    } finally {
-      setExporting(false);
-      setTimeout(() => { setExportProgress(0); setExportTotal(0); setExportCurrentKey(null); }, 1500);
-    }
-  };
+  const onExportAllGraphics = async () => runExportWithCountdown("graphics");
+  const onExportAllOfficial = async () => runExportWithCountdown("official");
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
