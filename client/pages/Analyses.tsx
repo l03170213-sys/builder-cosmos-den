@@ -79,7 +79,7 @@ export default function Analyses() {
   });
 
   // radar selection state
-  const [selectedKeys, setSelectedKeys] = React.useState<string[]>(() => [RESORTS[0]?.key].filter(Boolean));
+  const [selectedKeys, setSelectedKeys] = React.useState<string[]>(() => [getResorts()[0]?.key].filter(Boolean));
   const toggleSelect = (key: string) => {
     setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev.slice(0, 8), key]));
   };
