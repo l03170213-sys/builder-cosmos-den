@@ -22,6 +22,17 @@ export type AppSettings = {
   retentionDays: number;
   maxExportBatch: number;
   autoExportOnSnapshot: boolean;
+
+  // Survey-specific settings
+  recommendationThreshold: number; // value 0..1 used to mark 'Basé' thresholds
+  removeGarbageChars: boolean; // enable extra sanitization of exported text
+  pdfExportDelaySeconds: number; // initial delay per respondent export
+  pdfExportRetries: number; // number of retry attempts when fetching respondent details
+  exportPreCaptureMs: number; // ms to wait before capturing a page
+  exportCanvasScale: number; // scale used by html2canvas during export
+  allowedEmailDomains?: string; // comma separated list
+  adminContactEmail?: string;
+  enableAnalytics?: boolean;
 };
 
 const STORAGE_KEY = "vm_app_settings_v1";
