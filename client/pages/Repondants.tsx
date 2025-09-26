@@ -694,7 +694,7 @@ export default function Repondants() {
                                 <button
                                   onClick={() => {
                                     const selId = `${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
-                                    setSelected({ ...row, __selId: selId });
+                                    setSelected({ ...row, _selId: selId });
                                     setSelectedSnapshotName(row?.name || row?.label || row?.email || null);
                                     setDialogOpen(true);
                                   }}
