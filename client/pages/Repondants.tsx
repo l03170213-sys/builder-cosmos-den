@@ -743,7 +743,8 @@ export default function Repondants() {
                   const key = getRowKey(selected);
                   const live = (data && (data as any).items || []).find((r: any) => getRowKey(r) === key);
                   const rowToShow = live || selected;
-                  return rowToShow?.name || rowToShow?.label || rowToShow?.email || "Anonyme";
+                  // Prefer the exact name the user clicked (snapshot) to avoid mismatches
+                  return selectedSnapshotName || rowToShow?.name || rowToShow?.label || rowToShow?.email || "Anonyme";
                 })()}
               </DialogTitle>
               <DialogDescription id="respondent-dialog-desc">
