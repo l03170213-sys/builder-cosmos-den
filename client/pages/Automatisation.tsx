@@ -109,12 +109,24 @@ export default function Automatisation() {
   };
 
   const onPrepareDelete = (key: string) => {
-    const remaining = RESORTS.filter((r) => r.key !== key);
-    const exportText = formatResortsArray(remaining as any);
-    setDeleteSnippet(exportText);
-    setShowDeleteFor(key);
-    setShowGenerated(false);
-    setMessage(null);
+    const all = getResorts();
+    const isStatic = STATIC_RESORTS.some((r) => r.key === key);
+    if (isStatic) {
+      const remaining = STATIC_RESORTS.filter((r) => r.key !== key);
+      const exportText = formatResortsArray(remaining as any);
+      setDeleteSnippet(exportText);
+      setShowDeleteFor(key);
+      setShowGenerated(false);
+      setMessage(null);
+    } else {
+      // stored (local) resort -> remove directly after confirmation
+      if (confirm("Supprimer cet hôtel ajouté localement ?")) {
+        removeResort(key);
+        setMessage("Hôtel supprimé localement.");
+        setShowDeleteFor(null);
+        setTimeout(() => setMessage(null), 2000);
+      }
+    }
   };
 
   return (
