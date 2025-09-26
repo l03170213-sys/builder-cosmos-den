@@ -69,37 +69,42 @@ function sanitizeText(s: any) {
   if (s == null) return "";
   try {
     let str = String(s).normalize('NFKC');
-    // remove invisible/control/other characters
+    // always remove obvious invisible/control characters
     str = str.replace(/\p{C}/gu, '');
 
-    // Remove replacement character if present
-    str = str.replace(/\uFFFD/g, '');
+    const settings = typeof window !== 'undefined' ? loadSettings() : null;
+    const removeGarbage = settings ? Boolean(settings.removeGarbageChars) : true;
 
-    // Remove specific problematic sequences provided by user (literal attempts)
-    const unwantedSequences = [
-      'Ø<ß\u001F',
-      "'\u0008þ\u000F",
-      'Ø=Þ•',
-      'Ø<ßè',
-      'Ø=ÞÏþ\u000F',
-      'Ø<ßÊ',
-      'Ø<ß‰',
-      'Ø=Üe',
-      'Ø>Ý\u001D',
-      'Ø<ß',
-    ];
-    for (const seq of unwantedSequences) {
-      str = str.split(seq).join('');
+    if (removeGarbage) {
+      // Remove replacement character if present
+      str = str.replace(/\uFFFD/g, '');
+
+      // Remove specific problematic sequences provided by user (literal attempts)
+      const unwantedSequences = [
+        'Ø<ß\u001F',
+        "'\u0008þ\u000F",
+        'Ø=Þ•',
+        'Ø<ßè',
+        'Ø=ÞÏþ\u000F',
+        'Ø<ßÊ',
+        'Ø<ß‰',
+        'Ø=Üe',
+        'Ø>Ý\u001D',
+        'Ø<ß',
+      ];
+      for (const seq of unwantedSequences) {
+        str = str.split(seq).join('');
+      }
+
+      // Remove common spurious Latin-1 symbols that appear in the data
+      str = str.replace(/[ØÞÝß×÷=•<>¤]/g, '');
+
+      // Remove low-level control bytes that may remain
+      str = str.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+
+      // If there are leading non-letter/digit characters, strip them
+      str = str.replace(/^[^\p{L}\p{N}]+/u, '');
     }
-
-    // Remove common spurious Latin-1 symbols that appear in the data
-    str = str.replace(/[ØÞÝß×÷=•<>¤]/g, '');
-
-    // Remove low-level control bytes that may remain
-    str = str.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
-
-    // If there are leading non-letter/digit characters, strip them
-    str = str.replace(/^[^\p{L}\p{N}]+/u, '');
 
     // Collapse multiple whitespace
     str = str.replace(/\s+/g, ' ').trim();
