@@ -454,6 +454,7 @@ export default function Repondants() {
       setRespondentNoteGeneral(selected?.note ?? null);
       setRespondentColumnLetter(null);
       try {
+        const capturedKey = getRowKey(selected);
         const params = new URLSearchParams();
         if (selected?.email) params.set("email", selected.email);
         if (selected?.name) params.set("name", selected.name);
@@ -476,7 +477,7 @@ export default function Repondants() {
           const dataResp = await fetchJsonSafe(apiUrl, {
             credentials: "same-origin",
           });
-          if (mounted) {
+          if (mounted && getRowKey(selected) === capturedKey) {
             setCategoriesByRespondent(dataResp.categories || null);
             const overallResp = dataResp && (dataResp.overall ?? dataResp.overallAverage ?? dataResp.overallScore ?? dataResp.overall_score ?? dataResp.overall_value ?? null);
             // Do not overwrite the note coming from the list row; prefer selected.row note when present
@@ -488,7 +489,7 @@ export default function Repondants() {
           }
         } catch (err: any) {
           if (err && err.status === 404) {
-            if (mounted) {
+            if (mounted && getRowKey(selected) === capturedKey) {
               setCategoriesByRespondent(null);
               // keep the selected row's note if it exists
               setRespondentNoteGeneral(selected?.note ?? null);
