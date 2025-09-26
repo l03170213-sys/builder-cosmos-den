@@ -2,6 +2,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { RESORTS } from "@/lib/resorts";
 import { safeFetch } from "@/lib/fetcher";
+import { loadSettings } from "@/lib/settings";
 
 function makePage2Clone(original: HTMLElement) {
   // Create a clean container that mimics the example PDF layout
