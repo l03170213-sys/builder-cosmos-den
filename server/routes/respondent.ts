@@ -637,7 +637,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             ];
             result.overall = overallValFromMatrice || null;
           } else {
-            // respColIndex not found: keep previous fallback logic (use overallIdx and row indexing)
+            // respColIndex not found: prefer values from sheet1 (per-respondent row) instead of using matrice last-row (hotel averages).
             for (const m of fixedCategoryMapping) {
               let val = "";
               if (m.colIndex === 0) {
@@ -648,37 +648,17 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
                       ? String(scells[0].v)
                       : "";
               } else if (m.colIndex === 11) {
-                const c = lastRowCells[overallIdx];
-                val =
-                  c && c.v != null
-                    ? String(c.v)
-                    : scells[m.colIndex] && scells[m.colIndex].v != null
-                      ? String(scells[m.colIndex].v)
-                      : "";
+                // overall: take from sheet1 column L when available; do not default to matrice overall (hotel average)
+                val = scells[11] && scells[11].v != null ? String(scells[11].v) : "";
               } else {
-                const rowIndex = m.colIndex - 1;
-                const mrow = mrows[rowIndex];
-                if (
-                  mrow &&
-                  mrow.c &&
-                  mrow.c[overallIdx] &&
-                  mrow.c[overallIdx].v != null
-                ) {
-                  val = String(mrow.c[overallIdx].v);
-                } else {
-                  val =
-                    scells[m.colIndex] && scells[m.colIndex].v != null
-                      ? String(scells[m.colIndex].v)
-                      : "";
-                }
+                // For other categories, prefer sheet1 cell at the expected index; do not use matrice overall row as fallback
+                val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : "";
               }
               newCats.push({ name: m.name, value: val });
             }
             result.categories = newCats;
-            result.overall =
-              lastRowCells[overallIdx] && lastRowCells[overallIdx].v != null
-                ? String(lastRowCells[overallIdx].v)
-                : null;
+            // overall: prefer sheet1 column L if present, otherwise keep null (no hotel average fallback)
+            result.overall = scells[11] && scells[11].v != null ? String(scells[11].v) : null;
           }
           result.overall = overallVal;
         }
