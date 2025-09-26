@@ -659,6 +659,7 @@ export default function Repondants() {
                                       setTimeout(() => { if (btn) { btn.textContent = 'PDF'; btn.disabled = false; } }, 2000);
                                     } catch (e) {
                                       console.error('Export respondent failed', e);
+                                      try { toast({ title: 'Échec de l\'export PDF', description: String(e && (e.message || e)) }); } catch (_) {}
                                       const btn = document.getElementById('export-single-btn-' + i) as HTMLButtonElement | null;
                                       if (btn) { btn.textContent = 'Erreur'; setTimeout(() => { if (btn) { btn.textContent = 'PDF'; btn.disabled = false; } }, 2000); }
                                     }
