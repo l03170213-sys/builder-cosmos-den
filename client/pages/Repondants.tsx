@@ -417,7 +417,7 @@ export default function Repondants() {
     refetchOnWindowFocus: false,
     onSuccess: (d: any) => {
       // ensure the selected hasn't changed since this query was created
-      if (getRowKey(selected) !== respondentKeyAtRender) return;
+      if ((selected?._selId || null) !== respondentSelIdAtRender) return;
       setCategoriesByRespondent(d?.categories || null);
       const overall = d && (d.overall ?? d.overallAverage ?? d.overallScore ?? d.overall_score ?? d.overall_value ?? null);
       // do not overwrite the note from the list row if present — prefer row.note
