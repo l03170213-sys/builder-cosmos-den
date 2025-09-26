@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import useResorts from "@/hooks/use-resorts";
 import { toast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 function parseGviz(text: string) {
   const start = text.indexOf("(");
