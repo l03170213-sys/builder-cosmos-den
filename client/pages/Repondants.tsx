@@ -187,10 +187,7 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const apiUrl = new URL(
-          `/api/resort/${selected}/respondents?page=${page}&pageSize=${pageSize}`,
-          window.location.origin,
-        ).toString();
+        const apiUrl = `/api/resort/${selected}/respondents?page=${page}&pageSize=${pageSize}`;
         // server returns { items, total, page, pageSize }
         return await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
       } catch (err) {
@@ -260,10 +257,7 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const apiUrl = new URL(
-          `/api/resort/${selected}/summary`,
-          window.location.origin,
-        ).toString();
+        const apiUrl = `/api/resort/${selected}/summary`;
         try {
           return await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
         } catch (err) {
@@ -287,10 +281,7 @@ export default function Repondants() {
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const apiUrl = new URL(
-          `/api/resort/${selected}/averages`,
-          window.location.origin,
-        ).toString();
+        const apiUrl = `/api/resort/${selected}/averages`;
         try {
           return await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
         } catch (err) {
@@ -364,7 +355,7 @@ export default function Repondants() {
           if (it.email) params.set('email', it.email);
           if (it.name) params.set('name', it.name);
           if (it.date) params.set('date', it.date);
-          const apiUrl = new URL('/api/resort/' + selectedResortKey + '/respondent?' + params.toString(), window.location.origin).toString();
+          const apiUrl = `/api/resort/${selectedResortKey}/respondent?${params.toString()}`;
           let resp = await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }).catch(() => null);
           let noteVal = resp && (resp.overall ?? resp.overallAverage ?? resp.overallScore ?? resp.overall);
 
@@ -417,10 +408,7 @@ export default function Repondants() {
       } catch (ex) {
         // ignore
       }
-      const apiUrl = new URL(
-        "/api/resort/" + selectedResortKey + "/respondent?" + params.toString(),
-        window.location.origin,
-      ).toString();
+      const apiUrl = `/api/resort/${selectedResortKey}/respondent?${params.toString()}`;
       try {
         const serverResp = await fetchJsonSafe(apiUrl, { credentials: "same-origin" }).catch(() => null);
         if (serverResp && (serverResp.overall ?? serverResp.overallAverage ?? serverResp.overallScore ?? serverResp.overall) != null) {
@@ -570,7 +558,7 @@ export default function Repondants() {
         const all: any[] = [];
         let pageIdx = 1;
         while (true) {
-          const apiUrl = new URL(`/api/resort/${selected}/respondents?page=${pageIdx}&pageSize=500`, window.location.origin).toString();
+          const apiUrl = `/api/resort/${selected}/respondents?page=${pageIdx}&pageSize=500`;
           const resp = await fetch(apiUrl, { credentials: 'same-origin' });
           if (!resp.ok) break;
           const json = await resp.json().catch(() => null);
