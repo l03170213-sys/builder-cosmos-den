@@ -537,6 +537,10 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
     } catch (err) {
       console.error("Error exporting resort", r.key, err);
     }
+    // report progress after each resort (whether succeeded or not)
+    try {
+      if (onProgress) onProgress(resortIndex, totalResorts, r.key);
+    } catch (e) {}
   }
 
   // restore original selected resort
