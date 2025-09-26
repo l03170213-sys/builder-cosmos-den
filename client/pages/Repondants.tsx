@@ -589,7 +589,7 @@ export default function Repondants() {
                   <div className="flex items-center gap-2">
                     <button id="export-all-btn" onClick={async () => { /* placeholder, will be wired below */ }} className="px-3 py-2 rounded-md bg-primary text-white">Exporter tous les répondants (PDF)</button>
                     <button onClick={async () => {
-                      const qc = useQueryClient();
+                      const qc = queryClient;
                       const id = toast({ title: 'Actualisation', description: 'Récupération des données depuis Google Sheets…' });
                       try {
                         // Invalidate and refetch relevant queries for the currently selected resort
