@@ -395,7 +395,8 @@ function sanitizeFilename(name: string) {
 }
 
 export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "official"; delayMs?: number; timeoutMs?: number; canvasScale?: number; preCaptureMs?: number; onProgress?: (done:number,total:number,key?:string)=>void }) {
-  const { mode = "both", delayMs = 200, timeoutMs = 8000, canvasScale = 1.5, preCaptureMs = 1000, onProgress } = options || {};
+  const settings = loadSettings();
+  const { mode = "both", delayMs = settings.pdfExportDelaySeconds * 1000, timeoutMs = 8000, canvasScale = settings.exportCanvasScale, preCaptureMs = settings.exportPreCaptureMs, onProgress } = options || {} as any;
   const resorts = RESORTS;
   const original = typeof window !== "undefined" ? window.localStorage.getItem("selectedResort") || (resorts[0] && resorts[0].key) : null;
 
