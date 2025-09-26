@@ -421,7 +421,22 @@ export default function Repondants() {
         window.location.origin,
       ).toString();
       try {
-        return await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
+        const serverResp = await fetchJsonSafe(apiUrl, { credentials: "same-origin" }).catch(() => null);
+        if (serverResp && (serverResp.overall ?? serverResp.overallAverage ?? serverResp.overallScore ?? serverResp.overall) != null) {
+          return serverResp;
+        }
+        // fallback to client-side matrice lookup
+        try {
+          const cfg = resorts.find((r) => r.key === selectedResortKey);
+          if (cfg && cfg.gidMatrice) {
+            const mod = await import('@/lib/sheets');
+            const overall = await mod.fetchRespondentOverallFromMatrice(cfg.sheetId, cfg.gidMatrice, { email: selected?.email, name: selected?.name, date: selected?.date });
+            if (overall != null) return { overall } as any;
+          }
+        } catch (e) {
+          // ignore
+        }
+        return serverResp;
       } catch (err: any) {
         if (err && err.status === 404) return null;
         throw new Error(
