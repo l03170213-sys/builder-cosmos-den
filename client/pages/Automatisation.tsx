@@ -29,13 +29,9 @@ function slugify(s: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-function formatResortsArray(arr: typeof RESORTS) {
-  const lines = arr.map((r) => `  {\n    key: \"${r.key}\",\n    name: \"${r.name.replace(/\"/g, '\\\"')}\",\n    sheetId: \"${r.sheetId}\",\n    gidMatrice: \"${r.gidMatrice}\",\n  },`);
-  return `export const RESORTS = [\n${lines.join("\n\n")}\n];`;
-}
-
 export default function Automatisation() {
   const open = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
+  const resorts = useResorts();
 
   const [hotelName, setHotelName] = useState("");
   const [feuille1, setFeuille1] = useState("");
@@ -47,6 +43,7 @@ export default function Automatisation() {
   const [message, setMessage] = useState<string | null>(null);
 
   const onAdd = () => {
+    // Persist the resort immediately and rely on useResorts to update UI
     setMessage(null);
     if (!hotelName.trim()) {
       setMessage("Le nom de l'hôtel est requis.");
@@ -64,10 +61,18 @@ export default function Automatisation() {
       key = `${key}-${Date.now().toString().slice(-4)}`;
     }
 
-    const snippet = `  {\n    key: \"${key}\",\n    name: \"${hotelName.replace(/\"/g, '\\\"')}\",\n    sheetId: \"${sheetId}\",\n    gidMatrice: \"${gidM}\",\n  },`;
-
-    setGeneratedSnippet(snippet);
-    setShowGenerated(true);
+    const resortObj = { key, name: hotelName.trim(), sheetId, gidMatrice: gidM };
+    try {
+      addResort(resortObj as any);
+      setGeneratedSnippet(`  {\n    key: "${resortObj.key}",\n    name: "${resortObj.name.replace(/\"/g, '\\\"')}",\n    sheetId: "${resortObj.sheetId}",\n    gidMatrice: "${resortObj.gidMatrice}",\n  },`);
+      setShowGenerated(true);
+      setMessage("Hôtel ajouté et enregistré localement.");
+      setHotelName(""); setFeuille1(""); setMatrice("");
+      setTimeout(() => setMessage(null), 2500);
+    } catch (e) {
+      console.error(e);
+      setMessage("Erreur lors de l'ajout de l'hôtel.");
+    }
   };
 
   const onSaveLocal = () => {
@@ -179,7 +184,7 @@ export default function Automatisation() {
             </div>
 
             <div className="space-y-3">
-              {useResorts().map((r) => {
+              {resorts.map((r) => {
                 const sheetEditBase = `https://docs.google.com/spreadsheets/d/${r.sheetId}`;
                 const sheet1Edit = `${sheetEditBase}/edit#gid=0`;
                 const matriceEdit = `${sheetEditBase}/edit#gid=${r.gidMatrice}`;
