@@ -395,6 +395,18 @@ function sanitizeFilename(name: string) {
 }
 
 export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "official"; delayMs?: number; timeoutMs?: number; canvasScale?: number; preCaptureMs?: number; onProgress?: (done:number,total:number,key?:string)=>void }) {
+  // Prevent concurrent invocations which would trigger multiple downloads
+  try {
+    const globalAny: any = window as any;
+    if (globalAny.__exportAllHotelsRunning) {
+      console.warn('exportAllHotels already running, aborting duplicate call');
+      return;
+    }
+    globalAny.__exportAllHotelsRunning = true;
+  } catch (e) {
+    // ignore (e.g., not in browser)
+  }
+
   const settings = loadSettings();
   const { mode = "both", delayMs = settings.pdfExportDelaySeconds * 1000, timeoutMs = 8000, canvasScale = settings.exportCanvasScale, preCaptureMs = settings.exportPreCaptureMs, onProgress } = options || {} as any;
   const resorts = getResorts();
