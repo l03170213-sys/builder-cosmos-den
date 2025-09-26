@@ -11,6 +11,28 @@ function sanitizeText(s: any) {
     let str = String(s).normalize('NFKC');
     // remove invisible/control/other characters
     str = str.replace(/\p{C}/gu, '');
+
+    // Remove specific problematic sequences provided by user
+    const unwantedSequences = [
+      'Ø<ß\u001F',
+      "'\u0008þ\u000F",
+      'Ø=Þ•',
+      'Ø<ßè',
+      'Ø=ÞÏþ\u000F',
+      'Ø<ßÊ',
+      'Ø<ß‰',
+      'Ø=Üe',
+      'Ø>Ý\u001D',
+      'Ø<ß',
+    ];
+    for (const seq of unwantedSequences) {
+      // remove all occurrences
+      str = str.split(seq).join('');
+    }
+
+    // Also remove any remaining isolated "Ø", "Þ", "Ý" sequences that often appear as garbage
+    str = str.replace(/[ØÞÝ]/g, '');
+
     // Collapse multiple whitespace
     str = str.replace(/\s+/g, ' ').trim();
     // Collapse digits separated by spaces (e.g. '2 . 5 4' => '2.54')
