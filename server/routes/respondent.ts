@@ -625,12 +625,15 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               const mrow = mrows[matchedRowIdx];
               // Determine for each fixed category the column index by matching headerIndexMap first, then fallback to expected colIndex
               for (const m of fixedCategoryMapping) {
-                let readIdx: number | null = null;
+                // Prefer fixed column mapping for categories when matrix stores respondents as columns or when row is respondent
+                let readIdx: number | null = m.colIndex != null ? m.colIndex : null;
                 const key = normalizeDiacritics(m.name).replace(/[^a-z0-9@]+/g,'');
-                if (key && headerIndexMap[key] != null) readIdx = headerIndexMap[key];
-                if (readIdx == null && m.colIndex != null) readIdx = m.colIndex;
+                // Only use headerIndexMap if we don't have a sensible fixed index
+                if ((readIdx == null || readIdx < 0) && key && headerIndexMap[key] != null) readIdx = headerIndexMap[key];
                 let val = '';
-                if (mrow && mrow.c && readIdx != null && mrow.c[readIdx] && mrow.c[readIdx].v != null) val = parseRatingCell(mrow.c[readIdx]);
+                if (mrow && mrow.c && readIdx != null && mrow.c[readIdx] && mrow.c[readIdx].v != null) {
+                  val = parseRatingCell(mrow.c[readIdx]);
+                }
                 newCats.push({ name: m.name, value: val });
               }
               const overallCell = mrow && mrow.c && (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) ? (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) : null;
