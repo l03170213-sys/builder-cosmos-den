@@ -7,7 +7,7 @@ import { loadSettings } from "@/lib/settings";
 
 export default function Header() {
   const { resort, setSelected } = useSelectedResort();
-  const resorts = getResorts();
+  const resorts = useResorts();
   const current = resorts.find((r) => r.key === resort) || resorts[0] || { name: 'VM Resort' };
   const [settings, setSettings] = React.useState(() => loadSettings());
 
