@@ -376,6 +376,7 @@ export default function Repondants() {
     return () => { mounted = false; };
   }, [data, selectedResortKey]);
 
+  const respondentKeyAtRender = getRowKey(selected);
   const respondentQuery = useQuery({
     queryKey: [
       "respondentDetails",
@@ -415,6 +416,8 @@ export default function Repondants() {
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: false,
     onSuccess: (d: any) => {
+      // ensure the selected hasn't changed since this query was created
+      if (getRowKey(selected) !== respondentKeyAtRender) return;
       setCategoriesByRespondent(d?.categories || null);
       const overall = d && (d.overall ?? d.overallAverage ?? d.overallScore ?? d.overall_score ?? d.overall_value ?? null);
       // do not overwrite the note from the list row if present — prefer row.note
@@ -426,6 +429,8 @@ export default function Repondants() {
     },
     onError: (err) => {
       console.error("Failed to fetch respondent details:", err);
+      // ensure only clear when still the same selected snapshot
+      if (getRowKey(selected) !== respondentKeyAtRender) return;
       setCategoriesByRespondent(null);
       // preserve the note from the list row if present
       if (!selected?.note) setRespondentNoteGeneral(null);
