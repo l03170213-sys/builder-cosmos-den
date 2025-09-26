@@ -605,4 +605,7 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
     console.error("Failed to save combined PDF:", e);
     alert("Erreur lors de la génération du PDF combiné");
   }
+
+  // clear running flag
+  try { (window as any).__exportAllHotelsRunning = false; } catch(e) {}
 }
