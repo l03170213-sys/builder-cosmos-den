@@ -9,7 +9,8 @@ export function getDefaultResort() {
       ? window.localStorage.getItem(STORAGE_KEY)
       : null;
   if (stored) return stored;
-  return RESORTS[0].key;
+  const resorts = getResorts();
+  return resorts.length ? resorts[0].key : "vm-resort-albanie";
 }
 
 export function useSelectedResort() {
