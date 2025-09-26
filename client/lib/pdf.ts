@@ -214,8 +214,11 @@ export async function exportAllRespondentsPdf(resortKey: string, allRespondents:
   let added = 0;
   const total = allRespondents.length;
 
+  const perRespondentDelayMs = 700; // short delay between respondents to allow server to stabilize
   for (let i = 0; i < total; i++) {
     const r = allRespondents[i];
+    // small delay before processing each respondent
+    await pause(perRespondentDelayMs);
     // fetch details for each respondent — do sequentially to avoid rate limits
     try {
       const params = new URLSearchParams();
@@ -223,7 +226,19 @@ export async function exportAllRespondentsPdf(resortKey: string, allRespondents:
       if (r.name) params.set("name", r.name);
       if (r.date) params.set("date", r.date);
       const url = `/api/resort/${resortKey}/respondent?${params.toString()}`;
-      const details = await fetchJsonSafe(url, { credentials: "same-origin" }).catch(() => null);
+
+      // try a couple of times if the server hasn't populated the details yet
+      let details: any = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await pause(500 + attempt * 300);
+        try {
+          details = await fetchJsonSafe(url, { credentials: "same-origin" }).catch(() => null);
+        } catch (e) {
+          details = null;
+        }
+        if (details) break;
+      }
+
       addRespondentPage(
         doc,
         i,
