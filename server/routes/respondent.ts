@@ -91,7 +91,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
     const PESTANA_CATEGORY_NAMES = [
       "🌟 APPRÉCIATION GLOBALE",
-      "✈��� TRANSPORTS Aérien",
+      "✈️ TRANSPORTS Aérien",
       "🚐 Car navette",
       "🏨 HÉBERGEMENT",
       "🛏️ CHAMBRES",
