@@ -1,13 +1,16 @@
 import React from "react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { loadSettings, saveSettings, resetSettings, DEFAULT_SETTINGS, AppSettings } from "@/lib/settings";
+import { loadSettings, saveSettings, resetSettings, DEFAULT_SETTINGS, AppSettings, saveVersion, listVersions, applyVersion, loadVersion, removeVersion } from "@/lib/settings";
 import ManageUsers from "@/components/ManageUsers";
 
 export default function Parametres() {
   const [settings, setSettings] = React.useState<AppSettings>(() => loadSettings());
   const [status, setStatus] = React.useState<string | null>(null);
   const [showUsers, setShowUsers] = React.useState(false);
+
+  const [versionName, setVersionName] = React.useState<string>("version 1");
+  const [versions, setVersions] = React.useState<{ name: string; ts: number }[]>(() => listVersions());
 
   React.useEffect(() => {
     // apply theme immediately
@@ -29,6 +32,41 @@ export default function Parametres() {
     const def = resetSettings();
     setSettings(def);
     setStatus("Paramètres réinitialisés.");
+    setTimeout(() => setStatus(null), 2000);
+  }
+
+  function refreshVersions() {
+    setVersions(listVersions());
+  }
+
+  function onSaveVersion() {
+    try {
+      saveVersion(versionName, settings);
+      setStatus(`Version "${versionName}" enregistrée.`);
+      refreshVersions();
+      setTimeout(() => setStatus(null), 2000);
+    } catch (e) {
+      setStatus("Erreur lors de l'enregistrement de la version.");
+      setTimeout(() => setStatus(null), 2000);
+    }
+  }
+
+  function onApplyVersion(name: string) {
+    const s = applyVersion(name);
+    if (!s) {
+      setStatus(`Version "${name}" introuvable.`);
+      setTimeout(() => setStatus(null), 2000);
+      return;
+    }
+    setSettings(s);
+    setStatus(`Revenu à la version "${name}".`);
+    setTimeout(() => setStatus(null), 2000);
+  }
+
+  function onDeleteVersion(name: string) {
+    removeVersion(name);
+    refreshVersions();
+    setStatus(`Version "${name}" supprimée.`);
     setTimeout(() => setStatus(null), 2000);
   }
 
@@ -213,6 +251,38 @@ export default function Parametres() {
                 </div>
                 <ManageUsers open={showUsers} onOpenChange={(v)=>setShowUsers(v)} />
               </div>
+
+              <div className="mt-6 border-t pt-4">
+                <h3 className="text-lg font-semibold mb-2">Versions des paramètres</h3>
+                <p className="text-sm text-muted-foreground mb-2">Sauvegardez l'état courant des paramètres et revenez-y plus tard. Entrez un nom puis cliquez sur "Sauvegarder la version". Utilisez "Revenir" pour restaurer une version.</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <input value={versionName} onChange={(e)=>setVersionName(e.target.value)} className="rounded-md border px-3 py-2" />
+                  <button onClick={onSaveVersion} className="px-3 py-2 rounded-md bg-primary text-white">Sauvegarder la version</button>
+                  <button onClick={()=>{ setVersionName('version 1'); }} className="px-3 py-2 rounded-md border">Nom par défaut</button>
+                </div>
+
+                <div>
+                  {versions.length === 0 && <div className="text-sm text-muted-foreground">Aucune version enregistrée.</div>}
+                  {versions.length > 0 && (
+                    <ul className="space-y-2">
+                      {versions.map(v => (
+                        <li key={v.name} className="flex items-center justify-between border rounded-md p-2">
+                          <div>
+                            <div className="font-medium">{v.name}</div>
+                            <div className="text-sm text-muted-foreground">{new Date(v.ts).toLocaleString()}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={()=>onApplyVersion(v.name)} className="px-2 py-1 rounded-md border text-sm">Revenir</button>
+                            <button onClick={()=>onDeleteVersion(v.name)} className="px-2 py-1 rounded-md bg-red-600 text-white text-sm">Supprimer</button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+              </div>
+
             </div>
           </div>
         </main>
