@@ -364,8 +364,23 @@ export default function Repondants() {
           if (it.name) params.set('name', it.name);
           if (it.date) params.set('date', it.date);
           const apiUrl = new URL('/api/resort/' + selectedResortKey + '/respondent?' + params.toString(), window.location.origin).toString();
-          const resp = await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }).catch(() => null);
-          const noteVal = resp && (resp.overall ?? resp.overallAverage ?? resp.overallScore ?? resp.overall);
+          let resp = await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }).catch(() => null);
+          let noteVal = resp && (resp.overall ?? resp.overallAverage ?? resp.overallScore ?? resp.overall);
+
+          // fallback: client-side matrice lookup for locally added resorts
+          if ((noteVal == null || noteVal === '') ) {
+            try {
+              const cfg = resorts.find((r) => r.key === selectedResortKey);
+              if (cfg && cfg.gidMatrice) {
+                const mod = await import('@/lib/sheets');
+                const fromM = await mod.fetchRespondentOverallFromMatrice(cfg.sheetId, cfg.gidMatrice, { email: it.email, name: it.name, date: it.date });
+                if (fromM != null) noteVal = fromM;
+              }
+            } catch (e) {
+              // ignore
+            }
+          }
+
           if (mounted) {
             setRespondentNotesMap(prev => ({ ...prev, [key]: noteVal != null ? String(noteVal) : '' }));
           }
