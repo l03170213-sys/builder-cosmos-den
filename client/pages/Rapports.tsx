@@ -48,17 +48,17 @@ export default function Rapports() {
             <div className="space-x-2">
               <button
                 onClick={onExportAllGraphics}
-                disabled={exporting || waiting}
+                disabled={exporting}
                 className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm disabled:opacity-50"
               >
-                {waiting ? `Début dans ${countdown}s` : exporting ? "Export en cours..." : "Exporter tous les graphiques"}
+                {exporting ? "Export en cours..." : "Exporter tous les graphiques"}
               </button>
               <button
                 onClick={onExportAllOfficial}
-                disabled={exporting || waiting}
+                disabled={exporting}
                 className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-white text-sm disabled:opacity-50"
               >
-                {waiting ? `Début dans ${countdown}s` : exporting ? "Export en cours..." : "Exporter tous (format officiel)"}
+                {exporting ? "Export en cours..." : "Exporter tous (format officiel)"}
               </button>
             </div>
           </div>
