@@ -104,17 +104,31 @@ export default function Index() {
         const selected = selectedResortKey;
         const url = new URL(`/api/resort/${selected}/summary`, window.location.origin).toString();
         const r = await safeFetch(url, { credentials: "same-origin" });
-        const text = await r.clone().text().catch(() => "");
-        if (!r.ok) {
-          console.warn("resort summary fetch non-ok", r.status, text);
-          return null;
+        if (r.ok) {
+          const text = await r.clone().text().catch(() => "");
+          try {
+            return JSON.parse(text) as import("@shared/api").ResortSummaryResponse;
+          } catch (e) {
+            console.warn("resort summary invalid json", e);
+            return null;
+          }
         }
-        try {
-          return JSON.parse(text) as import("@shared/api").ResortSummaryResponse;
-        } catch (e) {
-          console.warn("resort summary invalid json", e, text);
-          return null;
+
+        if (r.status === 404) {
+          try {
+            const cfg = getResorts().find((x) => x.key === selectedResortKey);
+            if (!cfg) return null;
+            const mod = await import("@/lib/sheets");
+            const s = await mod.fetchSummaryFromSheet(cfg.sheetId);
+            return { resort: cfg.name, respondents: s.respondents, recommendationRate: s.recommendationRate } as import("@shared/api").ResortSummaryResponse;
+          } catch (e) {
+            console.warn('Fallback summary client fetch failed', e);
+            return null;
+          }
         }
+
+        console.warn("resort summary fetch non-ok", r.status);
+        return null;
       } catch (err: any) {
         console.warn("API summary fetch failed:", err && err.message ? err.message : err);
         return null;
