@@ -93,6 +93,11 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
     let resolvedNoteCol = noteCol;
     if (resolvedNoteCol === -1 && cols.length > 11) resolvedNoteCol = 11;
 
+    // Determine name column (prefer headers, fallback to E (4) or A (0))
+    const nameCol = findCol(["nom", "name", "client", "label"]) !== -1 ? findCol(["nom", "name", "client", "label"]) : (cols.length > 4 ? 4 : 0);
+    const resolvedEmailCol = emailCol !== -1 ? emailCol : (cols.length > 3 ? 3 : -1);
+    const resolvedPostalCol = postalCol !== -1 ? postalCol : (cols.length > 8 ? 8 : -1);
+
     const respondents: any[] = [];
     for (let r = 0; r < rows.length; r++) {
       const row = rows[r];
@@ -106,16 +111,15 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
 
       const obj: any = {};
       obj.id = r + 1;
-      // Use fixed sheet1 columns: name in E (index 4), email in B (1), postal in I (8)
-      obj.label = cellToString(c[4]);
-      // Email is in sheet1 column D (index 3)
-      obj.email = cellToString(c[3]);
+      // Use detected columns for name/email/postal to match VM Resort behaviour across all hotels
+      obj.label = cellToString(c[nameCol]);
+      obj.email = resolvedEmailCol !== -1 ? cellToString(c[resolvedEmailCol]) : cellToString(c[3]);
       obj.note = "";
       obj.date = dateCol !== -1 ? cellToString(c[dateCol]) : "";
       obj.age = ageCol !== -1 ? cellToString(c[ageCol]) : "";
-      obj.postal = cellToString(c[8]);
+      obj.postal = resolvedPostalCol !== -1 ? cellToString(c[resolvedPostalCol]) : cellToString(c[8]);
       obj.duration = durationCol !== -1 ? cellToString(c[durationCol]) : "";
-      // Prefer exact header match ("Votre avis compte pour nous ! :)") or BT (index 71) specifically; else fallback to known feedback column
+      // Prefer exact header match (TARGET_FEEDBACK_TITLE) or BT (index 71) specifically; else fallback to known feedback column
       if (feedbackColExact !== -1) {
         obj.feedback = cellToString(c[feedbackColExact]);
       } else if (c[71] && c[71].v != null) {
@@ -127,8 +131,7 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       }
 
       // If email empty, try to infer from label
-      if (!obj.email && obj.label && obj.label.includes("@"))
-        obj.email = obj.label;
+      if (!obj.email && obj.label && obj.label.includes("@")) obj.email = obj.label;
 
       // alias for compatibility with client which expects 'name'
       obj.name = obj.label;
