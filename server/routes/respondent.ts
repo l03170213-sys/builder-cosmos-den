@@ -304,6 +304,21 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       const srow = srows[sheet1RowIdx];
       const scells = srow.c || [];
       const lastIdx = Math.max(0, scells.length - 1);
+
+      // derive likely name/email column indices from sheet headers to be robust across hotels
+      const findHeaderIndex = (candidates: string[]) => {
+        for (let i = 0; i < scols.length; i++) {
+          const h = normalize(scols[i] || "");
+          for (const cand of candidates) if (h.includes(cand)) return i;
+        }
+        return -1;
+      };
+      const inferredNameIdx = findHeaderIndex(["nom", "name", "client", "label"]); // prefer header labels
+      const inferredEmailIdx = findHeaderIndex(["email", "courriel", "@"]);
+      const nameIdx = inferredNameIdx !== -1 ? inferredNameIdx : (scells[4] ? 4 : 0);
+      const emailIdx = inferredEmailIdx !== -1 ? inferredEmailIdx : (scells[3] ? 3 : -1);
+      const scellVal = (idx: number) => (idx != null && scells[idx] && scells[idx].v != null) ? String(scells[idx].v).trim() : "";
+
       // determine metadata columns to exclude (name/email/date/age/postal/duration)
       const metaKeywords = [
         "email",
@@ -376,9 +391,8 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           const mjson = parseGviz(mtext);
           const mrows: any[] = mjson.table.rows || [];
 
-          const targetName = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
-          const targetEmail = (srow.c && srow.c[3] && srow.c[3].v != null) ? String(srow.c[3].v).trim().toLowerCase() : '';
-
+          const targetName = (nameIdx != null && nameIdx >= 0) ? String(scellVal(nameIdx)).trim().toLowerCase() : '';
+          const targetEmail = (emailIdx != null && emailIdx >= 0) ? String(scellVal(emailIdx)).trim().toLowerCase() : '';
 
           matchedMatriceRow = null;
           for (let ri = 0; ri < mrows.length; ri++) {
@@ -478,10 +492,10 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         if (durIdx !== -1 && scells[durIdx] && scells[durIdx].v != null) result.duration = String(scells[durIdx].v);
       } catch (e) {}
       try {
-        result.name = scells[4] && scells[4].v != null ? String(scells[4].v) : null;
+        result.name = scellVal(nameIdx) || (scells[4] && scells[4].v != null ? String(scells[4].v) : null);
       } catch (e) {}
       try {
-        result.email = scells[3] && scells[3].v != null ? String(scells[3].v) : null;
+        result.email = scellVal(emailIdx) || (scells[3] && scells[3].v != null ? String(scells[3].v) : null);
       } catch (e) {}
 
       // Prefer overall from matched matrice row column L (index 11) if available
@@ -506,9 +520,9 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || "").toString());
           const mrows: any[] = mjson.table.rows || [];
 
-          const emailCellPreferred = srow.c && srow.c[3] && srow.c[3].v != null ? srow.c[3] : null;
+          const emailCellPreferred = scellVal(emailIdx) ? { v: scellVal(emailIdx) } : null;
           const emailVal = emailCellPreferred ? String(emailCellPreferred.v).trim().toLowerCase() : "";
-          const nameVal = srow.c && srow.c[4] && srow.c[4].v != null ? String(srow.c[4].v).trim().toLowerCase() : "";
+          const nameVal = scellVal(nameIdx) ? String(scellVal(nameIdx)).trim().toLowerCase() : "";
 
           const fixedCategoryMapping = [
             { colIndex: 0, name: "Nom" },
@@ -613,15 +627,15 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
                 }
               }
 
-              result.categories = [ { name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : '' }, ...newCats ];
+              result.categories = [ { name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats ];
               result.overall = overallValFromMatrice || null;
               result.column = String(respColIndex);
             }
           } else {
             // Strategy B: rows-as-respondents — find a row where any cell matches respondent name/email
             let matchedRowIdx = -1;
-            const targetName = (srow.c && srow.c[4] && srow.c[4].v != null) ? String(srow.c[4].v).trim().toLowerCase() : '';
-            const targetEmail = (srow.c && srow.c[3] && srow.c[3].v != null) ? String(srow.c[3].v).trim().toLowerCase() : '';
+            const targetName = scellVal(nameIdx) ? String(scellVal(nameIdx)).trim().toLowerCase() : '';
+            const targetEmail = scellVal(emailIdx) ? String(scellVal(emailIdx)).trim().toLowerCase() : '';
 
             for (let ri = 0; ri < mrows.length; ri++) {
               const cells = (mrows[ri] && mrows[ri].c) || [];
@@ -647,7 +661,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
                 newCats.push({ name: m.name, value: val });
               }
               const overallCell = mrow && mrow.c && (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) ? (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) : null;
-              result.categories = [{ name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : '' }, ...newCats];
+              result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
               result.overall = overallCell && overallCell.v != null ? parseRatingCell(overallCell) : null;
               result.column = null;
             } else {
@@ -658,7 +672,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
                   const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
                   newCats.push({ name, value: '' });
                 }
-                result.categories = [{ name: 'Nom', value: scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : '' }, ...newCats];
+                result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
                 result.overall = null;
                 result.column = null;
               } else {
@@ -666,7 +680,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
                 for (const m of fixedCategoryMapping) {
                   let val = "";
                   if (m.colIndex === 0) {
-                    val = scells[4] && scells[4].v != null ? String(scells[4].v) : scells[0] && scells[0].v != null ? String(scells[0].v) : "";
+                    val = scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : "");
                   } else if (m.colIndex === 11) {
                     val = scells[11] && scells[11].v != null ? String(scells[11].v) : "";
                   } else {
@@ -756,11 +770,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       // extract exact feedback column value if present
       let feedbackCell: any = null;
       if (
-        feedbackColExact !== -1 &&
-        cells[feedbackColExact] &&
-        cells[feedbackColExact].v != null
+        (typeof (feedbackColExactInSheet1) !== 'undefined') &&
+        feedbackColExactInSheet1 !== -1 &&
+        cells[feedbackColExactInSheet1] &&
+        cells[feedbackColExactInSheet1].v != null
       )
-        feedbackCell = cells[feedbackColExact];
+        feedbackCell = cells[feedbackColExactInSheet1];
       else if (cells[71] && cells[71].v != null) feedbackCell = cells[71];
       const feedback = feedbackCell ? String(feedbackCell.v) : null;
       result.categories = cats;
@@ -904,13 +919,14 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       // get feedback from exact feedback column if present (in last row) or fallback to BT (index 71)
       let feedbackCell: any = null;
       if (
-        feedbackColExact !== -1 &&
+        (typeof (feedbackColExactInSheet1) !== 'undefined') &&
+        feedbackColExactInSheet1 !== -1 &&
         lastRow &&
         lastRow.c &&
-        lastRow.c[feedbackColExact] &&
-        lastRow.c[feedbackColExact].v != null
+        lastRow.c[feedbackColExactInSheet1] &&
+        lastRow.c[feedbackColExactInSheet1].v != null
       )
-        feedbackCell = lastRow.c[feedbackColExact];
+        feedbackCell = lastRow.c[feedbackColExactInSheet1];
       else if (lastRow && lastRow.c && lastRow.c[71] && lastRow.c[71].v != null)
         feedbackCell = lastRow.c[71];
       const feedback = feedbackCell ? String(feedbackCell.v) : null;
@@ -1002,11 +1018,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           // extract exact feedback column value if present
           let feedbackCell: any = null;
           if (
-            feedbackColExact !== -1 &&
-            cells[feedbackColExact] &&
-            cells[feedbackColExact].v != null
+            (typeof (feedbackColExactInSheet1) !== 'undefined') &&
+            feedbackColExactInSheet1 !== -1 &&
+            cells[feedbackColExactInSheet1] &&
+            cells[feedbackColExactInSheet1].v != null
           )
-            feedbackCell = cells[feedbackColExact];
+            feedbackCell = cells[feedbackColExactInSheet1];
           else if (cells[71] && cells[71].v != null) feedbackCell = cells[71];
           const feedback = feedbackCell ? String(feedbackCell.v) : null;
           result.categories = cats;
