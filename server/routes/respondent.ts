@@ -353,19 +353,29 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         metaIdxs.add(feedbackColExactInSheet1);
       if (71 < scells.length) metaIdxs.add(71);
 
-      // Force fixed mapping for sheet1 columns: ensure specific categories come from exact columns
+      // Force fixed mapping for sheet1 columns: prefer the 8 requested categories when present
+      const TARGET_CATEGORIES = [
+        "Accueil",
+        "Propreté",
+        "Confort",
+        "Personnel",
+        "Services",
+        "Restauration",
+        "Rapport qualité-prix",
+        "Expérience globale",
+      ];
       const fixedCategoryMapping = [
         { colIndex: 0, name: "Nom" },
-        { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
-        { colIndex: 2, name: "✈️ TRANSPORTS Aérien" },
-        { colIndex: 3, name: "🚐 Car navette" },
-        { colIndex: 4, name: "🏨 HÉBERGEMENT" },
-        { colIndex: 5, name: "🛏️ CHAMBRES" },
-        { colIndex: 6, name: "🏊 PISCINE" },
-        { colIndex: 7, name: "🎉 ANIMATION" },
-        { colIndex: 8, name: "👥 ÉQUIPES" },
-        { colIndex: 9, name: "🤝 Représentant Top of Travel" },
-        { colIndex: 10, name: "🌍 EXCURSIONS" },
+        { colIndex: 1, name: TARGET_CATEGORIES[0] },
+        { colIndex: 2, name: TARGET_CATEGORIES[1] },
+        { colIndex: 3, name: TARGET_CATEGORIES[2] },
+        { colIndex: 4, name: TARGET_CATEGORIES[3] },
+        { colIndex: 5, name: TARGET_CATEGORIES[4] },
+        { colIndex: 6, name: TARGET_CATEGORIES[5] },
+        { colIndex: 7, name: TARGET_CATEGORIES[6] },
+        { colIndex: 8, name: TARGET_CATEGORIES[7] },
+        { colIndex: 9, name: "Autre 1" },
+        { colIndex: 10, name: "Autre 2" },
         { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
       ];
 
@@ -526,16 +536,16 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
           const fixedCategoryMapping = [
             { colIndex: 0, name: "Nom" },
-            { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
-            { colIndex: 2, name: "✈️ TRANSPORTS Aérien" },
-            { colIndex: 3, name: "🚐 Car navette" },
-            { colIndex: 4, name: "🏨 HÉBERGEMENT" },
-            { colIndex: 5, name: "🛏️ CHAMBRES" },
-            { colIndex: 6, name: "🏊 PISCINE" },
-            { colIndex: 7, name: "🎉 ANIMATION" },
-            { colIndex: 8, name: "👥 ÉQUIPES" },
-            { colIndex: 9, name: "🤝 Représentant Top of Travel" },
-            { colIndex: 10, name: "🌍 EXCURSIONS" },
+            { colIndex: 1, name: TARGET_CATEGORIES[0] },
+            { colIndex: 2, name: TARGET_CATEGORIES[1] },
+            { colIndex: 3, name: TARGET_CATEGORIES[2] },
+            { colIndex: 4, name: TARGET_CATEGORIES[3] },
+            { colIndex: 5, name: TARGET_CATEGORIES[4] },
+            { colIndex: 6, name: TARGET_CATEGORIES[5] },
+            { colIndex: 7, name: TARGET_CATEGORIES[6] },
+            { colIndex: 8, name: TARGET_CATEGORIES[7] },
+            { colIndex: 9, name: "Autre 1" },
+            { colIndex: 10, name: "Autre 2" },
             { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
           ];
 
@@ -667,7 +677,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             } else {
               // No per-respondent data found in matrice
               if (cfg.gidMatrice) {
-                // Matrice exists but no match — return empty category values to indicate absence
+                // Matrice exists but no match �� return empty category values to indicate absence
                 for (let i = 1; i <= 10; i++) {
                   const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
                   newCats.push({ name, value: '' });
