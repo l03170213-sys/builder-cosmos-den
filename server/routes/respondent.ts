@@ -97,7 +97,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       "🛏️ CHAMBRES",
       "🏊 PISCINE",
       "🎉 ANIMATION",
-      "���� ÉQUIPES",
+      "👥 ÉQUIPES",
       "🤝 Représentant Top of Travel",
       "🌍 EXCURSIONS",
     ];
@@ -443,10 +443,29 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             }
             // overall will be taken from matchedMatriceRow column L later
           } else {
-            // NO FALLBACK to sheet1 for category numeric values — must come from matrice
-            for (let i = 1; i <= 10; i++) {
-              const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-              cats.push({ name, value: '' });
+            // Try to use the same row index from sheet1 as a fallback (often sheets keep respondents aligned by row)
+            if (typeof sheet1RowIdx === 'number' && sheet1RowIdx >= 0 && sheet1RowIdx < mrows.length) {
+              const candidateRow = mrows[sheet1RowIdx];
+              if (candidateRow) {
+                const cells = candidateRow.c || [];
+                for (let i = 1; i <= 10; i++) {
+                  const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+                  const cell = cells[i];
+                  const parsed = parseRatingCell(cell);
+                  cats.push({ name, value: parsed && parsed.match(/^-?\d+(?:[.,]\d+)?$/) ? parsed : '' });
+                }
+              } else {
+                for (let i = 1; i <= 10; i++) {
+                  const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+                  cats.push({ name, value: '' });
+                }
+              }
+            } else {
+              // NO FALLBACK to sheet1 for category numeric values — must come from matrice
+              for (let i = 1; i <= 10; i++) {
+                const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+                cats.push({ name, value: '' });
+              }
             }
           }
         } else {
