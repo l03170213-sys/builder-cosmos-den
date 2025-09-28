@@ -182,6 +182,7 @@ export default function Repondants() {
   const queryClient = useQueryClient();
   const [page, setPage] = React.useState(1);
   const [pageSize] = React.useState(10);
+  const [gotoPage, setGotoPage] = React.useState<string>('');
   const { data, isLoading, isError } = useQuery({
     queryKey: ["repondants", selectedResortKey, page, pageSize],
     queryFn: async () => {
