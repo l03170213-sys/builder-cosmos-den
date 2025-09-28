@@ -359,29 +359,19 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         metaIdxs.add(feedbackColExactInSheet1);
       if (71 < scells.length) metaIdxs.add(71);
 
-      // Force fixed mapping for sheet1 columns: prefer the 8 requested categories when present
-      const TARGET_CATEGORIES = [
-        "Accueil",
-        "Propreté",
-        "Confort",
-        "Personnel",
-        "Services",
-        "Restauration",
-        "Rapport qualité-prix",
-        "Expérience globale",
-      ];
+      // Fixed column indices used as fallback only. Preferred category names are taken from the matrice (mcols or first cell of rows).
       const fixedCategoryMapping = [
         { colIndex: 0, name: "Nom" },
-        { colIndex: 1, name: TARGET_CATEGORIES[0] },
-        { colIndex: 2, name: TARGET_CATEGORIES[1] },
-        { colIndex: 3, name: TARGET_CATEGORIES[2] },
-        { colIndex: 4, name: TARGET_CATEGORIES[3] },
-        { colIndex: 5, name: TARGET_CATEGORIES[4] },
-        { colIndex: 6, name: TARGET_CATEGORIES[5] },
-        { colIndex: 7, name: TARGET_CATEGORIES[6] },
-        { colIndex: 8, name: TARGET_CATEGORIES[7] },
-        { colIndex: 9, name: "Autre 1" },
-        { colIndex: 10, name: "Autre 2" },
+        { colIndex: 1, name: "" },
+        { colIndex: 2, name: "" },
+        { colIndex: 3, name: "" },
+        { colIndex: 4, name: "" },
+        { colIndex: 5, name: "" },
+        { colIndex: 6, name: "" },
+        { colIndex: 7, name: "" },
+        { colIndex: 8, name: "" },
+        { colIndex: 9, name: "" },
+        { colIndex: 10, name: "" },
         { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
       ];
 
