@@ -685,17 +685,15 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             if (matchedRowIdx !== -1) {
               const mrow = mrows[matchedRowIdx];
               // Determine for each fixed category the column index by matching headerIndexMap first, then fallback to expected colIndex
-              for (const m of fixedCategoryMapping) {
-                // Prefer fixed column mapping for categories when matrix stores respondents as columns or when row is respondent
-                let readIdx: number | null = m.colIndex != null ? m.colIndex : null;
-                const key = normalizeDiacritics(m.name).replace(/[^a-z0-9@]+/g,'');
-                // Only use headerIndexMap if we don't have a sensible fixed index
-                if ((readIdx == null || readIdx < 0) && key && headerIndexMap[key] != null) readIdx = headerIndexMap[key];
+              // build categories by iterating over visible column headers (prefer mcols)
+              const maxCols = Math.max(10, mcols.length - 1);
+              for (let ci = 1; ci <= Math.min(maxCols, 20); ci++) {
+                const headerName = (mcols && mcols[ci]) ? String(mcols[ci]) : (fixedCategoryMapping.find(f=>f.colIndex===ci)?.name || `Col ${ci}`);
                 let val = '';
-                if (mrow && mrow.c && readIdx != null && mrow.c[readIdx] && mrow.c[readIdx].v != null) {
-                  val = parseRatingCell(mrow.c[readIdx]);
+                if (mrow && mrow.c && mrow.c[ci] && mrow.c[ci].v != null) {
+                  val = parseRatingCell(mrow.c[ci]);
                 }
-                newCats.push({ name: m.name, value: val });
+                newCats.push({ name: headerName, value: val });
               }
               const overallCell = mrow && mrow.c && (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) ? (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) : null;
               result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
