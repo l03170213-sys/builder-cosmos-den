@@ -622,14 +622,13 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           if (respColIndex !== -1) {
             // columns-as-respondents: for each category, find its row and read the value at respColIndex
             for (let i = 1; i <= 10; i++) {
-              const catName = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
+              // attempt to take the category name from the matrice row's first cell if present
               let foundRow = -1;
-              for (let ri = 0; ri < mrows.length; ri++) {
-                const first = mrows[ri] && mrows[ri].c && mrows[ri].c[0] ? cellToString(mrows[ri].c[0]) : "";
-                if (first && normalize(first) === normalize(catName || "")) { foundRow = ri; break; }
-              }
-              if (foundRow === -1) foundRow = i - 1;
-              const mrow = mrows[foundRow];
+              // default to the i-1 row when available
+              if (i - 1 < mrows.length) foundRow = i - 1;
+              const mrow = (foundRow !== -1 && mrows[foundRow]) ? mrows[foundRow] : null;
+              const catNameFromRow = mrow && mrow.c && mrow.c[0] ? cellToString(mrow.c[0]) : '';
+              const catName = catNameFromRow || (mcols && mcols[i] ? mcols[i] : (fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`));
               let val = "";
               if (mrow && mrow.c) {
                 const cell = mrow.c[respColIndex];
