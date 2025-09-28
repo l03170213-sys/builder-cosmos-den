@@ -199,7 +199,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               : "";
           if (
             first === "anonyme" ||
-            first === "anonym��" ||
+            first === "anonymé" ||
             first === "anonym"
           ) {
             candidates.push(i);
@@ -435,7 +435,8 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           if (matchedMatriceRow) {
             const cells = matchedMatriceRow.c || [];
             for (let i = 1; i <= 10; i++) {
-              const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
+              // prefer category name taken from matrice column headers (mcols) if available, else fallback to fixed mapping
+              let name = (mcols && mcols[i] && String(mcols[i]).trim()) ? String(mcols[i]) : (fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`);
               const cell = cells[i];
               // only accept numeric-like values from matrice (avoid 'OUI')
               const parsed = parseRatingCell(cell);
