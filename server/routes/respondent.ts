@@ -199,7 +199,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               : "";
           if (
             first === "anonyme" ||
-            first === "anonymé" ||
+            first === "anonym��" ||
             first === "anonym"
           ) {
             candidates.push(i);
@@ -405,6 +405,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         if (mr.ok) {
           const mtext = await mr.text();
           const mjson = parseGviz(mtext);
+          const mcols: string[] = (mjson.table.cols || []).map((c:any)=>(c.label||'').toString());
           const mrows: any[] = mjson.table.rows || [];
 
           const targetName = (nameIdx != null && nameIdx >= 0) ? String(scellVal(nameIdx)).trim().toLowerCase() : '';
