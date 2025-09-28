@@ -749,28 +749,50 @@ export default function Repondants() {
                           Préc
                         </button>
                         <div className="text-sm">
-                          Page {data.page} /{" "}
-                          {Math.max(1, Math.ceil(data.total / data.pageSize))}
+                          Page {data.page} / {Math.max(1, Math.ceil(data.total / data.pageSize))}
                         </div>
                         <button
-                          onClick={() =>
-                            setPage(
-                              Math.min(
-                                Math.max(
-                                  1,
-                                  Math.ceil(data.total / data.pageSize),
-                                ),
-                                page + 1,
-                              ),
-                            )
-                          }
-                          disabled={
-                            page >= Math.ceil(data.total / data.pageSize)
-                          }
+                          onClick={() => setPage(Math.min(Math.ceil(data.total / data.pageSize), page + 1))}
+                          disabled={page >= Math.ceil(data.total / data.pageSize)}
                           className="px-3 py-1 border rounded"
                         >
                           Suiv
                         </button>
+
+                        {/* Quick jump input */}
+                        <div className="flex items-center gap-2">
+                          <label className="text-sm">Aller à</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={Math.max(1, Math.ceil(data.total / data.pageSize))}
+                            value={gotoPage}
+                            onChange={(e) => setGotoPage(e.target.value)}
+                            className="w-20 rounded-md border px-2 py-1 text-sm"
+                            placeholder="n° page"
+                          />
+                          <button
+                            onClick={() => {
+                              const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize));
+                              const target = Number(gotoPage) || 1;
+                              const clamped = Math.min(Math.max(1, Math.floor(target)), totalPages);
+                              setPage(clamped);
+                            }}
+                            className="px-3 py-1 border rounded"
+                          >
+                            Aller
+                          </button>
+
+                          {/* Quick page 10 shortcut if available */}
+                          {Math.max(1, Math.ceil(data.total / data.pageSize)) >= 10 && (
+                            <button
+                              onClick={() => setPage(Math.min(10, Math.max(1, Math.ceil(data.total / data.pageSize))))}
+                              className="px-3 py-1 border rounded"
+                            >
+                              Page 10
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
