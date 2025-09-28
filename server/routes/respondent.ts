@@ -97,7 +97,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       "🛏️ CHAMBRES",
       "🏊 PISCINE",
       "🎉 ANIMATION",
-      "👥 ÉQUIPES",
+      "���� ÉQUIPES",
       "🤝 Représentant Top of Travel",
       "🌍 EXCURSIONS",
     ];
@@ -157,6 +157,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
     // Try to find respondent row in sheet1 by email/name/date
     const findRespondentRowInSheet1 = () => {
+      // If caller provided an explicit row index, use it (1-based in client)
+      const qRowNumExplicit = req.query.row ? parseInt(String(req.query.row), 10) : NaN;
+      if (!Number.isNaN(qRowNumExplicit) && qRowNumExplicit > 0 && qRowNumExplicit - 1 < srows.length) {
+        return qRowNumExplicit - 1;
+      }
+
       const qEmail = (req.query.email || "").toString().trim().toLowerCase();
       const qName = (req.query.name || "").toString().trim().toLowerCase();
       const qDate = (req.query.date || "").toString().trim();
@@ -677,7 +683,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             } else {
               // No per-respondent data found in matrice
               if (cfg.gidMatrice) {
-                // Matrice exists but no match �� return empty category values to indicate absence
+                // Matrice exists but no match — return empty category values to indicate absence
                 for (let i = 1; i <= 10; i++) {
                   const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
                   newCats.push({ name, value: '' });
