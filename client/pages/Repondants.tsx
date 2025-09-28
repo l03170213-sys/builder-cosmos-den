@@ -481,6 +481,8 @@ export default function Repondants() {
         if (selected?.email) params.set("email", selected.email);
         if (selected?.name) params.set("name", selected.name);
         if (selected?.date) params.set("date", selected.date);
+        // If we have the respondent row id from the list, pass it to the server to perform an exact row lookup
+        if ((selected as any)?.id) params.set("row", String((selected as any).id));
         // include debug flag automatically when inspecting KIEHL to surface server _debug
         try {
           const selName = (selected?.name || "").toString().trim().toLowerCase();
@@ -609,7 +611,7 @@ export default function Repondants() {
                     <button id="export-all-btn" onClick={async () => { /* placeholder, will be wired below */ }} className="px-3 py-2 rounded-md bg-primary text-white">Exporter tous les répondants (PDF)</button>
                     <button onClick={async () => {
                       const qc = queryClient;
-                      const id = toast({ title: 'Actualisation', description: 'Récupération des données depuis Google Sheets…' });
+                      const id = toast({ title: 'Actualisation', description: 'Récupération des données depuis Google Sheets���' });
                       try {
                         // Invalidate and refetch relevant queries for the currently selected resort
                         await qc.invalidateQueries(["repondants", selectedResortKey]);
