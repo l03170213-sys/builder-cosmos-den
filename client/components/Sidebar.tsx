@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { BarChart3, LineChart, Users2, FileText, Zap, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import React from "react";
-import cn from "clsx";
+import { cn } from "@/lib/utils";
 import { loadSettings } from "@/lib/settings";
 import { useMobileNav } from "@/components/MobileNavProvider";
 
