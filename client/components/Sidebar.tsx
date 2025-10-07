@@ -24,17 +24,13 @@ export function Sidebar() {
   }, []);
 
   // Mobile navigation context
-  let mobile: any = null;
-  try {
-    // use hook directly; File is rendered inside MobileNavProvider in App
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const mod = require("@/components/MobileNavProvider");
-    if (mod && mod.useMobileNav) {
-      mobile = mod.useMobileNav();
+  const mobile = (() => {
+    try {
+      return useMobileNav();
+    } catch (e) {
+      return null;
     }
-  } catch (e) {
-    mobile = null;
-  }
+  })();
 
   const content = (
     <div className="flex flex-col w-64 shrink-0 border-r" style={{ backgroundColor: "white", color: "var(--vm-primary)", borderColor: "rgba(0,0,0,0.06)" }}>
