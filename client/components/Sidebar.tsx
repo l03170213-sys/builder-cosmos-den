@@ -1,8 +1,8 @@
-import { cn } from "@/lib/utils";
+import { cn as classNames } from "@/lib/utils";
 import { BarChart3, LineChart, Users2, FileText, Zap, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import React from "react";
-import { cn } from "@/lib/utils";
+import { cn as classNames } from "@/lib/utils";
 import { loadSettings } from "@/lib/settings";
 import { useMobileNav } from "@/components/MobileNavProvider";
 
@@ -43,7 +43,7 @@ export function Sidebar() {
             key={to}
             to={to}
             className={({ isActive }) =>
-              cn(
+              classNames(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
                 isActive
                   ? "bg-primary text-white"
