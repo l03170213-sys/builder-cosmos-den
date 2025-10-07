@@ -5,7 +5,7 @@ import { useSelectedResort } from "@/hooks/use-selected-resort";
 import React from "react";
 import { loadSettings } from "@/lib/settings";
 
-import { Bars3 } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useMobileNav } from "@/components/MobileNavProvider";
 
 export default function Header() {
