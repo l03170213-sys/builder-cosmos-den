@@ -46,6 +46,7 @@ export function Sidebar() {
           <NavLink
             key={to}
             to={to}
+            onClick={() => mobile?.setOpen(false)}
             className={({ isActive }) =>
               cx(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
