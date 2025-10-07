@@ -1,24 +1,78 @@
 export async function safeFetch(u: string, opts?: RequestInit) {
   const doFetch = async (url: string) => {
+    // Use a safe set of options for cross-origin and credentialed requests
+    const optsOnFetch: RequestInit = { ...opts };
+    if (!optsOnFetch.mode) optsOnFetch.mode = "cors";
+    // default credentials: same-origin for same-origin requests, omit for cross-origin to avoid CORS credential issues
     try {
-      // Use a safe set of options for cross-origin and credentialed requests
-      const optsOnFetch: RequestInit = { ...opts };
-      if (!optsOnFetch.mode) optsOnFetch.mode = "cors";
-      // default credentials: same-origin for same-origin requests, omit for cross-origin to avoid CORS credential issues
-      try {
-        const urlObjTemp = new URL(url, typeof window !== 'undefined' ? window.location.origin : undefined);
-        const isSameOrigin = typeof window !== 'undefined' ? (urlObjTemp.origin === window.location.origin) : true;
-        if (optsOnFetch.credentials === undefined) optsOnFetch.credentials = isSameOrigin ? "same-origin" : "omit";
-      } catch (e) {
-        if (optsOnFetch.credentials === undefined) optsOnFetch.credentials = "same-origin";
-      }
-      // avoid cached stale responses during retries
-      if (!optsOnFetch.cache) optsOnFetch.cache = 'no-store';
+      const urlObjTemp = new URL(url, typeof window !== 'undefined' ? window.location.origin : undefined);
+      const isSameOrigin = typeof window !== 'undefined' ? (urlObjTemp.origin === window.location.origin) : true;
+      if (optsOnFetch.credentials === undefined) optsOnFetch.credentials = isSameOrigin ? "same-origin" : "omit";
+    } catch (e) {
+      if (optsOnFetch.credentials === undefined) optsOnFetch.credentials = "same-origin";
+    }
+    // avoid cached stale responses during retries
+    if (!optsOnFetch.cache) optsOnFetch.cache = 'no-store';
+
+    // Try native fetch first
+    try {
       const r = await fetch(url, optsOnFetch);
       return r;
     } catch (err) {
-      // rethrow so caller can handle and potentially try alternative forms
-      throw err;
+      // If fetch fails (network/CORS or a script overriding fetch), attempt an XHR fallback
+      try {
+        return await new Promise<any>((resolve, reject) => {
+          try {
+            const xhr = new XMLHttpRequest();
+            xhr.open((optsOnFetch.method as string) || 'GET', url, true);
+
+            // Apply headers if provided
+            const hdrs = optsOnFetch.headers as Record<string, string> | undefined;
+            if (hdrs && typeof hdrs === 'object') {
+              for (const k of Object.keys(hdrs)) {
+                try { xhr.setRequestHeader(k, (hdrs as any)[k]); } catch (e) {}
+              }
+            }
+
+            xhr.withCredentials = optsOnFetch.credentials === 'include' || optsOnFetch.credentials === 'same-origin';
+
+            xhr.onload = () => {
+              const headersMap = {
+                get: (name: string) => {
+                  const v = xhr.getResponseHeader(name);
+                  return v ? v : null;
+                },
+              };
+              const res = {
+                ok: xhr.status >= 200 && xhr.status < 300,
+                status: xhr.status || 0,
+                headers: headersMap,
+                text: () => Promise.resolve(typeof xhr.responseText === 'string' ? xhr.responseText : ''),
+                clone: function () { return this; },
+              };
+              resolve(res);
+            };
+
+            xhr.onerror = () => reject(new Error('Network error (XHR)'));
+            xhr.onabort = () => reject(new Error('Request aborted'));
+
+            if (optsOnFetch.body) {
+              try {
+                xhr.send(optsOnFetch.body as Document | BodyInit | null);
+              } catch (e) {
+                // last resort: send without body
+                xhr.send();
+              }
+            } else {
+              xhr.send();
+            }
+          } catch (e) {
+            reject(e);
+          }
+        });
+      } catch (e2) {
+        throw err;
+      }
     }
   };
 
