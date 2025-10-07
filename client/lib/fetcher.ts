@@ -22,9 +22,10 @@ export async function safeFetch(u: string, opts?: RequestInit) {
     // avoid cached stale responses during retries
     if (!optsOnFetch.cache) optsOnFetch.cache = "no-store";
 
-    // Try native fetch first
+    // Try native fetch first (prefer captured original fetch if present)
     try {
-      const r = await fetch(url, optsOnFetch);
+      const fetchFunc: typeof fetch = (typeof (globalThis as any).__originalFetch === 'function') ? (globalThis as any).__originalFetch : fetch;
+      const r = await fetchFunc(url, optsOnFetch as any);
       return r;
     } catch (err) {
       // If fetch fails (network/CORS or a script overriding fetch), attempt an XHR fallback
