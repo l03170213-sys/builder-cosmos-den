@@ -28,7 +28,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {/* Mobile menu button */}
           <button className="md:hidden p-2 rounded-md" aria-label="Toggle menu" onClick={() => mobile?.toggle()}>
-            <Bars3 className="h-6 w-6" />
+            <Menu className="h-6 w-6" />
           </button>
 
           <img src={settings.logoUrl} alt={settings.appName} className="h-8 w-auto rounded" />
