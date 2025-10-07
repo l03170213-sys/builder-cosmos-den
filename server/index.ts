@@ -25,7 +25,7 @@ export function createServer() {
         typeof req.url === "string" &&
         req.url.startsWith("/.netlify/functions/api")
       ) {
-        req.url = req.url.replace("/.netlify/functions/api", "");
+        req.url = req.url.replace("/.netlify/functions/api", "/api");
       }
     } catch (e) {
       // ignore
