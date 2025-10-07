@@ -80,7 +80,7 @@ export function Sidebar() {
           <div className="absolute left-0 top-0 h-full">
             {content}
             <div className="p-4">
-              <button className="px-3 py-2 rounded bg-gray-100" onClick={() => mobile.setOpen(false)}>Fermer</button>
+              <button className="px-3 py-2 rounded bg-gray-100" onClick={() => mobile?.setOpen(false)}>Fermer</button>
             </div>
           </div>
         </div>
