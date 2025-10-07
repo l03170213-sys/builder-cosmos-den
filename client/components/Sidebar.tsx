@@ -1,6 +1,13 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { BarChart3, LineChart, Users2, FileText, Zap, Settings } from "lucide-react";
+import {
+  BarChart3,
+  LineChart,
+  Users2,
+  FileText,
+  Zap,
+  Settings,
+} from "lucide-react";
 import { loadSettings } from "@/lib/settings";
 import { useMobileNav } from "@/components/MobileNavProvider";
 
@@ -35,10 +42,18 @@ export function Sidebar() {
   const content = (
     <div
       className="flex flex-col w-64 shrink-0 border-r"
-      style={{ backgroundColor: "white", color: "var(--vm-primary)", borderColor: "rgba(0,0,0,0.06)" }}
+      style={{
+        backgroundColor: "white",
+        color: "var(--vm-primary)",
+        borderColor: "rgba(0,0,0,0.06)",
+      }}
     >
       <div className="h-20 flex items-center gap-2 px-4 font-semibold tracking-tight">
-        <img src={settings.logoUrl} alt={settings.appName} className="h-16 w-auto object-contain rounded" />
+        <img
+          src={settings.logoUrl}
+          alt={settings.appName}
+          className="h-16 w-auto object-contain rounded"
+        />
       </div>
 
       <nav className="px-2 py-4 space-y-1">
@@ -50,7 +65,9 @@ export function Sidebar() {
             className={({ isActive }) =>
               cx(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
-                isActive ? "bg-primary text-white" : "text-primary hover:bg-primary hover:text-white",
+                isActive
+                  ? "bg-primary text-white"
+                  : "text-primary hover:bg-primary hover:text-white",
               )
             }
           >
@@ -71,11 +88,17 @@ export function Sidebar() {
       <aside className="hidden md:flex md:flex-col">{content}</aside>
       {mobile.open && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => mobile?.setOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => mobile?.setOpen(false)}
+          />
           <div className="absolute left-0 top-0 h-full">
             {content}
             <div className="p-4">
-              <button className="px-3 py-2 rounded bg-gray-100" onClick={() => mobile?.setOpen(false)}>
+              <button
+                className="px-3 py-2 rounded bg-gray-100"
+                onClick={() => mobile?.setOpen(false)}
+              >
                 Fermer
               </button>
             </div>

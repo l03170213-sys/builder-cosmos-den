@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const MobileNavContext = React.createContext<{
   open: boolean;
@@ -18,6 +18,7 @@ export function MobileNavProvider({ children }: { children: React.ReactNode }) {
 
 export function useMobileNav() {
   const ctx = React.useContext(MobileNavContext);
-  if (!ctx) throw new Error('useMobileNav must be used inside MobileNavProvider');
+  if (!ctx)
+    throw new Error("useMobileNav must be used inside MobileNavProvider");
   return ctx;
 }

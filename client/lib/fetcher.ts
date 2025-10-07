@@ -27,25 +27,37 @@ export async function safeFetch(u: string, opts?: RequestInit) {
     try {
       let usedXhrFirst = false;
       try {
-        const urlObjTemp = new URL(url, typeof window !== 'undefined' ? window.location.origin : undefined);
-        const isSameOrigin = typeof window !== 'undefined' ? urlObjTemp.origin === window.location.origin : true;
-        if (isSameOrigin && urlObjTemp.pathname.startsWith('/api/')) {
+        const urlObjTemp = new URL(
+          url,
+          typeof window !== "undefined" ? window.location.origin : undefined,
+        );
+        const isSameOrigin =
+          typeof window !== "undefined"
+            ? urlObjTemp.origin === window.location.origin
+            : true;
+        if (isSameOrigin && urlObjTemp.pathname.startsWith("/api/")) {
           usedXhrFirst = true;
           // Use XHR directly
           return await new Promise<any>((resolve, reject) => {
             try {
               const xhr = new XMLHttpRequest();
-              xhr.open((optsOnFetch.method as string) || 'GET', url, true);
+              xhr.open((optsOnFetch.method as string) || "GET", url, true);
 
               // Apply headers if provided
-              const hdrs = optsOnFetch.headers as Record<string, string> | undefined;
-              if (hdrs && typeof hdrs === 'object') {
+              const hdrs = optsOnFetch.headers as
+                | Record<string, string>
+                | undefined;
+              if (hdrs && typeof hdrs === "object") {
                 for (const k of Object.keys(hdrs)) {
-                  try { xhr.setRequestHeader(k, (hdrs as any)[k]); } catch (e) {}
+                  try {
+                    xhr.setRequestHeader(k, (hdrs as any)[k]);
+                  } catch (e) {}
                 }
               }
 
-              xhr.withCredentials = optsOnFetch.credentials === 'include' || optsOnFetch.credentials === 'same-origin';
+              xhr.withCredentials =
+                optsOnFetch.credentials === "include" ||
+                optsOnFetch.credentials === "same-origin";
 
               xhr.onload = () => {
                 const headersMap = {
@@ -58,21 +70,34 @@ export async function safeFetch(u: string, opts?: RequestInit) {
                   ok: xhr.status >= 200 && xhr.status < 300,
                   status: xhr.status || 0,
                   headers: headersMap,
-                  text: () => Promise.resolve(typeof xhr.responseText === 'string' ? xhr.responseText : ''),
-                  clone: function () { return this; },
+                  text: () =>
+                    Promise.resolve(
+                      typeof xhr.responseText === "string"
+                        ? xhr.responseText
+                        : "",
+                    ),
+                  clone: function () {
+                    return this;
+                  },
                 };
                 resolve(res);
               };
 
-              xhr.onerror = () => reject(new Error('Network error (XHR)'));
-              xhr.onabort = () => reject(new Error('Request aborted'));
+              xhr.onerror = () => reject(new Error("Network error (XHR)"));
+              xhr.onabort = () => reject(new Error("Request aborted"));
 
               if (optsOnFetch.body) {
-                try { xhr.send(optsOnFetch.body as Document | BodyInit | null); } catch (e) { xhr.send(); }
+                try {
+                  xhr.send(optsOnFetch.body as Document | BodyInit | null);
+                } catch (e) {
+                  xhr.send();
+                }
               } else {
                 xhr.send();
               }
-            } catch (e) { reject(e); }
+            } catch (e) {
+              reject(e);
+            }
           });
         }
       } catch (e) {
@@ -80,7 +105,10 @@ export async function safeFetch(u: string, opts?: RequestInit) {
       }
 
       // Prefer the original native fetch if available (captured before wrappers like FullStory)
-      const fetchFunc: typeof fetch = (typeof (globalThis as any).__originalFetch === 'function') ? (globalThis as any).__originalFetch : fetch;
+      const fetchFunc: typeof fetch =
+        typeof (globalThis as any).__originalFetch === "function"
+          ? (globalThis as any).__originalFetch
+          : fetch;
       const r = await fetchFunc(url, optsOnFetch as any);
       return r;
     } catch (err) {
@@ -89,17 +117,23 @@ export async function safeFetch(u: string, opts?: RequestInit) {
         return await new Promise<any>((resolve, reject) => {
           try {
             const xhr = new XMLHttpRequest();
-            xhr.open((optsOnFetch.method as string) || 'GET', url, true);
+            xhr.open((optsOnFetch.method as string) || "GET", url, true);
 
             // Apply headers if provided
-            const hdrs = optsOnFetch.headers as Record<string, string> | undefined;
-            if (hdrs && typeof hdrs === 'object') {
+            const hdrs = optsOnFetch.headers as
+              | Record<string, string>
+              | undefined;
+            if (hdrs && typeof hdrs === "object") {
               for (const k of Object.keys(hdrs)) {
-                try { xhr.setRequestHeader(k, (hdrs as any)[k]); } catch (e) {}
+                try {
+                  xhr.setRequestHeader(k, (hdrs as any)[k]);
+                } catch (e) {}
               }
             }
 
-            xhr.withCredentials = optsOnFetch.credentials === 'include' || optsOnFetch.credentials === 'same-origin';
+            xhr.withCredentials =
+              optsOnFetch.credentials === "include" ||
+              optsOnFetch.credentials === "same-origin";
 
             xhr.onload = () => {
               const headersMap = {
@@ -112,21 +146,34 @@ export async function safeFetch(u: string, opts?: RequestInit) {
                 ok: xhr.status >= 200 && xhr.status < 300,
                 status: xhr.status || 0,
                 headers: headersMap,
-                text: () => Promise.resolve(typeof xhr.responseText === 'string' ? xhr.responseText : ''),
-                clone: function () { return this; },
+                text: () =>
+                  Promise.resolve(
+                    typeof xhr.responseText === "string"
+                      ? xhr.responseText
+                      : "",
+                  ),
+                clone: function () {
+                  return this;
+                },
               };
               resolve(res);
             };
 
-            xhr.onerror = () => reject(new Error('Network error (XHR)'));
-            xhr.onabort = () => reject(new Error('Request aborted'));
+            xhr.onerror = () => reject(new Error("Network error (XHR)"));
+            xhr.onabort = () => reject(new Error("Request aborted"));
 
             if (optsOnFetch.body) {
-              try { xhr.send(optsOnFetch.body as Document | BodyInit | null); } catch (e) { xhr.send(); }
+              try {
+                xhr.send(optsOnFetch.body as Document | BodyInit | null);
+              } catch (e) {
+                xhr.send();
+              }
             } else {
               xhr.send();
             }
-          } catch (e) { reject(e); }
+          } catch (e) {
+            reject(e);
+          }
         });
       } catch (e2) {
         throw err;

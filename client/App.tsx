@@ -21,7 +21,10 @@ const queryClient = new QueryClient();
 const App = () => {
   const [authed, setAuthed] = React.useState<boolean>(() => {
     try {
-      return typeof window !== "undefined" && localStorage.getItem("vm:authed") === "1";
+      return (
+        typeof window !== "undefined" &&
+        localStorage.getItem("vm:authed") === "1"
+      );
     } catch (e) {
       return false;
     }
@@ -58,15 +61,15 @@ const App = () => {
         <BrowserRouter>
           <MobileNavProvider>
             <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/analyses" element={<Analyses />} />
-            <Route path="/rapports" element={<Rapports />} />
-            <Route path="/automatisation" element={<Automatisation />} />
-            <Route path="/repondants" element={<Repondants />} />
-            <Route path="/parametres" element={<Parametres />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/analyses" element={<Analyses />} />
+              <Route path="/rapports" element={<Rapports />} />
+              <Route path="/automatisation" element={<Automatisation />} />
+              <Route path="/repondants" element={<Repondants />} />
+              <Route path="/parametres" element={<Parametres />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </MobileNavProvider>
         </BrowserRouter>
       </TooltipProvider>
