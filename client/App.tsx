@@ -14,6 +14,7 @@ import Repondants from "./pages/Repondants";
 import Parametres from "./pages/Parametres";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import { MobileNavProvider } from "@/components/MobileNavProvider";
 
 const queryClient = new QueryClient();
 
@@ -55,7 +56,8 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
+          <MobileNavProvider>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/analyses" element={<Analyses />} />
             <Route path="/rapports" element={<Rapports />} />
@@ -65,6 +67,7 @@ const App = () => {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </MobileNavProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
