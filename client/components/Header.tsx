@@ -27,7 +27,7 @@ export default function Header() {
       <div className="h-full max-w-screen-2xl mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Mobile menu button */}
-          <button className="md:hidden p-2 rounded-md" aria-label="Toggle menu" onClick={mobile.toggle}>
+          <button className="md:hidden p-2 rounded-md" aria-label="Toggle menu" onClick={() => mobile?.toggle()}>
             <Bars3 className="h-6 w-6" />
           </button>
 
