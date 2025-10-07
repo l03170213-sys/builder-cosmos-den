@@ -1,5 +1,4 @@
 import jsPDF from "jspdf";
-import jsPDF from "jspdf";
 import { fetchJsonSafe } from "@/lib/fetcher";
 import { loadSettings } from "@/lib/settings";
 
