@@ -76,7 +76,7 @@ export function Sidebar() {
       </aside>
       {mobile.open && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => mobile.setOpen(false)} />
+          <div className="absolute inset-0 bg-black/40" onClick={() => mobile?.setOpen(false)} />
           <div className="absolute left-0 top-0 h-full">
             {content}
             <div className="p-4">
