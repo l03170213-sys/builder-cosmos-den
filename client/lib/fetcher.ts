@@ -5,14 +5,22 @@ export async function safeFetch(u: string, opts?: RequestInit) {
     if (!optsOnFetch.mode) optsOnFetch.mode = "cors";
     // default credentials: same-origin for same-origin requests, omit for cross-origin to avoid CORS credential issues
     try {
-      const urlObjTemp = new URL(url, typeof window !== 'undefined' ? window.location.origin : undefined);
-      const isSameOrigin = typeof window !== 'undefined' ? (urlObjTemp.origin === window.location.origin) : true;
-      if (optsOnFetch.credentials === undefined) optsOnFetch.credentials = isSameOrigin ? "same-origin" : "omit";
+      const urlObjTemp = new URL(
+        url,
+        typeof window !== "undefined" ? window.location.origin : undefined,
+      );
+      const isSameOrigin =
+        typeof window !== "undefined"
+          ? urlObjTemp.origin === window.location.origin
+          : true;
+      if (optsOnFetch.credentials === undefined)
+        optsOnFetch.credentials = isSameOrigin ? "same-origin" : "omit";
     } catch (e) {
-      if (optsOnFetch.credentials === undefined) optsOnFetch.credentials = "same-origin";
+      if (optsOnFetch.credentials === undefined)
+        optsOnFetch.credentials = "same-origin";
     }
     // avoid cached stale responses during retries
-    if (!optsOnFetch.cache) optsOnFetch.cache = 'no-store';
+    if (!optsOnFetch.cache) optsOnFetch.cache = "no-store";
 
     // Try native fetch first
     try {
@@ -24,17 +32,23 @@ export async function safeFetch(u: string, opts?: RequestInit) {
         return await new Promise<any>((resolve, reject) => {
           try {
             const xhr = new XMLHttpRequest();
-            xhr.open((optsOnFetch.method as string) || 'GET', url, true);
+            xhr.open((optsOnFetch.method as string) || "GET", url, true);
 
             // Apply headers if provided
-            const hdrs = optsOnFetch.headers as Record<string, string> | undefined;
-            if (hdrs && typeof hdrs === 'object') {
+            const hdrs = optsOnFetch.headers as
+              | Record<string, string>
+              | undefined;
+            if (hdrs && typeof hdrs === "object") {
               for (const k of Object.keys(hdrs)) {
-                try { xhr.setRequestHeader(k, (hdrs as any)[k]); } catch (e) {}
+                try {
+                  xhr.setRequestHeader(k, (hdrs as any)[k]);
+                } catch (e) {}
               }
             }
 
-            xhr.withCredentials = optsOnFetch.credentials === 'include' || optsOnFetch.credentials === 'same-origin';
+            xhr.withCredentials =
+              optsOnFetch.credentials === "include" ||
+              optsOnFetch.credentials === "same-origin";
 
             xhr.onload = () => {
               const headersMap = {
@@ -47,14 +61,21 @@ export async function safeFetch(u: string, opts?: RequestInit) {
                 ok: xhr.status >= 200 && xhr.status < 300,
                 status: xhr.status || 0,
                 headers: headersMap,
-                text: () => Promise.resolve(typeof xhr.responseText === 'string' ? xhr.responseText : ''),
-                clone: function () { return this; },
+                text: () =>
+                  Promise.resolve(
+                    typeof xhr.responseText === "string"
+                      ? xhr.responseText
+                      : "",
+                  ),
+                clone: function () {
+                  return this;
+                },
               };
               resolve(res);
             };
 
-            xhr.onerror = () => reject(new Error('Network error (XHR)'));
-            xhr.onabort = () => reject(new Error('Request aborted'));
+            xhr.onerror = () => reject(new Error("Network error (XHR)"));
+            xhr.onabort = () => reject(new Error("Request aborted"));
 
             if (optsOnFetch.body) {
               try {
@@ -78,25 +99,37 @@ export async function safeFetch(u: string, opts?: RequestInit) {
 
   const tryUrls: string[] = [];
   try {
-    const urlObj = new URL(u, typeof window !== 'undefined' ? window.location.origin : undefined);
+    const urlObj = new URL(
+      u,
+      typeof window !== "undefined" ? window.location.origin : undefined,
+    );
     // If cross-origin, try a relative path first (some previews/proxies rewrite requests)
-    if (typeof window !== 'undefined' && urlObj.origin !== window.location.origin) {
-      if (urlObj.pathname.startsWith('/api/')) {
+    if (
+      typeof window !== "undefined" &&
+      urlObj.origin !== window.location.origin
+    ) {
+      if (urlObj.pathname.startsWith("/api/")) {
         tryUrls.push(urlObj.pathname + urlObj.search);
       }
       // then original absolute URL
       tryUrls.push(u);
       // add Netlify functions alternative
-      if (urlObj.pathname.startsWith('/api/')) {
-        const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
+      if (urlObj.pathname.startsWith("/api/")) {
+        const altPath = urlObj.pathname.replace(
+          /^\/api\//,
+          "/.netlify/functions/api/",
+        );
         const alt = new URL(altPath, urlObj.origin).toString();
         tryUrls.push(alt);
       }
     } else {
       // same-origin: prefer the given URL then fallbacks
       tryUrls.push(u);
-      if (urlObj.pathname.startsWith('/api/')) {
-        const altPath = urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/');
+      if (urlObj.pathname.startsWith("/api/")) {
+        const altPath = urlObj.pathname.replace(
+          /^\/api\//,
+          "/.netlify/functions/api/",
+        );
         const alt = new URL(altPath, urlObj.origin).toString();
         tryUrls.push(alt);
         tryUrls.push(urlObj.pathname + urlObj.search);
@@ -112,12 +145,16 @@ export async function safeFetch(u: string, opts?: RequestInit) {
   for (let attempt = 0; attempt < tryUrls.length; attempt++) {
     const url = tryUrls[attempt];
     try {
-      console.debug('safeFetch: attempting', url, 'opts=', opts);
+      console.debug("safeFetch: attempting", url, "opts=", opts);
       const r = await doFetch(url);
-      console.debug('safeFetch: success', url, r.status);
+      console.debug("safeFetch: success", url, r.status);
       return r;
     } catch (err: any) {
-      console.warn('safeFetch: attempt failed', url, err && err.message ? err.message : err);
+      console.warn(
+        "safeFetch: attempt failed",
+        url,
+        err && err.message ? err.message : err,
+      );
       lastErr = err;
       // small delay before next attempt
       await new Promise((res) => setTimeout(res, 150 * (attempt + 1)));
@@ -127,12 +164,16 @@ export async function safeFetch(u: string, opts?: RequestInit) {
   // If all attempts failed, try a couple of simple retries on the original URL (and relative if possible)
   for (let retry = 0; retry < 2; retry++) {
     try {
-      console.debug('safeFetch: final retry', retry + 1, 'for', u);
+      console.debug("safeFetch: final retry", retry + 1, "for", u);
       const r = await doFetch(u);
-      console.debug('safeFetch: final retry success', u, r.status);
+      console.debug("safeFetch: final retry success", u, r.status);
       return r;
     } catch (err: any) {
-      console.warn('safeFetch: final retry failed', retry + 1, err && err.message ? err.message : err);
+      console.warn(
+        "safeFetch: final retry failed",
+        retry + 1,
+        err && err.message ? err.message : err,
+      );
       lastErr = err;
       await new Promise((res) => setTimeout(res, 200 * (retry + 1)));
     }
@@ -140,15 +181,21 @@ export async function safeFetch(u: string, opts?: RequestInit) {
 
   // Last attempt: if the last error was a network/fetch error, throw a clearer message
   if (lastErr) {
-    const isTypeError = (lastErr instanceof Error && (lastErr.message === 'Failed to fetch' || lastErr.name === 'TypeError')) || String(lastErr).includes('Failed to fetch') || String(lastErr).toLowerCase().includes('networkerror') || String(lastErr).toLowerCase().includes('network error');
+    const isTypeError =
+      (lastErr instanceof Error &&
+        (lastErr.message === "Failed to fetch" ||
+          lastErr.name === "TypeError")) ||
+      String(lastErr).includes("Failed to fetch") ||
+      String(lastErr).toLowerCase().includes("networkerror") ||
+      String(lastErr).toLowerCase().includes("network error");
     if (isTypeError) {
       const e: any = new Error(
-        "Network error: unable to reach the backend. Ensure the backend (dev server, functions or proxy) is available, the base URL is correct, and CORS/proxy settings allow requests."
+        "Network error: unable to reach the backend. Ensure the backend (dev server, functions or proxy) is available, the base URL is correct, and CORS/proxy settings allow requests.",
       );
       e.cause = lastErr;
       // include helpful diagnostics when available
       try {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           e.diagnostics = { windowOrigin: window.location.origin };
         }
       } catch (ex) {}
@@ -157,7 +204,10 @@ export async function safeFetch(u: string, opts?: RequestInit) {
   }
 
   // Fallback: always throw a sanitized error (avoid throwing raw TypeError from fetch which can be confusing)
-  const finalErr: any = lastErr instanceof Error ? new Error(`Request failed: ${lastErr.message}`) : new Error('Request failed');
+  const finalErr: any =
+    lastErr instanceof Error
+      ? new Error(`Request failed: ${lastErr.message}`)
+      : new Error("Request failed");
   finalErr.cause = lastErr;
   throw finalErr;
 }
@@ -167,21 +217,24 @@ export async function fetchJsonSafe(url: string, opts?: RequestInit) {
   const text = await r
     .clone()
     .text()
-    .catch(() => '');
+    .catch(() => "");
 
-  const contentType = r.headers.get('content-type') || '';
+  const contentType = r.headers.get("content-type") || "";
   const looksLikeHtml =
-    contentType.includes('text/html') ||
-    text.trim().toLowerCase().startsWith('<!doctype');
+    contentType.includes("text/html") ||
+    text.trim().toLowerCase().startsWith("<!doctype");
 
   // If server responded OK but returned HTML (dev server SPA fallback), attempt several function-based fallbacks
   if (r.ok && looksLikeHtml) {
     try {
-      const urlObj = new URL(url, typeof window !== 'undefined' ? window.location.origin : undefined);
-      if (urlObj.pathname.startsWith('/api/')) {
+      const urlObj = new URL(
+        url,
+        typeof window !== "undefined" ? window.location.origin : undefined,
+      );
+      if (urlObj.pathname.startsWith("/api/")) {
         const candidates = [
-          urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/api/'),
-          urlObj.pathname.replace(/^\/api\//, '/.netlify/functions/'),
+          urlObj.pathname.replace(/^\/api\//, "/.netlify/functions/api/"),
+          urlObj.pathname.replace(/^\/api\//, "/.netlify/functions/"),
         ];
         for (const p of candidates) {
           try {
@@ -190,11 +243,11 @@ export async function fetchJsonSafe(url: string, opts?: RequestInit) {
             const text2 = await r2
               .clone()
               .text()
-              .catch(() => '');
-            const ct2 = r2.headers.get('content-type') || '';
+              .catch(() => "");
+            const ct2 = r2.headers.get("content-type") || "";
             const looksLikeHtml2 =
-              ct2.includes('text/html') ||
-              String(text2).trim().toLowerCase().startsWith('<!doctype');
+              ct2.includes("text/html") ||
+              String(text2).trim().toLowerCase().startsWith("<!doctype");
             if (!r2.ok || looksLikeHtml2) {
               // try next fallback
               continue;

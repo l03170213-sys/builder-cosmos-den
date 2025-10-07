@@ -33,17 +33,18 @@ function makePage2Clone(original: HTMLElement) {
   }
 
   const right = document.createElement("div");
-  right.style.display = 'flex';
-  right.style.flexDirection = 'column';
-  right.style.alignItems = 'flex-end';
+  right.style.display = "flex";
+  right.style.flexDirection = "column";
+  right.style.alignItems = "flex-end";
   right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
   // add papillon top-right
-  const pap = document.createElement('img');
-  pap.src = 'https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F6fe54180faf14512a2c40bff421820cc?format=webp&width=800';
-  pap.alt = 'papillon';
-  pap.style.width = '36px';
-  pap.style.height = 'auto';
-  pap.style.marginTop = '6px';
+  const pap = document.createElement("img");
+  pap.src =
+    "https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F6fe54180faf14512a2c40bff421820cc?format=webp&width=800";
+  pap.alt = "papillon";
+  pap.style.width = "36px";
+  pap.style.height = "auto";
+  pap.style.marginTop = "6px";
   right.appendChild(pap);
 
   header.appendChild(left);
@@ -105,16 +106,17 @@ function makeSummaryClone(summaryEl: HTMLElement) {
     left.innerHTML = `<h1 style="margin:0;font-size:22px;font-weight:800">VM Resort - Albanie</h1><div style="margin-top:6px;color:#475569">Rapport de satisfaction</div>`;
   }
   const right = document.createElement("div");
-  right.style.display = 'flex';
-  right.style.flexDirection = 'column';
-  right.style.alignItems = 'flex-end';
+  right.style.display = "flex";
+  right.style.flexDirection = "column";
+  right.style.alignItems = "flex-end";
   right.innerHTML = `<div style="text-align:right;color:#94a3b8;font-size:12px">Generated: ${new Date().toLocaleDateString()}</div>`;
-  const pap2 = document.createElement('img');
-  pap2.src = 'https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F6fe54180faf14512a2c40bff421820cc?format=webp&width=800';
-  pap2.alt = 'papillon';
-  pap2.style.width = '36px';
-  pap2.style.height = 'auto';
-  pap2.style.marginTop = '6px';
+  const pap2 = document.createElement("img");
+  pap2.src =
+    "https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F6fe54180faf14512a2c40bff421820cc?format=webp&width=800";
+  pap2.alt = "papillon";
+  pap2.style.width = "36px";
+  pap2.style.height = "auto";
+  pap2.style.marginTop = "6px";
   right.appendChild(pap2);
   header.appendChild(left);
   header.appendChild(right);
@@ -329,24 +331,25 @@ export default async function exportToPdf(options: {
       window.localStorage.getItem("selectedResort") || "vm-resort-albanie";
     const resorts = getResorts();
     const cfg = resorts.find((r: any) => r.key === selectedKey) || resorts[0];
-    const leftDiv = document.createElement('div');
-    leftDiv.style.fontSize = '18px';
-    leftDiv.style.fontWeight = '700';
+    const leftDiv = document.createElement("div");
+    leftDiv.style.fontSize = "18px";
+    leftDiv.style.fontWeight = "700";
     leftDiv.textContent = cfg.name;
     header.appendChild(leftDiv);
   } catch (e) {
-    const leftDiv = document.createElement('div');
-    leftDiv.style.fontSize = '18px';
-    leftDiv.style.fontWeight = '700';
-    leftDiv.textContent = 'VM Resort';
+    const leftDiv = document.createElement("div");
+    leftDiv.style.fontSize = "18px";
+    leftDiv.style.fontWeight = "700";
+    leftDiv.textContent = "VM Resort";
     header.appendChild(leftDiv);
   }
   // right: papillon
-  const rightImg = document.createElement('img');
-  rightImg.src = 'https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F6fe54180faf14512a2c40bff421820cc?format=webp&width=800';
-  rightImg.alt = 'papillon';
-  rightImg.style.width = '36px';
-  rightImg.style.height = 'auto';
+  const rightImg = document.createElement("img");
+  rightImg.src =
+    "https://cdn.builder.io/api/v1/image/assets%2Fa55e2b675d8b4a19887bfba4c19f448e%2F6fe54180faf14512a2c40bff421820cc?format=webp&width=800";
+  rightImg.alt = "papillon";
+  rightImg.style.width = "36px";
+  rightImg.style.height = "auto";
   header.appendChild(rightImg);
   chartContainer.appendChild(header);
 
@@ -430,12 +433,19 @@ function sanitizeFilename(name: string) {
     .toLowerCase();
 }
 
-export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "official"; delayMs?: number; timeoutMs?: number; canvasScale?: number; preCaptureMs?: number; onProgress?: (done:number,total:number,key?:string)=>void }) {
+export async function exportAllHotels(options?: {
+  mode?: "both" | "graphics" | "official";
+  delayMs?: number;
+  timeoutMs?: number;
+  canvasScale?: number;
+  preCaptureMs?: number;
+  onProgress?: (done: number, total: number, key?: string) => void;
+}) {
   // Prevent concurrent invocations which would trigger multiple downloads
   try {
     const globalAny: any = window as any;
     if (globalAny.__exportAllHotelsRunning) {
-      console.warn('exportAllHotels already running, aborting duplicate call');
+      console.warn("exportAllHotels already running, aborting duplicate call");
       return;
     }
     globalAny.__exportAllHotelsRunning = true;
@@ -444,45 +454,80 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
   }
 
   const settings = loadSettings();
-  const { mode = "both", delayMs = settings.pdfExportDelaySeconds * 1000, timeoutMs = 8000, canvasScale = settings.exportCanvasScale, preCaptureMs = settings.exportPreCaptureMs, onProgress } = options || {} as any;
+  const {
+    mode = "both",
+    delayMs = settings.pdfExportDelaySeconds * 1000,
+    timeoutMs = 8000,
+    canvasScale = settings.exportCanvasScale,
+    preCaptureMs = settings.exportPreCaptureMs,
+    onProgress,
+  } = options || ({} as any);
   const resorts = getResorts();
-  const original = typeof window !== "undefined" ? window.localStorage.getItem("selectedResort") || (resorts[0] && resorts[0].key) : null;
+  const original =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("selectedResort") ||
+        (resorts[0] && resorts[0].key)
+      : null;
 
   const waitForElement = async (id: string, timeout = timeoutMs) => {
     const start = Date.now();
     let attempts = 0;
     const interval = 200;
     while (Date.now() - start < timeout) {
-      const el = document.getElementById(id) || document.querySelector(`#${id}`);
+      const el =
+        document.getElementById(id) || document.querySelector(`#${id}`);
       if (el) {
-        if (attempts > 0) console.debug(`waitForElement: found ${id} after ${attempts} attempts`);
+        if (attempts > 0)
+          console.debug(
+            `waitForElement: found ${id} after ${attempts} attempts`,
+          );
         return el as HTMLElement;
       }
       attempts++;
       await new Promise((r) => setTimeout(r, interval));
     }
-    console.warn(`waitForElement: timeout waiting for "${id}" after ${attempts} attempts (${timeout}ms)`);
+    console.warn(
+      `waitForElement: timeout waiting for "${id}" after ${attempts} attempts (${timeout}ms)`,
+    );
     try {
-      const ids = Array.from(document.querySelectorAll('[id]'))
+      const ids = Array.from(document.querySelectorAll("[id]"))
         .slice(0, 50)
         .map((el: Element) => (el as HTMLElement).id);
-      console.warn('Available element ids (first 50):', ids.join(','));
+      console.warn("Available element ids (first 50):", ids.join(","));
     } catch (e) {}
     return null;
   };
 
   // Prepare a single PDF document for all resorts
-  const final = new jsPDF({ unit: "px", format: "a4", orientation: "landscape" });
+  const final = new jsPDF({
+    unit: "px",
+    format: "a4",
+    orientation: "landscape",
+  });
   let isFirstPage = true;
 
-  const addScaledImage = async (pdf: any, dataUrl: string, orientation: "landscape" | "portrait" = "landscape") => {
+  const addScaledImage = async (
+    pdf: any,
+    dataUrl: string,
+    orientation: "landscape" | "portrait" = "landscape",
+  ) => {
     const margin = 20;
-    const pageW = orientation === "landscape" ? pdf.internal.pageSize.getWidth() : pdf.internal.pageSize.getHeight();
-    const pageH = orientation === "landscape" ? pdf.internal.pageSize.getHeight() : pdf.internal.pageSize.getWidth();
+    const pageW =
+      orientation === "landscape"
+        ? pdf.internal.pageSize.getWidth()
+        : pdf.internal.pageSize.getHeight();
+    const pageH =
+      orientation === "landscape"
+        ? pdf.internal.pageSize.getHeight()
+        : pdf.internal.pageSize.getWidth();
 
     if (!isFirstPage) {
       if (orientation === "landscape") pdf.addPage(undefined, "landscape");
-      else pdf.addPage([pdf.internal.pageSize.getHeight(), pdf.internal.pageSize.getWidth()], "portrait");
+      else
+        pdf.addPage(
+          [pdf.internal.pageSize.getHeight(), pdf.internal.pageSize.getWidth()],
+          "portrait",
+        );
     }
 
     const imgEl = new Image();
@@ -505,12 +550,18 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
   const totalResorts = resorts.length;
   let resortIndex = 0;
   // initial progress report
-  if (onProgress) try { onProgress(0, totalResorts, null); } catch(e) {}
+  if (onProgress)
+    try {
+      onProgress(0, totalResorts, null);
+    } catch (e) {}
 
   for (const r of resorts) {
     resortIndex++;
     // report start of processing this resort (mark as current)
-    if (onProgress) try { onProgress(resortIndex, totalResorts, r.name); } catch(e) {}
+    if (onProgress)
+      try {
+        onProgress(resortIndex, totalResorts, r.name);
+      } catch (e) {}
     try {
       if (typeof window === "undefined") break;
       window.localStorage.setItem("selectedResort", r.key);
@@ -518,9 +569,9 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
 
       // Ensure app route is root so Index components render (chart/list exist)
       try {
-        if (window.location.pathname !== '/') {
-          window.history.pushState({}, '', '/');
-          window.dispatchEvent(new PopStateEvent('popstate'));
+        if (window.location.pathname !== "/") {
+          window.history.pushState({}, "", "/");
+          window.dispatchEvent(new PopStateEvent("popstate"));
         }
       } catch (e) {}
 
@@ -528,7 +579,10 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
       await new Promise((r) => setTimeout(r, 300));
 
       // reaffirm current progress after UI update
-      if (onProgress) try { onProgress(resortIndex, totalResorts, r.name); } catch(e) {}
+      if (onProgress)
+        try {
+          onProgress(resortIndex, totalResorts, r.name);
+        } catch (e) {}
 
       if (mode === "both" || mode === "graphics") {
         // Try capture up to 3 times (initial wait + backoff) to allow UI to render
@@ -536,7 +590,11 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
         const settings = loadSettings();
         const maxAttempts = Math.max(1, settings.pdfExportRetries || 3);
         const elementTimeout = Math.max(timeoutMs, 15000);
-        for (let attempt = 0; attempt < maxAttempts && !capturedGraphics; attempt++) {
+        for (
+          let attempt = 0;
+          attempt < maxAttempts && !capturedGraphics;
+          attempt++
+        ) {
           const [chartEl, listEl] = await Promise.all([
             waitForElement("chart-wrapper", elementTimeout),
             waitForElement("list-wrapper", elementTimeout),
@@ -554,7 +612,8 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
               chartContainer.style.padding = "24px";
               chartContainer.style.background = "white";
               chartContainer.style.boxSizing = "border-box";
-              chartContainer.style.fontFamily = "Inter, Arial, Helvetica, sans-serif";
+              chartContainer.style.fontFamily =
+                "Inter, Arial, Helvetica, sans-serif";
               chartContainer.style.color = "#0f172a";
 
               const header = document.createElement("div");
@@ -568,13 +627,19 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
               const clonedChart = chartEl.cloneNode(true) as HTMLElement;
               clonedChart.style.width = "100%";
               clonedChart.style.height = "auto";
-              clonedChart.querySelectorAll?.(".animate-pulse").forEach((el: any) => (el.className = ""));
+              clonedChart
+                .querySelectorAll?.(".animate-pulse")
+                .forEach((el: any) => (el.className = ""));
               chartContainer.appendChild(clonedChart);
 
               chartContainer.style.position = "fixed";
               chartContainer.style.left = "-9999px";
               document.body.appendChild(chartContainer);
-              const chartCanvas = await html2canvas(chartContainer, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+              const chartCanvas = await html2canvas(chartContainer, {
+                scale: canvasScale,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+              });
               document.body.removeChild(chartContainer);
 
               const chartImgData = chartCanvas.toDataURL("image/png");
@@ -585,29 +650,44 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
               page2.style.position = "fixed";
               page2.style.left = "-9999px";
               document.body.appendChild(page2);
-              const listCanvas = await html2canvas(page2, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+              const listCanvas = await html2canvas(page2, {
+                scale: canvasScale,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+              });
               document.body.removeChild(page2);
               const listImgData = listCanvas.toDataURL("image/png");
               await addScaledImage(final, listImgData, "portrait");
 
               capturedGraphics = true;
             } catch (err) {
-              console.warn(`Attempt ${attempt} failed capturing graphics for ${r.key}:`, err);
+              console.warn(
+                `Attempt ${attempt} failed capturing graphics for ${r.key}:`,
+                err,
+              );
               // continue to next attempt
             }
           } else {
-            console.warn(`Elements not found for graphics attempt ${attempt} on ${r.key}`);
+            console.warn(
+              `Elements not found for graphics attempt ${attempt} on ${r.key}`,
+            );
           }
-          if (!capturedGraphics) await new Promise((res) => setTimeout(res, 500 + attempt * 300));
+          if (!capturedGraphics)
+            await new Promise((res) => setTimeout(res, 500 + attempt * 300));
         }
-        if (!capturedGraphics) console.warn(`Skipping graphic pages for ${r.key} after retries`);
+        if (!capturedGraphics)
+          console.warn(`Skipping graphic pages for ${r.key} after retries`);
       }
 
       if (mode === "both" || mode === "official") {
         const settings2 = loadSettings();
         const maxAttempts2 = Math.max(1, settings2.pdfExportRetries || 3);
         let capturedSummary = false;
-        for (let attempt = 0; attempt < maxAttempts2 && !capturedSummary; attempt++) {
+        for (
+          let attempt = 0;
+          attempt < maxAttempts2 && !capturedSummary;
+          attempt++
+        ) {
           const [summaryEl, listEl] = await Promise.all([
             waitForElement("pdf-summary", timeoutMs),
             waitForElement("list-wrapper", timeoutMs),
@@ -616,25 +696,38 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
             try {
               const waitMs = preCaptureMs + attempt * 700;
               await new Promise((res) => setTimeout(res, waitMs));
-              const summaryContainer = makeSummaryClone(summaryEl as HTMLElement);
+              const summaryContainer = makeSummaryClone(
+                summaryEl as HTMLElement,
+              );
               summaryContainer.style.position = "fixed";
               summaryContainer.style.left = "-9999px";
               document.body.appendChild(summaryContainer);
-              const summaryCanvas = await html2canvas(summaryContainer, { scale: canvasScale, useCORS: true, backgroundColor: "#ffffff" });
+              const summaryCanvas = await html2canvas(summaryContainer, {
+                scale: canvasScale,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+              });
               document.body.removeChild(summaryContainer);
               const summaryImg = summaryCanvas.toDataURL("image/png");
               await addScaledImage(final, summaryImg, "landscape");
 
               capturedSummary = true;
             } catch (err) {
-              console.warn(`Attempt ${attempt} failed capturing official for ${r.key}:`, err);
+              console.warn(
+                `Attempt ${attempt} failed capturing official for ${r.key}:`,
+                err,
+              );
             }
           } else {
-            console.warn(`Elements not found for official attempt ${attempt} on ${r.key}`);
+            console.warn(
+              `Elements not found for official attempt ${attempt} on ${r.key}`,
+            );
           }
-          if (!capturedSummary) await new Promise((res) => setTimeout(res, 500 + attempt * 300));
+          if (!capturedSummary)
+            await new Promise((res) => setTimeout(res, 500 + attempt * 300));
         }
-        if (!capturedSummary) console.warn(`Skipping official page for ${r.key} after retries`);
+        if (!capturedSummary)
+          console.warn(`Skipping official page for ${r.key} after retries`);
       }
     } catch (err) {
       console.error("Error exporting resort", r.key, err);
@@ -660,5 +753,7 @@ export async function exportAllHotels(options?: { mode?: "both" | "graphics" | "
   }
 
   // clear running flag
-  try { (window as any).__exportAllHotelsRunning = false; } catch(e) {}
+  try {
+    (window as any).__exportAllHotelsRunning = false;
+  } catch (e) {}
 }
