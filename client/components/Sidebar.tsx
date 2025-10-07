@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 import React from "react";
 import cn from "clsx";
 import { loadSettings } from "@/lib/settings";
+import { useMobileNav } from "@/components/MobileNavProvider";
 
 const items = [
   { to: "/", label: "Dashboard", icon: BarChart3 },
