@@ -43,7 +43,7 @@ export function Sidebar() {
             key={to}
             to={to}
             className={({ isActive }) =>
-              cxSidebar(
+              utils.cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm",
                 isActive
                   ? "bg-primary text-white"
