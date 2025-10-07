@@ -21,8 +21,11 @@ export function createServer() {
   // express routes defined as /api/... still match.
   app.use((req, _res, next) => {
     try {
-      if (typeof req.url === 'string' && req.url.startsWith('/.netlify/functions/api')) {
-        req.url = req.url.replace('/.netlify/functions/api', '');
+      if (
+        typeof req.url === "string" &&
+        req.url.startsWith("/.netlify/functions/api")
+      ) {
+        req.url = req.url.replace("/.netlify/functions/api", "");
       }
     } catch (e) {
       // ignore
