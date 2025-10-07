@@ -1,8 +1,8 @@
-import { cn as cxSidebar } from "@/lib/utils";
+import * as utils from "@/lib/utils";
 import { BarChart3, LineChart, Users2, FileText, Zap, Settings } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import React from "react";
-import { cn as cxSidebar } from "@/lib/utils";
+import * as utils from "@/lib/utils";
 import { loadSettings } from "@/lib/settings";
 import { useMobileNav } from "@/components/MobileNavProvider";
 
