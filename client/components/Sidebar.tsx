@@ -21,8 +21,19 @@ export function Sidebar() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  return (
-    <aside className="hidden md:flex md:flex-col w-64 shrink-0 border-r" style={{ backgroundColor: "white", color: "var(--vm-primary)", borderColor: "rgba(0,0,0,0.06)" }}>
+  const mobile = (() => {
+    try {
+      // lazy require to avoid SSR issues
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const mod = require("@/components/MobileNavProvider");
+      return mod.useMobileNav ? mod.useMobileNav() : null;
+    } catch (e) {
+      return null;
+    }
+  })();
+
+  const content = (
+    <div className="flex flex-col w-64 shrink-0 border-r" style={{ backgroundColor: "white", color: "var(--vm-primary)", borderColor: "rgba(0,0,0,0.06)" }}>
       <div className="h-20 flex items-center gap-2 px-4 font-semibold tracking-tight">
         <img src={settings.logoUrl} alt={settings.appName} className="h-16 w-auto object-contain rounded" />
       </div>
@@ -45,7 +56,36 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
-    </aside>
+    </div>
+  );
+
+  // Desktop: hidden on mobile
+  if (!mobile) {
+    return (
+      <aside className="hidden md:flex md:flex-col">
+        {content}
+      </aside>
+    );
+  }
+
+  // Mobile overlay when open
+  return (
+    <>
+      <aside className="hidden md:flex md:flex-col">
+        {content}
+      </aside>
+      {mobile.open && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => mobile.setOpen(false)} />
+          <div className="absolute left-0 top-0 h-full">
+            {content}
+            <div className="p-4">
+              <button className="px-3 py-2 rounded bg-gray-100" onClick={() => mobile.setOpen(false)}>Fermer</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
