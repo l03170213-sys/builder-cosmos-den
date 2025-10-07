@@ -188,6 +188,21 @@ export default function Automatisation() {
             </div>
 
             <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <button
+                  onClick={() => {
+                    const allScripts = resorts.map((r) => generateScriptForResort(r)).join('\n\n// -------------------------\n\n');
+                    navigator.clipboard.writeText(allScripts).then(() => setMessage('Script Apps Script copié pour tous les hôtels.'), () => setMessage('Échec de la copie.'));
+                    setTimeout(() => setMessage(null), 2500);
+                  }}
+                  className="px-3 py-2 rounded-md border text-sm bg-primary text-white"
+                >
+                  Copier Apps Script pour tous
+                </button>
+
+                <a href="https://developers.google.com/apps-script/guides/sheets" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground">Guide Apps Script</a>
+              </div>
+
               {resorts.map((r) => {
                 const sheetEditBase = `https://docs.google.com/spreadsheets/d/${r.sheetId}`;
                 const sheet1Edit = `${sheetEditBase}/edit#gid=0`;
@@ -205,7 +220,19 @@ export default function Automatisation() {
 
                       <button onClick={() => open(matriceEdit)} className="px-3 py-1 rounded-md border text-sm bg-primary text-white" title="Ouvrir feuille matrice moyenne (édition)">Matrice Moyenne (édit)</button>
 
-                      <button onClick={() => onPrepareDelete(r.key)} className="px-2 py-1 rounded-md border text-xs bg-destructive text-white" title="Préparer suppression">Supprimer</button>
+                      <button
+                        onClick={() => {
+                          const script = generateScriptForResort(r);
+                          navigator.clipboard.writeText(script).then(() => setMessage('Script Apps Script copié pour ' + r.name + '.'), () => setMessage('Échec de la copie.'));
+                          setTimeout(() => setMessage(null), 2500);
+                        }}
+                        className="px-3 py-1 rounded-md border text-sm"
+                        title="Copier Apps Script pour ce document"
+                      >
+                        Copier Apps Script
+                      </button>
+
+                      <button onClick={() => onPrepareDelete(r.key)} className="px-3 py-1 rounded-md border text-xs bg-destructive text-white" title="Préparer suppression">Supprimer</button>
                     </div>
                   </div>
                 );
