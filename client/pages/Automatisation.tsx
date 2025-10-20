@@ -44,7 +44,7 @@ export default function Automatisation() {
   const [showDeleteFor, setShowDeleteFor] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const onAdd = () => {
+  const onAdd = async () => {
     // Persist the resort immediately and rely on useResorts to update UI
     setMessage(null);
     if (!hotelName.trim()) {
@@ -57,6 +57,25 @@ export default function Automatisation() {
       return;
     }
     const gidM = parseGid(matrice) || "0";
+    // quick validation: attempt to fetch the GViz endpoint to ensure sheet is accessible
+    try {
+      const testUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?gid=${gidM}`;
+      const r = await fetch(testUrl);
+      if (!r.ok) {
+        setMessage("Impossible d'accéder à la feuille Google. Vérifiez les permissions (partage/public) ou l'ID.");
+        return;
+      }
+      const text = await r.text();
+      if (!text || text.length < 50 || !text.includes('google.visualization.Query.setResponse')) {
+        setMessage("La feuille renvoie un format inattendu. Vérifiez que la feuille Matrice Moyennes existe et contient des données.");
+        return;
+      }
+    } catch (e) {
+      console.error('Validation fetch failed', e);
+      setMessage("Échec lors de la vérification de la feuille. Vérifiez la connectivité et les permissions.");
+      return;
+    }
+
     let key = slugify(hotelName);
     const existing = getResorts();
     if (existing.some((r) => r.key === key)) {
