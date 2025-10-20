@@ -76,9 +76,14 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     const resortKey = req.params.resort as string;
     const cfg = RESORTS[resortKey];
     // enable debug when explicit flag is set or when requesting respondent named KIEHL
-    const isDebug = (req.query.debug === '1') || ((req.query.name || '').toString().trim().toLowerCase() === 'kiehl');
+    const isDebug =
+      req.query.debug === "1" ||
+      (req.query.name || "").toString().trim().toLowerCase() === "kiehl";
     if (!cfg) {
-      if (isDebug) return res.status(404).json({ error: "Unknown resort", _debug: { resortKey } });
+      if (isDebug)
+        return res
+          .status(404)
+          .json({ error: "Unknown resort", _debug: { resortKey } });
       return res.status(404).json({ error: "Unknown resort" });
     }
 
@@ -115,9 +120,16 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     const sr = await fetch(sheet1Url);
     if (!sr.ok) {
       if (isDebug) {
-        return res.status(502).json({ error: "Unable to fetch sheet1 (respondents)", _debug: { sheet1Url, status: sr.status } });
+        return res
+          .status(502)
+          .json({
+            error: "Unable to fetch sheet1 (respondents)",
+            _debug: { sheet1Url, status: sr.status },
+          });
       }
-      return res.status(502).json({ error: "Unable to fetch sheet1 (respondents)" });
+      return res
+        .status(502)
+        .json({ error: "Unable to fetch sheet1 (respondents)" });
     }
     const stext = await sr.text();
     const sjson = parseGviz(stext);
@@ -137,13 +149,13 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
     // normalize helper to strip diacritics and collapse spaces for robust matching
     function normalizeDiacritics(s: string) {
-      if (!s) return '';
+      if (!s) return "";
       try {
         return s
           .toString()
-          .normalize('NFD')
-          .replace(/\p{Diacritic}/gu, '')
-          .replace(/\s+/g, ' ')
+          .normalize("NFD")
+          .replace(/\p{Diacritic}/gu, "")
+          .replace(/\s+/g, " ")
           .trim()
           .toLowerCase();
       } catch (e) {
@@ -158,8 +170,14 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     // Try to find respondent row in sheet1 by email/name/date
     const findRespondentRowInSheet1 = () => {
       // If caller provided an explicit row index, use it (1-based in client)
-      const qRowNumExplicit = req.query.row ? parseInt(String(req.query.row), 10) : NaN;
-      if (!Number.isNaN(qRowNumExplicit) && qRowNumExplicit > 0 && qRowNumExplicit - 1 < srows.length) {
+      const qRowNumExplicit = req.query.row
+        ? parseInt(String(req.query.row), 10)
+        : NaN;
+      if (
+        !Number.isNaN(qRowNumExplicit) &&
+        qRowNumExplicit > 0 &&
+        qRowNumExplicit - 1 < srows.length
+      ) {
         return qRowNumExplicit - 1;
       }
 
@@ -217,7 +235,10 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           const cells = srows[idx].c || [];
           // Use column C (index 2) specifically for date matching
           const dateCell = cells[2];
-          const matchesDate = dateCell && formatDateToFR(cellToString(dateCell)) === targetDate && targetDate !== "";
+          const matchesDate =
+            dateCell &&
+            formatDateToFR(cellToString(dateCell)) === targetDate &&
+            targetDate !== "";
           if (matchesDate) return idx;
         }
       }
@@ -319,11 +340,21 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         }
         return -1;
       };
-      const inferredNameIdx = findHeaderIndex(["nom", "name", "client", "label"]); // prefer header labels
+      const inferredNameIdx = findHeaderIndex([
+        "nom",
+        "name",
+        "client",
+        "label",
+      ]); // prefer header labels
       const inferredEmailIdx = findHeaderIndex(["email", "courriel", "@"]);
-      const nameIdx = inferredNameIdx !== -1 ? inferredNameIdx : (scells[4] ? 4 : 0);
-      const emailIdx = inferredEmailIdx !== -1 ? inferredEmailIdx : (scells[3] ? 3 : -1);
-      const scellVal = (idx: number) => (idx != null && scells[idx] && scells[idx].v != null) ? String(scells[idx].v).trim() : "";
+      const nameIdx =
+        inferredNameIdx !== -1 ? inferredNameIdx : scells[4] ? 4 : 0;
+      const emailIdx =
+        inferredEmailIdx !== -1 ? inferredEmailIdx : scells[3] ? 3 : -1;
+      const scellVal = (idx: number) =>
+        idx != null && scells[idx] && scells[idx].v != null
+          ? String(scells[idx].v).trim()
+          : "";
 
       // determine metadata columns to exclude (name/email/date/age/postal/duration)
       const metaKeywords = [
@@ -380,10 +411,11 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         const s = cellToString(cell);
         const m = s && s.match && s.match(/-?\d+[.,]?\d*/g);
         if (m && m.length) {
-          const n = Number(String(m[0]).replace(',', '.'));
-          if (Number.isFinite(n) && n >= 0 && n <= 5) return String(Number(n.toFixed(2)));
+          const n = Number(String(m[0]).replace(",", "."));
+          if (Number.isFinite(n) && n >= 0 && n <= 5)
+            return String(Number(n.toFixed(2)));
         }
-        return s || '';
+        return s || "";
       }
 
       // Try to prefer values from the matrice row that corresponds to this respondent
@@ -395,100 +427,168 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         if (mr.ok) {
           const mtext = await mr.text();
           const mjson = parseGviz(mtext);
-          const mcols: string[] = (mjson.table.cols || []).map((c:any)=>(c.label||'').toString());
+          const mcols: string[] = (mjson.table.cols || []).map((c: any) =>
+            (c.label || "").toString(),
+          );
           const mrows: any[] = mjson.table.rows || [];
 
-          const targetName = (nameIdx != null && nameIdx >= 0) ? String(scellVal(nameIdx)).trim().toLowerCase() : '';
-          const targetEmail = (emailIdx != null && emailIdx >= 0) ? String(scellVal(emailIdx)).trim().toLowerCase() : '';
+          const targetName =
+            nameIdx != null && nameIdx >= 0
+              ? String(scellVal(nameIdx)).trim().toLowerCase()
+              : "";
+          const targetEmail =
+            emailIdx != null && emailIdx >= 0
+              ? String(scellVal(emailIdx)).trim().toLowerCase()
+              : "";
 
           matchedMatriceRow = null;
           for (let ri = 0; ri < mrows.length; ri++) {
             const mrow = mrows[ri];
             const cells = mrow.c || [];
-            const firstRaw = cellToString(cells[0]) || '';
+            const firstRaw = cellToString(cells[0]) || "";
             const firstNorm = normalizeDiacritics(firstRaw);
             const targetNameNorm = normalizeDiacritics(targetName);
-            const targetEmailNorm = (targetEmail || '').toString().trim().toLowerCase();
+            const targetEmailNorm = (targetEmail || "")
+              .toString()
+              .trim()
+              .toLowerCase();
 
             // priority: exact/normalized match on first cell (most reliable)
-            if (firstNorm && targetNameNorm && (firstNorm === targetNameNorm || firstNorm.includes(targetNameNorm) || targetNameNorm.includes(firstNorm))) {
+            if (
+              firstNorm &&
+              targetNameNorm &&
+              (firstNorm === targetNameNorm ||
+                firstNorm.includes(targetNameNorm) ||
+                targetNameNorm.includes(firstNorm))
+            ) {
               matchedMatriceRow = mrow;
               break;
             }
 
             // search any cell for email or normalized name tokens
-            const normCells = (cells || []).map((c: any) => normalizeDiacritics(cellToString(c)));
-            if (targetEmailNorm && normCells.some(v => v && v.includes(targetEmailNorm))) { matchedMatriceRow = mrow; break; }
-            if (targetNameNorm && normCells.some(v => v && (v.includes(targetNameNorm) || targetNameNorm.includes(v)))) { matchedMatriceRow = mrow; break; }
+            const normCells = (cells || []).map((c: any) =>
+              normalizeDiacritics(cellToString(c)),
+            );
+            if (
+              targetEmailNorm &&
+              normCells.some((v) => v && v.includes(targetEmailNorm))
+            ) {
+              matchedMatriceRow = mrow;
+              break;
+            }
+            if (
+              targetNameNorm &&
+              normCells.some(
+                (v) =>
+                  v &&
+                  (v.includes(targetNameNorm) || targetNameNorm.includes(v)),
+              )
+            ) {
+              matchedMatriceRow = mrow;
+              break;
+            }
           }
 
           if (matchedMatriceRow) {
             const cells = matchedMatriceRow.c || [];
             for (let i = 1; i <= 10; i++) {
               // prefer category name taken from matrice column headers (mcols) if available, else fallback to fixed mapping
-              let name = (mcols && mcols[i] && String(mcols[i]).trim()) ? String(mcols[i]) : (fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`);
+              let name =
+                mcols && mcols[i] && String(mcols[i]).trim()
+                  ? String(mcols[i])
+                  : fixedCategoryMapping.find((f) => f.colIndex === i)?.name ||
+                    `Col ${i}`;
               const cell = cells[i];
               // only accept numeric-like values from matrice (avoid 'OUI')
               const parsed = parseRatingCell(cell);
               // if parsed looks like a number, use it, else keep empty string
-              cats.push({ name, value: parsed && parsed.match(/^-?\d+(?:[.,]\d+)?$/) ? parsed : '' });
+              cats.push({
+                name,
+                value:
+                  parsed && parsed.match(/^-?\d+(?:[.,]\d+)?$/) ? parsed : "",
+              });
             }
             // overall will be taken from matchedMatriceRow column L later
           } else {
             // Try to use the same row index from sheet1 as a fallback (often sheets keep respondents aligned by row)
-            if (typeof sheet1RowIdx === 'number' && sheet1RowIdx >= 0 && sheet1RowIdx < mrows.length) {
+            if (
+              typeof sheet1RowIdx === "number" &&
+              sheet1RowIdx >= 0 &&
+              sheet1RowIdx < mrows.length
+            ) {
               const candidateRow = mrows[sheet1RowIdx];
               if (candidateRow) {
                 const cells = candidateRow.c || [];
                 for (let i = 1; i <= 10; i++) {
                   // prefer mcols name when available
-                  let name = (mcols && mcols[i] && String(mcols[i]).trim()) ? String(mcols[i]) : (fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`);
+                  let name =
+                    mcols && mcols[i] && String(mcols[i]).trim()
+                      ? String(mcols[i])
+                      : fixedCategoryMapping.find((f) => f.colIndex === i)
+                          ?.name || `Col ${i}`;
                   const cell = cells[i];
                   const parsed = parseRatingCell(cell);
-                  cats.push({ name, value: parsed && parsed.match(/^-?\d+(?:[.,]\d+)?$/) ? parsed : '' });
+                  cats.push({
+                    name,
+                    value:
+                      parsed && parsed.match(/^-?\d+(?:[.,]\d+)?$/)
+                        ? parsed
+                        : "",
+                  });
                 }
               } else {
                 for (let i = 1; i <= 10; i++) {
-                  const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-                  cats.push({ name, value: '' });
+                  const name =
+                    fixedCategoryMapping.find((f) => f.colIndex === i)?.name ||
+                    `Col ${i}`;
+                  cats.push({ name, value: "" });
                 }
               }
             } else {
               // NO FALLBACK to sheet1 for category numeric values — must come from matrice
               for (let i = 1; i <= 10; i++) {
-                const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-                cats.push({ name, value: '' });
+                const name =
+                  fixedCategoryMapping.find((f) => f.colIndex === i)?.name ||
+                  `Col ${i}`;
+                cats.push({ name, value: "" });
               }
             }
           }
         } else {
           // couldn't fetch matrice — return empty category values (do not use sheet1 'OUI')
           for (let i = 1; i <= 10; i++) {
-            const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-            cats.push({ name, value: '' });
+            const name =
+              fixedCategoryMapping.find((f) => f.colIndex === i)?.name ||
+              `Col ${i}`;
+            cats.push({ name, value: "" });
           }
         }
       } catch (e) {
-        console.error('Failed to use matrice row for respondent categories:', e);
+        console.error(
+          "Failed to use matrice row for respondent categories:",
+          e,
+        );
         for (let i = 1; i <= 10; i++) {
-          const name = fixedCategoryMapping.find(f => f.colIndex === i)?.name || `Col ${i}`;
-          cats.push({ name, value: '' });
+          const name =
+            fixedCategoryMapping.find((f) => f.colIndex === i)?.name ||
+            `Col ${i}`;
+          cats.push({ name, value: "" });
         }
       }
 
       // prepare a result skeleton; overall & feedback to be resolved below
       const result: any = {
-      categories: cats,
-      overall: null as null | string,
-      column: null as null | string,
-      feedback: null as null | string,
-      date: null as null | string,
-      age: null as null | string,
-      postal: null as null | string,
-      duration: null as null | string,
-      name: null as null | string,
-      email: null as null | string,
-    };
+        categories: cats,
+        overall: null as null | string,
+        column: null as null | string,
+        feedback: null as null | string,
+        date: null as null | string,
+        age: null as null | string,
+        postal: null as null | string,
+        duration: null as null | string,
+        name: null as null | string,
+        email: null as null | string,
+      };
 
       // feedback from sheet1: prefer exact header, else BT
       let fcell: any = null;
@@ -503,39 +603,58 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
       // attach meta fields (date, age BK, postal, duration, name, email) from sheet1 when available
       try {
-        result.date = scells[2] && scells[2].v != null ? String(scells[2].v) : null;
+        result.date =
+          scells[2] && scells[2].v != null ? String(scells[2].v) : null;
       } catch (e) {}
       try {
-        result.age = scells[62] && scells[62].v != null ? String(scells[62].v) : null;
+        result.age =
+          scells[62] && scells[62].v != null ? String(scells[62].v) : null;
       } catch (e) {}
       try {
-        result.postal = scells[8] && scells[8].v != null ? String(scells[8].v) : null;
+        result.postal =
+          scells[8] && scells[8].v != null ? String(scells[8].v) : null;
       } catch (e) {}
       try {
         // attempt to find duration column by header heuristics
         const durIdx = scols.findIndex((h: string) => {
           const nh = normalize(h || "");
-          return nh.includes("dur") || nh.includes("séjour") || nh.includes("duree");
+          return (
+            nh.includes("dur") || nh.includes("séjour") || nh.includes("duree")
+          );
         });
-        if (durIdx !== -1 && scells[durIdx] && scells[durIdx].v != null) result.duration = String(scells[durIdx].v);
+        if (durIdx !== -1 && scells[durIdx] && scells[durIdx].v != null)
+          result.duration = String(scells[durIdx].v);
       } catch (e) {}
       try {
-        result.name = scellVal(nameIdx) || (scells[4] && scells[4].v != null ? String(scells[4].v) : null);
+        result.name =
+          scellVal(nameIdx) ||
+          (scells[4] && scells[4].v != null ? String(scells[4].v) : null);
       } catch (e) {}
       try {
-        result.email = scellVal(emailIdx) || (scells[3] && scells[3].v != null ? String(scells[3].v) : null);
+        result.email =
+          scellVal(emailIdx) ||
+          (scells[3] && scells[3].v != null ? String(scells[3].v) : null);
       } catch (e) {}
 
       // Prefer overall from matched matrice row column L (index 11) if available
       try {
-        if (typeof matchedMatriceRow !== 'undefined' && matchedMatriceRow && matchedMatriceRow.c && matchedMatriceRow.c[11] && matchedMatriceRow.c[11].v != null) {
+        if (
+          typeof matchedMatriceRow !== "undefined" &&
+          matchedMatriceRow &&
+          matchedMatriceRow.c &&
+          matchedMatriceRow.c[11] &&
+          matchedMatriceRow.c[11].v != null
+        ) {
           result.overall = String(matchedMatriceRow.c[11].v);
         } else if (scells && scells[11] && scells[11].v != null) {
           // fallback to sheet1 column L if present
           result.overall = String(scells[11].v);
         }
       } catch (e) {
-        console.error('Error while determining respondent overall from matched matrice row:', e);
+        console.error(
+          "Error while determining respondent overall from matched matrice row:",
+          e,
+        );
       }
 
       // Now fetch matrice and extract per-respondent category values in a robust, unified way
@@ -545,12 +664,20 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         if (mr.ok) {
           const mtext = await mr.text();
           const mjson = parseGviz(mtext);
-          const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || "").toString());
+          const mcols: string[] = (mjson.table.cols || []).map((c: any) =>
+            (c.label || "").toString(),
+          );
           const mrows: any[] = mjson.table.rows || [];
 
-          const emailCellPreferred = scellVal(emailIdx) ? { v: scellVal(emailIdx) } : null;
-          const emailVal = emailCellPreferred ? String(emailCellPreferred.v).trim().toLowerCase() : "";
-          const nameVal = scellVal(nameIdx) ? String(scellVal(nameIdx)).trim().toLowerCase() : "";
+          const emailCellPreferred = scellVal(emailIdx)
+            ? { v: scellVal(emailIdx) }
+            : null;
+          const emailVal = emailCellPreferred
+            ? String(emailCellPreferred.v).trim().toLowerCase()
+            : "";
+          const nameVal = scellVal(nameIdx)
+            ? String(scellVal(nameIdx)).trim().toLowerCase()
+            : "";
 
           const fixedCategoryMapping = [
             { colIndex: 0, name: "Nom" },
@@ -567,9 +694,18 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
           ];
 
-          const normHeader = (s: string) => normalizeDiacritics((s || "").toString().trim().toLowerCase()).replace(/[^a-z0-9@]+/g, "");
-          const targetNameNorm = normalizeDiacritics(nameVal).replace(/\s+/g, "");
-          const targetEmailNorm = (emailVal || "").toString().trim().toLowerCase();
+          const normHeader = (s: string) =>
+            normalizeDiacritics(
+              (s || "").toString().trim().toLowerCase(),
+            ).replace(/[^a-z0-9@]+/g, "");
+          const targetNameNorm = normalizeDiacritics(nameVal).replace(
+            /\s+/g,
+            "",
+          );
+          const targetEmailNorm = (emailVal || "")
+            .toString()
+            .trim()
+            .toLowerCase();
 
           // Build header lookup from mcols and first row if available
           const headerIndexMap: Record<string, number> = {};
@@ -590,20 +726,38 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           // Strategy A: columns-as-respondents — try to find respondent column index
           let respColIndex = -1;
           for (const lblKey of Object.keys(headerIndexMap)) {
-            if (targetEmailNorm && lblKey.includes(targetEmailNorm)) { respColIndex = headerIndexMap[lblKey]; break; }
-            if (targetNameNorm && lblKey.includes(targetNameNorm)) { respColIndex = headerIndexMap[lblKey]; break; }
+            if (targetEmailNorm && lblKey.includes(targetEmailNorm)) {
+              respColIndex = headerIndexMap[lblKey];
+              break;
+            }
+            if (targetNameNorm && lblKey.includes(targetNameNorm)) {
+              respColIndex = headerIndexMap[lblKey];
+              break;
+            }
           }
 
           // token matching on mcols labels if not found
           if (respColIndex === -1 && mcols && mcols.length) {
-            const nameTokens = (nameVal || "").split(/\s+/).map(t => normalizeDiacritics(t).replace(/[^a-z0-9]+/g, "")).filter(Boolean);
+            const nameTokens = (nameVal || "")
+              .split(/\s+/)
+              .map((t) => normalizeDiacritics(t).replace(/[^a-z0-9]+/g, ""))
+              .filter(Boolean);
             for (let ci = 0; ci < mcols.length; ci++) {
               const lbl = normHeader(mcols[ci] || "");
               if (!lbl) continue;
-              if (targetEmailNorm && lbl.includes(targetEmailNorm)) { respColIndex = ci; break; }
+              if (targetEmailNorm && lbl.includes(targetEmailNorm)) {
+                respColIndex = ci;
+                break;
+              }
               let matchCount = 0;
               for (const tk of nameTokens) if (lbl.includes(tk)) matchCount++;
-              if (nameTokens.length > 0 && matchCount >= Math.max(1, Math.floor(nameTokens.length / 2))) { respColIndex = ci; break; }
+              if (
+                nameTokens.length > 0 &&
+                matchCount >= Math.max(1, Math.floor(nameTokens.length / 2))
+              ) {
+                respColIndex = ci;
+                break;
+              }
             }
           }
 
@@ -616,9 +770,16 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               let foundRow = -1;
               // default to the i-1 row when available
               if (i - 1 < mrows.length) foundRow = i - 1;
-              const mrow = (foundRow !== -1 && mrows[foundRow]) ? mrows[foundRow] : null;
-              const catNameFromRow = mrow && mrow.c && mrow.c[0] ? cellToString(mrow.c[0]) : '';
-              const catName = catNameFromRow || (mcols && mcols[i] ? mcols[i] : (fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`));
+              const mrow =
+                foundRow !== -1 && mrows[foundRow] ? mrows[foundRow] : null;
+              const catNameFromRow =
+                mrow && mrow.c && mrow.c[0] ? cellToString(mrow.c[0]) : "";
+              const catName =
+                catNameFromRow ||
+                (mcols && mcols[i]
+                  ? mcols[i]
+                  : fixedCategoryMapping.find((f) => f.colIndex === i)?.name ||
+                    `Col ${i}`);
               let val = "";
               if (mrow && mrow.c) {
                 const cell = mrow.c[respColIndex];
@@ -628,7 +789,14 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             }
 
             // Validate that most extracted values are numeric; otherwise this respColIndex is likely incorrect
-            const numericCount = newCats.reduce((acc, c) => acc + (/^-?\d+(?:[.,]\d+)?$/.test(String(c.value || '').trim()) ? 1 : 0), 0);
+            const numericCount = newCats.reduce(
+              (acc, c) =>
+                acc +
+                (/^-?\d+(?:[.,]\d+)?$/.test(String(c.value || "").trim())
+                  ? 1
+                  : 0),
+              0,
+            );
             if (numericCount < Math.max(1, Math.floor(newCats.length * 0.6))) {
               // fallback to rows-as-respondents handling below
               // clear newCats and let rows-as-respondents logic run
@@ -639,37 +807,79 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               // overall: look for a row with 'moyenne' or fallback to last non-empty row value
               let overallValFromMatrice: string | null = null;
               for (let ri = 0; ri < mrows.length; ri++) {
-                const first = mrows[ri] && mrows[ri].c && mrows[ri].c[0] ? cellToString(mrows[ri].c[0]) : "";
-                if (first && normalize(first).includes('moyenne')) {
+                const first =
+                  mrows[ri] && mrows[ri].c && mrows[ri].c[0]
+                    ? cellToString(mrows[ri].c[0])
+                    : "";
+                if (first && normalize(first).includes("moyenne")) {
                   const c = mrows[ri].c && mrows[ri].c[respColIndex];
-                  if (c && c.v != null) overallValFromMatrice = parseRatingCell(c);
+                  if (c && c.v != null)
+                    overallValFromMatrice = parseRatingCell(c);
                   break;
                 }
               }
               if (!overallValFromMatrice) {
                 // fallback to last non-empty row's value at respColIndex
                 for (let ri = mrows.length - 1; ri >= 0; ri--) {
-                  const c = mrows[ri] && mrows[ri].c && mrows[ri].c[respColIndex];
-                  if (c && c.v != null) { overallValFromMatrice = parseRatingCell(c); break; }
+                  const c =
+                    mrows[ri] && mrows[ri].c && mrows[ri].c[respColIndex];
+                  if (c && c.v != null) {
+                    overallValFromMatrice = parseRatingCell(c);
+                    break;
+                  }
                 }
               }
 
-              result.categories = [ { name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats ];
+              result.categories = [
+                {
+                  name: "Nom",
+                  value:
+                    scellVal(nameIdx) ||
+                    (scells[0] && scells[0].v != null
+                      ? String(scells[0].v)
+                      : ""),
+                },
+                ...newCats,
+              ];
               result.overall = overallValFromMatrice || null;
               result.column = String(respColIndex);
             }
           } else {
             // Strategy B: rows-as-respondents — find a row where any cell matches respondent name/email
             let matchedRowIdx = -1;
-            const targetName = scellVal(nameIdx) ? String(scellVal(nameIdx)).trim().toLowerCase() : '';
-            const targetEmail = scellVal(emailIdx) ? String(scellVal(emailIdx)).trim().toLowerCase() : '';
+            const targetName = scellVal(nameIdx)
+              ? String(scellVal(nameIdx)).trim().toLowerCase()
+              : "";
+            const targetEmail = scellVal(emailIdx)
+              ? String(scellVal(emailIdx)).trim().toLowerCase()
+              : "";
 
             for (let ri = 0; ri < mrows.length; ri++) {
               const cells = (mrows[ri] && mrows[ri].c) || [];
-              const normCells = cells.map((c:any) => normalizeDiacritics(cellToString(c) || '').replace(/\s+/g,''));
-              if (targetEmail && normCells.some(v => v && v.includes(targetEmail))) { matchedRowIdx = ri; break; }
-              const targetNameD = normalizeDiacritics(targetName).replace(/\s+/g,'');
-              if (targetName && normCells.some(v => v && (v.includes(targetNameD) || targetNameD.includes(v)))) { matchedRowIdx = ri; break; }
+              const normCells = cells.map((c: any) =>
+                normalizeDiacritics(cellToString(c) || "").replace(/\s+/g, ""),
+              );
+              if (
+                targetEmail &&
+                normCells.some((v) => v && v.includes(targetEmail))
+              ) {
+                matchedRowIdx = ri;
+                break;
+              }
+              const targetNameD = normalizeDiacritics(targetName).replace(
+                /\s+/g,
+                "",
+              );
+              if (
+                targetName &&
+                normCells.some(
+                  (v) =>
+                    v && (v.includes(targetNameD) || targetNameD.includes(v)),
+                )
+              ) {
+                matchedRowIdx = ri;
+                break;
+              }
             }
 
             if (matchedRowIdx !== -1) {
@@ -678,16 +888,38 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               // build categories by iterating over visible column headers (prefer mcols)
               const maxCols = Math.max(10, mcols.length - 1);
               for (let ci = 1; ci <= Math.min(maxCols, 20); ci++) {
-                const headerName = (mcols && mcols[ci]) ? String(mcols[ci]) : (fixedCategoryMapping.find(f=>f.colIndex===ci)?.name || `Col ${ci}`);
-                let val = '';
+                const headerName =
+                  mcols && mcols[ci]
+                    ? String(mcols[ci])
+                    : fixedCategoryMapping.find((f) => f.colIndex === ci)
+                        ?.name || `Col ${ci}`;
+                let val = "";
                 if (mrow && mrow.c && mrow.c[ci] && mrow.c[ci].v != null) {
                   val = parseRatingCell(mrow.c[ci]);
                 }
                 newCats.push({ name: headerName, value: val });
               }
-              const overallCell = mrow && mrow.c && (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) ? (mrow.c[11] || mrow.c[headerIndexMap['moyennegenerale']]) : null;
-              result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
-              result.overall = overallCell && overallCell.v != null ? parseRatingCell(overallCell) : null;
+              const overallCell =
+                mrow &&
+                mrow.c &&
+                (mrow.c[11] || mrow.c[headerIndexMap["moyennegenerale"]])
+                  ? mrow.c[11] || mrow.c[headerIndexMap["moyennegenerale"]]
+                  : null;
+              result.categories = [
+                {
+                  name: "Nom",
+                  value:
+                    scellVal(nameIdx) ||
+                    (scells[0] && scells[0].v != null
+                      ? String(scells[0].v)
+                      : ""),
+                },
+                ...newCats,
+              ];
+              result.overall =
+                overallCell && overallCell.v != null
+                  ? parseRatingCell(overallCell)
+                  : null;
               result.column = null;
             } else {
               // No per-respondent data found in matrice
@@ -695,16 +927,62 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
                 // Matrice exists but no per-respondent row match. Try to compute per-respondent category averages using sheet1 columns for this particular respondent row.
                 try {
                   const categoriesDef: Record<string, string[]> = {
-                    "🌟 APPRÉCIATION GLOBALE": ["Conformité Prestations / Brochures", "Rapport Qualité / Prix", "Appréciation globale des vacances"],
-                    "✈️ TRANSPORTS Aérien": ["Accueil / Confort", "Ponctualité", "Sécurité"],
-                    "🚐 Car navette": ["Prestation du conducteur", "Confort et propreté"],
-                    "🏨 HÉBERGEMENT": ["Accueil", "Cadre des restaurants", "Cadre et environnement", "Propreté des parties communes", "Qualité et variété des plats"],
-                    "🛏️ CHAMBRES": ["Propreté", "Confort", "Taille", "Salle de bains"],
+                    "🌟 APPRÉCIATION GLOBALE": [
+                      "Conformité Prestations / Brochures",
+                      "Rapport Qualité / Prix",
+                      "Appréciation globale des vacances",
+                    ],
+                    "✈️ TRANSPORTS Aérien": [
+                      "Accueil / Confort",
+                      "Ponctualité",
+                      "Sécurité",
+                    ],
+                    "🚐 Car navette": [
+                      "Prestation du conducteur",
+                      "Confort et propreté",
+                    ],
+                    "🏨 HÉBERGEMENT": [
+                      "Accueil",
+                      "Cadre des restaurants",
+                      "Cadre et environnement",
+                      "Propreté des parties communes",
+                      "Qualité et variété des plats",
+                    ],
+                    "🛏️ CHAMBRES": [
+                      "Propreté",
+                      "Confort",
+                      "Taille",
+                      "Salle de bains",
+                    ],
                     "🏊 PISCINE": ["Aménagements", "Hygiène", "Sécurité"],
-                    "🎉 ANIMATION": ["Qualité des équipements sportifs", "Animation en soirée", "Variété des activités", "Convivialité Équipe d’Animation", "Activités pour enfants", "Animation en journée"],
-                    "👥 ÉQUIPES": ["Aéroport arrivée", "Aéroport départ", "Réunion d’information", "Présence et convivialité", "Anticipation des besoins", "Réactivité et solutions apportées"],
-                    "🤝 Représentant Top of Travel": ["Réunion d’information", "Présence et convivialité", "Anticipation des besoins", "Réactivité et solutions apportées"],
-                    "🌍 EXCURSIONS": ["Qualité", "Moyens de transport", "Guides locaux", "Restauration"]
+                    "🎉 ANIMATION": [
+                      "Qualité des équipements sportifs",
+                      "Animation en soirée",
+                      "Variété des activités",
+                      "Convivialité Équipe d’Animation",
+                      "Activités pour enfants",
+                      "Animation en journée",
+                    ],
+                    "👥 ÉQUIPES": [
+                      "Aéroport arrivée",
+                      "Aéroport départ",
+                      "Réunion d’information",
+                      "Présence et convivialité",
+                      "Anticipation des besoins",
+                      "Réactivité et solutions apportées",
+                    ],
+                    "🤝 Représentant Top of Travel": [
+                      "Réunion d’information",
+                      "Présence et convivialité",
+                      "Anticipation des besoins",
+                      "Réactivité et solutions apportées",
+                    ],
+                    "🌍 EXCURSIONS": [
+                      "Qualité",
+                      "Moyens de transport",
+                      "Guides locaux",
+                      "Restauration",
+                    ],
                   };
 
                   const headerMatches = (header: string, title: string) => {
@@ -714,45 +992,88 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
                     return h === t || h.includes(t) || t.includes(h);
                   };
 
-                  for (const [catName, titles] of Object.entries(categoriesDef)) {
-                    let sum = 0; let count = 0;
+                  for (const [catName, titles] of Object.entries(
+                    categoriesDef,
+                  )) {
+                    let sum = 0;
+                    let count = 0;
                     // find columns matching any title
                     const colIndexes: number[] = [];
                     for (let hi = 0; hi < scols.length; hi++) {
-                      const h = scols[hi] || '';
+                      const h = scols[hi] || "";
                       for (const t of titles) {
-                        if (headerMatches(h, t)) { colIndexes.push(hi); break; }
+                        if (headerMatches(h, t)) {
+                          colIndexes.push(hi);
+                          break;
+                        }
                       }
                     }
                     // Read values for this respondent row only
                     if (colIndexes.length > 0) {
                       for (const ci of colIndexes) {
-                        const raw = scells[ci] && scells[ci].v != null ? scells[ci].v : null;
+                        const raw =
+                          scells[ci] && scells[ci].v != null
+                            ? scells[ci].v
+                            : null;
                         const n = toNumber(raw);
-                        if (n != null) { sum += n; count++; }
+                        if (n != null) {
+                          sum += n;
+                          count++;
+                        }
                       }
                       if (count > 0) {
                         const avg = sum / count;
                         const normalized = normalizeAverage(avg);
-                        newCats.push({ name: catName, value: normalized != null ? String(Number(normalized.toFixed(2))) : '' });
+                        newCats.push({
+                          name: catName,
+                          value:
+                            normalized != null
+                              ? String(Number(normalized.toFixed(2)))
+                              : "",
+                        });
                       } else {
-                        newCats.push({ name: catName, value: '' });
+                        newCats.push({ name: catName, value: "" });
                       }
                     } else {
-                      newCats.push({ name: catName, value: '' });
+                      newCats.push({ name: catName, value: "" });
                     }
                   }
 
-                  result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
-                  result.overall = scells[11] && scells[11].v != null ? String(scells[11].v) : null;
+                  result.categories = [
+                    {
+                      name: "Nom",
+                      value:
+                        scellVal(nameIdx) ||
+                        (scells[0] && scells[0].v != null
+                          ? String(scells[0].v)
+                          : ""),
+                    },
+                    ...newCats,
+                  ];
+                  result.overall =
+                    scells[11] && scells[11].v != null
+                      ? String(scells[11].v)
+                      : null;
                   result.column = null;
                 } catch (eCalc) {
                   // on error, fallback to empty categories
                   for (let i = 1; i <= 10; i++) {
-                    const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
-                    newCats.push({ name, value: '' });
+                    const name =
+                      fixedCategoryMapping.find((f) => f.colIndex === i)
+                        ?.name || `Col ${i}`;
+                    newCats.push({ name, value: "" });
                   }
-                  result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
+                  result.categories = [
+                    {
+                      name: "Nom",
+                      value:
+                        scellVal(nameIdx) ||
+                        (scells[0] && scells[0].v != null
+                          ? String(scells[0].v)
+                          : ""),
+                    },
+                    ...newCats,
+                  ];
                   result.overall = null;
                   result.column = null;
                 }
@@ -761,16 +1082,29 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
                 for (const m of fixedCategoryMapping) {
                   let val = "";
                   if (m.colIndex === 0) {
-                    val = scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : "");
+                    val =
+                      scellVal(nameIdx) ||
+                      (scells[0] && scells[0].v != null
+                        ? String(scells[0].v)
+                        : "");
                   } else if (m.colIndex === 11) {
-                    val = scells[11] && scells[11].v != null ? String(scells[11].v) : "";
+                    val =
+                      scells[11] && scells[11].v != null
+                        ? String(scells[11].v)
+                        : "";
                   } else {
-                    val = scells[m.colIndex] && scells[m.colIndex].v != null ? String(scells[m.colIndex].v) : "";
+                    val =
+                      scells[m.colIndex] && scells[m.colIndex].v != null
+                        ? String(scells[m.colIndex].v)
+                        : "";
                   }
                   newCats.push({ name: m.name, value: val });
                 }
                 result.categories = newCats;
-                result.overall = scells[11] && scells[11].v != null ? String(scells[11].v) : null;
+                result.overall =
+                  scells[11] && scells[11].v != null
+                    ? String(scells[11].v)
+                    : null;
                 result.column = null;
               }
             }
@@ -781,21 +1115,39 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       }
 
       // Attach debug info when requested or if specific respondent (KIEHL) to aid debugging
-      const qNameLower = (req.query.name || '').toString().trim().toLowerCase();
-      if (req.query.debug === '1' || qNameLower === 'kiehl') {
+      const qNameLower = (req.query.name || "").toString().trim().toLowerCase();
+      if (req.query.debug === "1" || qNameLower === "kiehl") {
         try {
           const dbg: any = {};
-          dbg.sheet1RowIdx = typeof sheet1RowIdx !== 'undefined' ? sheet1RowIdx : null;
-          dbg.scells = (typeof scells !== 'undefined' && scells) ? (scells || []).map(cellToString).slice(0, 200) : null;
-          dbg.respColIndex = typeof respColIndex !== 'undefined' ? respColIndex : null;
-          dbg.mcols = typeof mcols !== 'undefined' ? (mcols || []).slice(0, 200) : null;
-          dbg.mrowsLength = typeof mrows !== 'undefined' ? (mrows || []).length : null;
-          dbg.lastRowIndex = (typeof mrows !== 'undefined' && typeof lastRow !== 'undefined' && lastRow) ? Math.max(0, (mrows || []).indexOf(lastRow)) : null;
-          dbg.lastRowCells = (typeof lastRowCells !== 'undefined' && lastRowCells) ? (lastRowCells || []).map(cellToString).slice(0,200) : null;
-          dbg.matchedMatriceRow = (typeof matchedMatriceRow !== 'undefined' && matchedMatriceRow) ? (matchedMatriceRow.c || []).map(cellToString) : null;
+          dbg.sheet1RowIdx =
+            typeof sheet1RowIdx !== "undefined" ? sheet1RowIdx : null;
+          dbg.scells =
+            typeof scells !== "undefined" && scells
+              ? (scells || []).map(cellToString).slice(0, 200)
+              : null;
+          dbg.respColIndex =
+            typeof respColIndex !== "undefined" ? respColIndex : null;
+          dbg.mcols =
+            typeof mcols !== "undefined" ? (mcols || []).slice(0, 200) : null;
+          dbg.mrowsLength =
+            typeof mrows !== "undefined" ? (mrows || []).length : null;
+          dbg.lastRowIndex =
+            typeof mrows !== "undefined" &&
+            typeof lastRow !== "undefined" &&
+            lastRow
+              ? Math.max(0, (mrows || []).indexOf(lastRow))
+              : null;
+          dbg.lastRowCells =
+            typeof lastRowCells !== "undefined" && lastRowCells
+              ? (lastRowCells || []).map(cellToString).slice(0, 200)
+              : null;
+          dbg.matchedMatriceRow =
+            typeof matchedMatriceRow !== "undefined" && matchedMatriceRow
+              ? (matchedMatriceRow.c || []).map(cellToString)
+              : null;
           result._debug = dbg;
         } catch (ex) {
-          console.error('Failed to build debug info:', ex);
+          console.error("Failed to build debug info:", ex);
         }
       }
 
@@ -806,7 +1158,13 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     const gurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID_MATRICE_MOYENNE}`;
     const rr = await fetch(gurl);
     if (!rr.ok) {
-      if (isDebug) return res.status(502).json({ error: "Unable to fetch matrice", _debug: { gurl, status: rr.status } });
+      if (isDebug)
+        return res
+          .status(502)
+          .json({
+            error: "Unable to fetch matrice",
+            _debug: { gurl, status: rr.status },
+          });
       return res.status(502).json({ error: "Unable to fetch matrice" });
     }
     const text = await rr.text();
@@ -851,7 +1209,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       // extract exact feedback column value if present
       let feedbackCell: any = null;
       if (
-        (typeof (feedbackColExactInSheet1) !== 'undefined') &&
+        typeof feedbackColExactInSheet1 !== "undefined" &&
         feedbackColExactInSheet1 !== -1 &&
         cells[feedbackColExactInSheet1] &&
         cells[feedbackColExactInSheet1].v != null
@@ -1000,7 +1358,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       // get feedback from exact feedback column if present (in last row) or fallback to BT (index 71)
       let feedbackCell: any = null;
       if (
-        (typeof (feedbackColExactInSheet1) !== 'undefined') &&
+        typeof feedbackColExactInSheet1 !== "undefined" &&
         feedbackColExactInSheet1 !== -1 &&
         lastRow &&
         lastRow.c &&
@@ -1099,7 +1457,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           // extract exact feedback column value if present
           let feedbackCell: any = null;
           if (
-            (typeof (feedbackColExactInSheet1) !== 'undefined') &&
+            typeof feedbackColExactInSheet1 !== "undefined" &&
             feedbackColExactInSheet1 !== -1 &&
             cells[feedbackColExactInSheet1] &&
             cells[feedbackColExactInSheet1].v != null
@@ -1118,7 +1476,16 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       console.error("sheet1 mapping attempt failed:", e);
     }
 
-    if (isDebug) return res.status(404).json({ error: "Respondent not found in matrice", _debug: { sheet1RowIdx: typeof sheet1RowIdx !== 'undefined' ? sheet1RowIdx : null } });
+    if (isDebug)
+      return res
+        .status(404)
+        .json({
+          error: "Respondent not found in matrice",
+          _debug: {
+            sheet1RowIdx:
+              typeof sheet1RowIdx !== "undefined" ? sheet1RowIdx : null,
+          },
+        });
     return res.status(404).json({ error: "Respondent not found in matrice" });
   } catch (err) {
     console.error("Failed to fetch respondent details:", err);

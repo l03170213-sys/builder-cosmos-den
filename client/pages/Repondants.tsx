@@ -42,7 +42,9 @@ function formatDateToFR(raw: string) {
     .trim();
 
   // Handle Google/Sheets style Date(YYYY,M,D,...) — accept both Date(Y,M,D) and Date(Y,M,D,H,mm,ss)
-  const sheetsDate = s.match(/^Date\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})(?:\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})\s*)?\)$/);
+  const sheetsDate = s.match(
+    /^Date\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})(?:\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})\s*)?\)$/,
+  );
   if (sheetsDate) {
     const year = Number(sheetsDate[1]);
     const monthIndex = Number(sheetsDate[2]); // Google Sheets Date month is 0-based in this representation
@@ -182,7 +184,7 @@ export default function Repondants() {
   const queryClient = useQueryClient();
   const [page, setPage] = React.useState(1);
   const [pageSize] = React.useState(10);
-  const [gotoPage, setGotoPage] = React.useState<string>('');
+  const [gotoPage, setGotoPage] = React.useState<string>("");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["repondants", selectedResortKey, page, pageSize],
     queryFn: async () => {
@@ -302,7 +304,9 @@ export default function Repondants() {
   // respondent details query (poll while dialog open)
   // state to hold selected respondent and per-category values
   const [selected, setSelected] = React.useState<any>(null);
-  const [selectedSnapshotName, setSelectedSnapshotName] = React.useState<string | null>(null);
+  const [selectedSnapshotName, setSelectedSnapshotName] = React.useState<
+    string | null
+  >(null);
   const [categoriesByRespondent, setCategoriesByRespondent] = React.useState<
     { name: string; value: string }[] | null
   >(null);
@@ -331,14 +335,19 @@ export default function Repondants() {
   };
 
   // map to store fetched per-respondent overall notes
-  const [respondentNotesMap, setRespondentNotesMap] = React.useState<Record<string,string>>({});
+  const [respondentNotesMap, setRespondentNotesMap] = React.useState<
+    Record<string, string>
+  >({});
 
   const getRowKey = (row: any) => {
     if (!row) return "";
     if (row.id != null) return `id:${row.id}`;
-    if (row.email && row.date) return `e:${String(row.email).toLowerCase()}|d:${String(row.date)}`;
+    if (row.email && row.date)
+      return `e:${String(row.email).toLowerCase()}|d:${String(row.date)}`;
     if (row.email) return `e:${String(row.email).toLowerCase()}`;
-    return `n:${String(row.name || "").trim().toLowerCase()}|${String(row.date || "")}`;
+    return `n:${String(row.name || "")
+      .trim()
+      .toLowerCase()}|${String(row.date || "")}`;
   };
 
   React.useEffect(() => {
@@ -353,20 +362,31 @@ export default function Repondants() {
         if (it.note) continue;
         try {
           const params = new URLSearchParams();
-          if (it.email) params.set('email', it.email);
-          if (it.name) params.set('name', it.name);
-          if (it.date) params.set('date', it.date);
+          if (it.email) params.set("email", it.email);
+          if (it.name) params.set("name", it.name);
+          if (it.date) params.set("date", it.date);
           const apiUrl = `/api/resort/${selectedResortKey}/respondent?${params.toString()}`;
-          let resp = await fetchJsonSafe(apiUrl, { credentials: 'same-origin' }).catch(() => null);
-          let noteVal = resp && (resp.overall ?? resp.overallAverage ?? resp.overallScore ?? resp.overall);
+          let resp = await fetchJsonSafe(apiUrl, {
+            credentials: "same-origin",
+          }).catch(() => null);
+          let noteVal =
+            resp &&
+            (resp.overall ??
+              resp.overallAverage ??
+              resp.overallScore ??
+              resp.overall);
 
           // fallback: client-side matrice lookup for locally added resorts
-          if ((noteVal == null || noteVal === '') ) {
+          if (noteVal == null || noteVal === "") {
             try {
               const cfg = resorts.find((r) => r.key === selectedResortKey);
               if (cfg && cfg.gidMatrice) {
-                const mod = await import('@/lib/sheets');
-                const fromM = await mod.fetchRespondentOverallFromMatrice(cfg.sheetId, cfg.gidMatrice, { email: it.email, name: it.name, date: it.date });
+                const mod = await import("@/lib/sheets");
+                const fromM = await mod.fetchRespondentOverallFromMatrice(
+                  cfg.sheetId,
+                  cfg.gidMatrice,
+                  { email: it.email, name: it.name, date: it.date },
+                );
                 if (fromM != null) noteVal = fromM;
               }
             } catch (e) {
@@ -375,7 +395,10 @@ export default function Repondants() {
           }
 
           if (mounted) {
-            setRespondentNotesMap(prev => ({ ...prev, [key]: noteVal != null ? String(noteVal) : '' }));
+            setRespondentNotesMap((prev) => ({
+              ...prev,
+              [key]: noteVal != null ? String(noteVal) : "",
+            }));
           }
         } catch (e) {
           // ignore
@@ -384,7 +407,9 @@ export default function Repondants() {
         await new Promise((r) => setTimeout(r, 200));
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [data, selectedResortKey]);
 
   const respondentSelIdAtRender = selected?._selId || null;
@@ -411,16 +436,32 @@ export default function Repondants() {
       }
       const apiUrl = `/api/resort/${selectedResortKey}/respondent?${params.toString()}`;
       try {
-        const serverResp = await fetchJsonSafe(apiUrl, { credentials: "same-origin" }).catch(() => null);
-        if (serverResp && (serverResp.overall ?? serverResp.overallAverage ?? serverResp.overallScore ?? serverResp.overall) != null) {
+        const serverResp = await fetchJsonSafe(apiUrl, {
+          credentials: "same-origin",
+        }).catch(() => null);
+        if (
+          serverResp &&
+          (serverResp.overall ??
+            serverResp.overallAverage ??
+            serverResp.overallScore ??
+            serverResp.overall) != null
+        ) {
           return serverResp;
         }
         // fallback to client-side matrice lookup for detailed categories
         try {
           const cfg = resorts.find((r) => r.key === selectedResortKey);
           if (cfg && cfg.gidMatrice) {
-            const mod = await import('@/lib/sheets');
-            const details = await mod.fetchRespondentDetailsFromSheet(cfg.sheetId, cfg.gidMatrice, { email: selected?.email, name: selected?.name, date: selected?.date });
+            const mod = await import("@/lib/sheets");
+            const details = await mod.fetchRespondentDetailsFromSheet(
+              cfg.sheetId,
+              cfg.gidMatrice,
+              {
+                email: selected?.email,
+                name: selected?.name,
+                date: selected?.date,
+              },
+            );
             if (details) return details as any;
           }
         } catch (e) {
@@ -442,7 +483,14 @@ export default function Repondants() {
       // ensure the selected hasn't changed since this query was created
       if ((selected?._selId || null) !== respondentSelIdAtRender) return;
       setCategoriesByRespondent(d?.categories || null);
-      const overall = d && (d.overall ?? d.overallAverage ?? d.overallScore ?? d.overall_score ?? d.overall_value ?? null);
+      const overall =
+        d &&
+        (d.overall ??
+          d.overallAverage ??
+          d.overallScore ??
+          d.overall_score ??
+          d.overall_value ??
+          null);
       // do not overwrite the note from the list row if present — prefer row.note
       if (!selected?.note) {
         setRespondentNoteGeneral(overall != null ? overall : null);
@@ -483,10 +531,14 @@ export default function Repondants() {
         if (selected?.name) params.set("name", selected.name);
         if (selected?.date) params.set("date", selected.date);
         // If we have the respondent row id from the list, pass it to the server to perform an exact row lookup
-        if ((selected as any)?.id) params.set("row", String((selected as any).id));
+        if ((selected as any)?.id)
+          params.set("row", String((selected as any).id));
         // include debug flag automatically when inspecting KIEHL to surface server _debug
         try {
-          const selName = (selected?.name || "").toString().trim().toLowerCase();
+          const selName = (selected?.name || "")
+            .toString()
+            .trim()
+            .toLowerCase();
           if (selName === "kiehl") params.set("debug", "1");
         } catch (ex) {
           // ignore
@@ -504,10 +556,19 @@ export default function Repondants() {
           });
           if (mounted && (selected?._selId || null) === capturedSelId) {
             setCategoriesByRespondent(dataResp.categories || null);
-            const overallResp = dataResp && (dataResp.overall ?? dataResp.overallAverage ?? dataResp.overallScore ?? dataResp.overall_score ?? dataResp.overall_value ?? null);
+            const overallResp =
+              dataResp &&
+              (dataResp.overall ??
+                dataResp.overallAverage ??
+                dataResp.overallScore ??
+                dataResp.overall_score ??
+                dataResp.overall_value ??
+                null);
             // Do not overwrite the note coming from the list row; prefer selected.row note when present
             if (!selected?.note) {
-              setRespondentNoteGeneral(overallResp != null ? overallResp : null);
+              setRespondentNoteGeneral(
+                overallResp != null ? overallResp : null,
+              );
             }
             setRespondentColumnLetter(dataResp.column ?? null);
             setRespondentFeedback(dataResp.feedback ?? null);
@@ -548,12 +609,12 @@ export default function Repondants() {
 
   // export handlers
   React.useEffect(() => {
-    const btn = document.getElementById('export-all-btn');
+    const btn = document.getElementById("export-all-btn");
     if (!btn) return;
     const handler = async () => {
       try {
         (btn as HTMLButtonElement).disabled = true;
-        btn.textContent = 'Préparation...';
+        btn.textContent = "Préparation...";
         // wait 5s per requirement
         await new Promise((res) => setTimeout(res, 5000));
         // fetch all respondents pages sequentially
@@ -562,7 +623,7 @@ export default function Repondants() {
         let pageIdx = 1;
         while (true) {
           const apiUrl = `/api/resort/${selected}/respondents?page=${pageIdx}&pageSize=500`;
-          const resp = await fetch(apiUrl, { credentials: 'same-origin' });
+          const resp = await fetch(apiUrl, { credentials: "same-origin" });
           if (!resp.ok) break;
           const json = await resp.json().catch(() => null);
           if (!json || !Array.isArray(json.items)) break;
@@ -571,22 +632,29 @@ export default function Repondants() {
           pageIdx++;
         }
         // dynamically import pdf helper
-        const mod = await import('@/lib/pdf');
-        await mod.exportAllRespondentsPdf(selectedResortKey, all, (done: number, total: number) => {
-          btn.textContent = `Exportation ${done}/${total}…`;
-        });
-        btn.textContent = 'Téléchargement terminé';
+        const mod = await import("@/lib/pdf");
+        await mod.exportAllRespondentsPdf(
+          selectedResortKey,
+          all,
+          (done: number, total: number) => {
+            btn.textContent = `Exportation ${done}/${total}…`;
+          },
+        );
+        btn.textContent = "Téléchargement terminé";
       } catch (e) {
-        console.error('Export all failed', e);
-        btn.textContent = 'Échec de l\'export';
+        console.error("Export all failed", e);
+        btn.textContent = "Échec de l'export";
       } finally {
         setTimeout(() => {
-          if (btn) { btn.textContent = 'Exporter tous les répondants (PDF)'; (btn as HTMLButtonElement).disabled = false; }
+          if (btn) {
+            btn.textContent = "Exporter tous les répondants (PDF)";
+            (btn as HTMLButtonElement).disabled = false;
+          }
         }, 2500);
       }
     };
-    btn.addEventListener('click', handler);
-    return () => btn.removeEventListener('click', handler);
+    btn.addEventListener("click", handler);
+    return () => btn.removeEventListener("click", handler);
   }, [selectedResortKey]);
 
   React.useEffect(() => {
@@ -609,25 +677,67 @@ export default function Repondants() {
                 <div className="flex items-center justify-between mb-3">
                   <div />
                   <div className="flex items-center gap-2">
-                    <button id="export-all-btn" onClick={async () => { /* placeholder, will be wired below */ }} className="px-3 py-2 rounded-md bg-primary text-white">Exporter tous les répondants (PDF)</button>
-                    <button onClick={async () => {
-                      const qc = queryClient;
-                      const id = toast({ title: 'Actualisation', description: 'Récupération des données depuis Google Sheets���' });
-                      try {
-                        // Invalidate and refetch relevant queries for the currently selected resort
-                        await qc.invalidateQueries(["repondants", selectedResortKey]);
-                        await qc.invalidateQueries(["resortSummary", selectedResortKey]);
-                        await qc.invalidateQueries(["resortAverages", selectedResortKey]);
-                        // Trigger refetch
-                        await qc.refetchQueries({ queryKey: ["repondants", selectedResortKey], exact: false });
-                        await qc.refetchQueries({ queryKey: ["resortSummary", selectedResortKey], exact: false });
-                        await qc.refetchQueries({ queryKey: ["resortAverages", selectedResortKey], exact: false });
-                        toast({ title: 'Actualisation terminée', description: 'Les données ont été mises à jour.' });
-                      } catch (e) {
-                        console.error('Refresh failed', e);
-                        toast({ title: 'Erreur', description: 'Impossible d\'actualiser les données.' , variant: 'destructive' as any});
-                      }
-                    }} className="px-3 py-2 rounded-md border text-sm">Actualiser</button>
+                    <button
+                      id="export-all-btn"
+                      onClick={async () => {
+                        /* placeholder, will be wired below */
+                      }}
+                      className="px-3 py-2 rounded-md bg-primary text-white"
+                    >
+                      Exporter tous les répondants (PDF)
+                    </button>
+                    <button
+                      onClick={async () => {
+                        const qc = queryClient;
+                        const id = toast({
+                          title: "Actualisation",
+                          description:
+                            "Récupération des données depuis Google Sheets���",
+                        });
+                        try {
+                          // Invalidate and refetch relevant queries for the currently selected resort
+                          await qc.invalidateQueries([
+                            "repondants",
+                            selectedResortKey,
+                          ]);
+                          await qc.invalidateQueries([
+                            "resortSummary",
+                            selectedResortKey,
+                          ]);
+                          await qc.invalidateQueries([
+                            "resortAverages",
+                            selectedResortKey,
+                          ]);
+                          // Trigger refetch
+                          await qc.refetchQueries({
+                            queryKey: ["repondants", selectedResortKey],
+                            exact: false,
+                          });
+                          await qc.refetchQueries({
+                            queryKey: ["resortSummary", selectedResortKey],
+                            exact: false,
+                          });
+                          await qc.refetchQueries({
+                            queryKey: ["resortAverages", selectedResortKey],
+                            exact: false,
+                          });
+                          toast({
+                            title: "Actualisation terminée",
+                            description: "Les données ont été mises à jour.",
+                          });
+                        } catch (e) {
+                          console.error("Refresh failed", e);
+                          toast({
+                            title: "Erreur",
+                            description: "Impossible d'actualiser les données.",
+                            variant: "destructive" as any,
+                          });
+                        }
+                      }}
+                      className="px-3 py-2 rounded-md border text-sm"
+                    >
+                      Actualiser
+                    </button>
                   </div>
                 </div>
                 {isLoading && <div>Chargement…</div>}
@@ -667,18 +777,37 @@ export default function Repondants() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-100">
                         {(data.items || []).map((row: any, i: number) => (
-                          <tr key={row && row.id != null ? `id:${row.id}` : (getRowKey(row) || `${i}-${String(row.email||row.name||'')}`)} className="hover:bg-gray-50">
+                          <tr
+                            key={
+                              row && row.id != null
+                                ? `id:${row.id}`
+                                : getRowKey(row) ||
+                                  `${i}-${String(row.email || row.name || "")}`
+                            }
+                            className="hover:bg-gray-50"
+                          >
                             <td className="px-4 py-3 text-sm text-gray-600">
                               {row.name || row.label || row.email}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-700">
                               {(() => {
-                              const key = getRowKey(row);
-                              const noteRaw = row.note ?? (key ? (respondentNotesMap as any)[key] : undefined);
-                              if (noteRaw != null && noteRaw !== "") return formatAverage(noteRaw);
-                              if (averages && (averages as any).overallAverage) return formatAverage((averages as any).overallAverage);
-                              return "—";
-                            })()}
+                                const key = getRowKey(row);
+                                const noteRaw =
+                                  row.note ??
+                                  (key
+                                    ? (respondentNotesMap as any)[key]
+                                    : undefined);
+                                if (noteRaw != null && noteRaw !== "")
+                                  return formatAverage(noteRaw);
+                                if (
+                                  averages &&
+                                  (averages as any).overallAverage
+                                )
+                                  return formatAverage(
+                                    (averages as any).overallAverage,
+                                  );
+                                return "—";
+                              })()}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
                               {formatDateToFR(row.date)}
@@ -696,9 +825,14 @@ export default function Repondants() {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => {
-                                    const selId = `${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+                                    const selId = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
                                     setSelected({ ...row, _selId: selId });
-                                    setSelectedSnapshotName(row?.name || row?.label || row?.email || null);
+                                    setSelectedSnapshotName(
+                                      row?.name ||
+                                        row?.label ||
+                                        row?.email ||
+                                        null,
+                                    );
                                     setDialogOpen(true);
                                   }}
                                   className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100"
@@ -709,17 +843,50 @@ export default function Repondants() {
                                 <button
                                   onClick={async () => {
                                     try {
-                                      const btn = document.getElementById('export-single-btn-' + i) as HTMLButtonElement | null;
-                                      if (btn) { btn.disabled = true; btn.textContent = 'Préparation...'; }
-                                      const mod = await import('@/lib/pdf');
-                                      await mod.exportRespondentPdf(selectedResortKey, row);
-                                      if (btn) btn.textContent = 'Téléchargé';
-                                      setTimeout(() => { if (btn) { btn.textContent = 'PDF'; btn.disabled = false; } }, 2000);
+                                      const btn = document.getElementById(
+                                        "export-single-btn-" + i,
+                                      ) as HTMLButtonElement | null;
+                                      if (btn) {
+                                        btn.disabled = true;
+                                        btn.textContent = "Préparation...";
+                                      }
+                                      const mod = await import("@/lib/pdf");
+                                      await mod.exportRespondentPdf(
+                                        selectedResortKey,
+                                        row,
+                                      );
+                                      if (btn) btn.textContent = "Téléchargé";
+                                      setTimeout(() => {
+                                        if (btn) {
+                                          btn.textContent = "PDF";
+                                          btn.disabled = false;
+                                        }
+                                      }, 2000);
                                     } catch (e) {
-                                      console.error('Export respondent failed', e);
-                                      try { toast({ title: 'Échec de l\'export PDF', description: String(e && (e.message || e)) }); } catch (_) {}
-                                      const btn = document.getElementById('export-single-btn-' + i) as HTMLButtonElement | null;
-                                      if (btn) { btn.textContent = 'Erreur'; setTimeout(() => { if (btn) { btn.textContent = 'PDF'; btn.disabled = false; } }, 2000); }
+                                      console.error(
+                                        "Export respondent failed",
+                                        e,
+                                      );
+                                      try {
+                                        toast({
+                                          title: "Échec de l'export PDF",
+                                          description: String(
+                                            e && (e.message || e),
+                                          ),
+                                        });
+                                      } catch (_) {}
+                                      const btn = document.getElementById(
+                                        "export-single-btn-" + i,
+                                      ) as HTMLButtonElement | null;
+                                      if (btn) {
+                                        btn.textContent = "Erreur";
+                                        setTimeout(() => {
+                                          if (btn) {
+                                            btn.textContent = "PDF";
+                                            btn.disabled = false;
+                                          }
+                                        }, 2000);
+                                      }
                                     }
                                   }}
                                   id={`export-single-btn-${i}`}
@@ -749,11 +916,21 @@ export default function Repondants() {
                           Préc
                         </button>
                         <div className="text-sm">
-                          Page {data.page} / {Math.max(1, Math.ceil(data.total / data.pageSize))}
+                          Page {data.page} /{" "}
+                          {Math.max(1, Math.ceil(data.total / data.pageSize))}
                         </div>
                         <button
-                          onClick={() => setPage(Math.min(Math.ceil(data.total / data.pageSize), page + 1))}
-                          disabled={page >= Math.ceil(data.total / data.pageSize)}
+                          onClick={() =>
+                            setPage(
+                              Math.min(
+                                Math.ceil(data.total / data.pageSize),
+                                page + 1,
+                              ),
+                            )
+                          }
+                          disabled={
+                            page >= Math.ceil(data.total / data.pageSize)
+                          }
                           className="px-3 py-1 border rounded"
                         >
                           Suiv
@@ -765,7 +942,10 @@ export default function Repondants() {
                           <input
                             type="number"
                             min={1}
-                            max={Math.max(1, Math.ceil(data.total / data.pageSize))}
+                            max={Math.max(
+                              1,
+                              Math.ceil(data.total / data.pageSize),
+                            )}
                             value={gotoPage}
                             onChange={(e) => setGotoPage(e.target.value)}
                             className="w-20 rounded-md border px-2 py-1 text-sm"
@@ -773,9 +953,15 @@ export default function Repondants() {
                           />
                           <button
                             onClick={() => {
-                              const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize));
+                              const totalPages = Math.max(
+                                1,
+                                Math.ceil(data.total / data.pageSize),
+                              );
                               const target = Number(gotoPage) || 1;
-                              const clamped = Math.min(Math.max(1, Math.floor(target)), totalPages);
+                              const clamped = Math.min(
+                                Math.max(1, Math.floor(target)),
+                                totalPages,
+                              );
                               setPage(clamped);
                             }}
                             className="px-3 py-1 border rounded"
@@ -784,9 +970,20 @@ export default function Repondants() {
                           </button>
 
                           {/* Quick page 10 shortcut if available */}
-                          {Math.max(1, Math.ceil(data.total / data.pageSize)) >= 10 && (
+                          {Math.max(1, Math.ceil(data.total / data.pageSize)) >=
+                            10 && (
                             <button
-                              onClick={() => setPage(Math.min(10, Math.max(1, Math.ceil(data.total / data.pageSize))))}
+                              onClick={() =>
+                                setPage(
+                                  Math.min(
+                                    10,
+                                    Math.max(
+                                      1,
+                                      Math.ceil(data.total / data.pageSize),
+                                    ),
+                                  ),
+                                )
+                              }
                               className="px-3 py-1 border rounded"
                             >
                               Page 10
@@ -813,10 +1010,18 @@ export default function Repondants() {
               <DialogTitle>
                 {(() => {
                   const key = getRowKey(selected);
-                  const live = (data && (data as any).items || []).find((r: any) => getRowKey(r) === key);
+                  const live = ((data && (data as any).items) || []).find(
+                    (r: any) => getRowKey(r) === key,
+                  );
                   const rowToShow = live || selected;
                   // Prefer the exact name the user clicked (snapshot) to avoid mismatches
-                  return selectedSnapshotName || rowToShow?.name || rowToShow?.label || rowToShow?.email || "Anonyme";
+                  return (
+                    selectedSnapshotName ||
+                    rowToShow?.name ||
+                    rowToShow?.label ||
+                    rowToShow?.email ||
+                    "Anonyme"
+                  );
                 })()}
               </DialogTitle>
               <DialogDescription id="respondent-dialog-desc">
@@ -838,9 +1043,12 @@ export default function Repondants() {
                         ? `${formatAverage(respondentNoteGeneral)}/5`
                         : (() => {
                             const key = getRowKey(selected);
-                            const fromMap = key ? (respondentNotesMap as any)[key] : null;
+                            const fromMap = key
+                              ? (respondentNotesMap as any)[key]
+                              : null;
                             if (fromMap) return `${formatAverage(fromMap)}/5`;
-                            if (averages && (averages as any).overallAverage) return `${formatAverage((averages as any).overallAverage)}/5`;
+                            if (averages && (averages as any).overallAverage)
+                              return `${formatAverage((averages as any).overallAverage)}/5`;
                             return "—";
                           })()}
                   </div>
@@ -880,8 +1088,7 @@ export default function Repondants() {
                       categoriesByRespondent &&
                       categoriesByRespondent.length === 0 && (
                         <div className="text-sm text-muted-foreground">
-                          Aucune donnée de catégories trouvée pour ce
-                          répondant.
+                          Aucune donnée de catégories trouvée pour ce répondant.
                         </div>
                       )}
                     {!loadingRespondentData &&
@@ -899,9 +1106,17 @@ export default function Repondants() {
                               <div className="text-sm font-medium text-gray-900">
                                 {(() => {
                                   const nameKeys = /^(nom|name|client)$/i;
-                                  const isNameCategory = c.name && nameKeys.test(String(c.name).trim());
+                                  const isNameCategory =
+                                    c.name &&
+                                    nameKeys.test(String(c.name).trim());
                                   if (isNameCategory) {
-                                    return selectedSnapshotName || selected?.name || selected?.label || selected?.email || "—";
+                                    return (
+                                      selectedSnapshotName ||
+                                      selected?.name ||
+                                      selected?.label ||
+                                      selected?.email ||
+                                      "—"
+                                    );
                                   }
                                   return c.value ? formatAverage(c.value) : "—";
                                 })()}
