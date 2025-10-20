@@ -256,11 +256,27 @@ export default function Analyses() {
   const [categoryFilter, setCategoryFilter] = React.useState<string>("");
   const [categorySortBy, setCategorySortBy] = React.useState<'avg'|'std'|'count'|'name'>('avg');
   const [categorySortDir, setCategorySortDir] = React.useState<'desc'|'asc'>('desc');
+  const [categoryMin, setCategoryMin] = React.useState<string>('');
+  const [categoryMax, setCategoryMax] = React.useState<string>('');
+
+  const toggleSort = (col: 'avg'|'std'|'count'|'name') => {
+    if (categorySortBy === col) {
+      setCategorySortDir((d) => (d === 'desc' ? 'asc' : 'desc'));
+    } else {
+      setCategorySortBy(col);
+      setCategorySortDir('desc');
+    }
+  };
 
   const categoryRows = React.useMemo(() => {
     const rows = (analysis.catStats || []).slice();
     const q = (categoryFilter || '').toString().trim().toLowerCase();
     let filtered = q ? rows.filter(r => (r.name || '').toString().toLowerCase().includes(q)) : rows;
+
+    const min = parseFloat(categoryMin as any);
+    const max = parseFloat(categoryMax as any);
+    if (!isNaN(min)) filtered = filtered.filter((r: any) => r.avg == null ? false : Number(r.avg) >= min);
+    if (!isNaN(max)) filtered = filtered.filter((r: any) => r.avg == null ? false : Number(r.avg) <= max);
 
     filtered.sort((a: any, b: any) => {
       let va: any = a[categorySortBy];
@@ -272,7 +288,7 @@ export default function Analyses() {
       return 0;
     });
     return filtered;
-  }, [analysis.catStats, categoryFilter, categorySortBy, categorySortDir]);
+  }, [analysis.catStats, categoryFilter, categorySortBy, categorySortDir, categoryMin, categoryMax]);
 
   const exportCategoryCsv = React.useCallback(() => {
     const header = ['Catégorie','Moyenne','Meilleur hôtel', ...resorts.map(r => r.name)];
@@ -298,6 +314,23 @@ export default function Analyses() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'comparaison_categories.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   }, [categoryRows]);
+
+  const exportCategoryExcel = React.useCallback(() => {
+    // Build HTML table and download as .xls (widely supported by Excel)
+    const headerCols = ['Catégorie','Moyenne','Meilleur hôtel', ...resorts.map(r=>r.name)];
+    const rowsHtml = categoryRows.map((stat:any) => {
+      const best = (stat.hotels || []).slice().sort((x:any,y:any)=>y.val-x.val)[0];
+      const cols = resorts.map((r)=>{
+        const f = (stat.hotels || []).find((h:any)=>h.key===r.key);
+        return `<td>${f?Number(f.val).toFixed(2):''}</td>`;
+      }).join('');
+      return `<tr><td>${stat.name}</td><td>${stat.avg!=null?Number(stat.avg).toFixed(2):''}</td><td>${best?best.name+' ('+Number(best.val).toFixed(2)+')':''}</td>${cols}</tr>`;
+    }).join('');
+    const tableHtml = `<table><thead><tr>${headerCols.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'comparaison_categories.xls'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }, [categoryRows, resorts]);
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
@@ -441,6 +474,12 @@ export default function Analyses() {
               </div>
 
               <div className="flex items-center gap-2">
+                <label className="text-sm text-muted-foreground">Filtre moyenne</label>
+                <input value={categoryMin} onChange={(e)=>setCategoryMin(e.target.value)} placeholder="min" className="border rounded px-2 py-1 text-sm w-20" />
+                <input value={categoryMax} onChange={(e)=>setCategoryMax(e.target.value)} placeholder="max" className="border rounded px-2 py-1 text-sm w-20" />
+              </div>
+
+              <div className="flex items-center gap-2">
                 <label className="text-sm text-muted-foreground">Trier par</label>
                 <select id="category-sort" value={categorySortBy} onChange={(e) => setCategorySortBy(e.target.value as any)} className="border rounded px-2 py-1 text-sm">
                   <option value="avg">Moyenne</option>
@@ -458,6 +497,7 @@ export default function Analyses() {
               <div className="ml-auto flex items-center gap-2">
                 <button onClick={exportCategoryCsv} className="px-3 py-1 rounded-md border text-sm">Exporter CSV</button>
                 <button onClick={exportCategoryJson} className="px-3 py-1 rounded-md border text-sm">Exporter JSON</button>
+                <button onClick={exportCategoryExcel} className="px-3 py-1 rounded-md border text-sm">Exporter Excel</button>
               </div>
             </div>
 
@@ -465,8 +505,8 @@ export default function Analyses() {
               <table className="w-full table-fixed text-sm">
                 <thead>
                   <tr className="text-left">
-                    <th className="p-2 w-64">Catégorie</th>
-                    <th className="p-2 w-24">Moyenne</th>
+                    <th onClick={()=>toggleSort('name')} className="p-2 w-64 cursor-pointer">Catégorie {categorySortBy==='name' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
+                    <th onClick={()=>toggleSort('avg')} className="p-2 w-24 cursor-pointer">Moyenne {categorySortBy==='avg' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
                     <th className="p-2 w-48">Meilleur hôtel</th>
                     {resorts.map((r) => (
                       <th key={r.key} className="p-2 text-center">{r.name}</th>
