@@ -692,14 +692,70 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
             } else {
               // No per-respondent data found in matrice
               if (cfg.gidMatrice) {
-                // Matrice exists but no match — return empty category values to indicate absence
-                for (let i = 1; i <= 10; i++) {
-                  const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
-                  newCats.push({ name, value: '' });
+                // Matrice exists but no per-respondent row match. Try to compute per-respondent category averages using sheet1 columns for this particular respondent row.
+                try {
+                  const categoriesDef: Record<string, string[]> = {
+                    "🌟 APPRÉCIATION GLOBALE": ["Conformité Prestations / Brochures", "Rapport Qualité / Prix", "Appréciation globale des vacances"],
+                    "✈️ TRANSPORTS Aérien": ["Accueil / Confort", "Ponctualité", "Sécurité"],
+                    "🚐 Car navette": ["Prestation du conducteur", "Confort et propreté"],
+                    "🏨 HÉBERGEMENT": ["Accueil", "Cadre des restaurants", "Cadre et environnement", "Propreté des parties communes", "Qualité et variété des plats"],
+                    "🛏️ CHAMBRES": ["Propreté", "Confort", "Taille", "Salle de bains"],
+                    "🏊 PISCINE": ["Aménagements", "Hygiène", "Sécurité"],
+                    "🎉 ANIMATION": ["Qualité des équipements sportifs", "Animation en soirée", "Variété des activités", "Convivialité Équipe d’Animation", "Activités pour enfants", "Animation en journée"],
+                    "👥 ÉQUIPES": ["Aéroport arrivée", "Aéroport départ", "Réunion d’information", "Présence et convivialité", "Anticipation des besoins", "Réactivité et solutions apportées"],
+                    "🤝 Représentant Top of Travel": ["Réunion d’information", "Présence et convivialité", "Anticipation des besoins", "Réactivité et solutions apportées"],
+                    "🌍 EXCURSIONS": ["Qualité", "Moyens de transport", "Guides locaux", "Restauration"]
+                  };
+
+                  const headerMatches = (header: string, title: string) => {
+                    if (!header || !title) return false;
+                    const h = header.toString().trim().toLowerCase();
+                    const t = title.toString().trim().toLowerCase();
+                    return h === t || h.includes(t) || t.includes(h);
+                  };
+
+                  for (const [catName, titles] of Object.entries(categoriesDef)) {
+                    let sum = 0; let count = 0;
+                    // find columns matching any title
+                    const colIndexes: number[] = [];
+                    for (let hi = 0; hi < scols.length; hi++) {
+                      const h = scols[hi] || '';
+                      for (const t of titles) {
+                        if (headerMatches(h, t)) { colIndexes.push(hi); break; }
+                      }
+                    }
+                    // Read values for this respondent row only
+                    if (colIndexes.length > 0) {
+                      for (const ci of colIndexes) {
+                        const raw = scells[ci] && scells[ci].v != null ? scells[ci].v : null;
+                        const n = toNumber(raw);
+                        if (n != null) { sum += n; count++; }
+                      }
+                      if (count > 0) {
+                        const avg = sum / count;
+                        const normalized = normalizeAverage(avg);
+                        newCats.push({ name: catName, value: normalized != null ? String(Number(normalized.toFixed(2))) : '' });
+                      } else {
+                        newCats.push({ name: catName, value: '' });
+                      }
+                    } else {
+                      newCats.push({ name: catName, value: '' });
+                    }
+                  }
+
+                  result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
+                  result.overall = scells[11] && scells[11].v != null ? String(scells[11].v) : null;
+                  result.column = null;
+                } catch (eCalc) {
+                  // on error, fallback to empty categories
+                  for (let i = 1; i <= 10; i++) {
+                    const name = fixedCategoryMapping.find((f) => f.colIndex === i)?.name || `Col ${i}`;
+                    newCats.push({ name, value: '' });
+                  }
+                  result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
+                  result.overall = null;
+                  result.column = null;
                 }
-                result.categories = [{ name: 'Nom', value: scellVal(nameIdx) || (scells[0] && scells[0].v != null ? String(scells[0].v) : '') }, ...newCats];
-                result.overall = null;
-                result.column = null;
               } else {
                 // No matrice configured: fallback to sheet1 per-respondent values
                 for (const m of fixedCategoryMapping) {
