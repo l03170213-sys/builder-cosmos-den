@@ -377,6 +377,42 @@ export default function Analyses() {
             </div>
           </section>
 
+          <section className="bg-white rounded-md p-4 shadow-sm mt-6">
+            <h3 className="text-lg font-semibold mb-3">Comparaison par catégorie (tous les hôtels)</h3>
+            <div className="text-sm text-muted-foreground mb-3">Tableau comparatif des moyennes par catégorie pour chaque hôtel. Les catégories sont triées par moyenne (meilleure en premier).</div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full table-fixed text-sm">
+                <thead>
+                  <tr className="text-left">
+                    <th className="p-2 w-64">Catégorie</th>
+                    <th className="p-2 w-24">Moyenne</th>
+                    <th className="p-2 w-48">Meilleur hôtel</th>
+                    {resorts.map((r) => (
+                      <th key={r.key} className="p-2 text-center">{r.name}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {analysis.catStats.slice().reverse().map((stat: any) => {
+                    const best = (stat.hotels || []).slice().sort((a: any, b: any) => b.val - a.val)[0];
+                    return (
+                      <tr key={stat.name} className="border-t">
+                        <td className="p-2 align-top">{stat.name}</td>
+                        <td className="p-2 font-semibold">{Number(stat.avg).toFixed(2)}</td>
+                        <td className="p-2">{best ? `${best.name} (${Number(best.val).toFixed(2)})` : '—'}</td>
+                        {resorts.map((r) => {
+                          const found = (stat.hotels || []).find((h: any) => h.key === r.key);
+                          return <td key={r.key} className="p-2 text-center">{found ? Number(found.val).toFixed(2) : '—'}</td>;
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
           <Dialog open={modalOpen} onOpenChange={(open) => { if (!open) closeModal(); setModalOpen(open); }}>
             <DialogContent>
               <DialogTitle>{resorts.find(r => r.key === modalResortKey)?.name || 'Hôtel'}</DialogTitle>
