@@ -252,6 +252,53 @@ export default function Analyses() {
   const bestHotel = (analysis.goodHotels && analysis.goodHotels[0]) || null;
   const worstHotel = (analysis.badHotels && analysis.badHotels[0]) || null;
 
+  // Category table controls
+  const [categoryFilter, setCategoryFilter] = React.useState<string>("");
+  const [categorySortBy, setCategorySortBy] = React.useState<'avg'|'std'|'count'|'name'>('avg');
+  const [categorySortDir, setCategorySortDir] = React.useState<'desc'|'asc'>('desc');
+
+  const categoryRows = React.useMemo(() => {
+    const rows = (analysis.catStats || []).slice();
+    const q = (categoryFilter || '').toString().trim().toLowerCase();
+    let filtered = q ? rows.filter(r => (r.name || '').toString().toLowerCase().includes(q)) : rows;
+
+    filtered.sort((a: any, b: any) => {
+      let va: any = a[categorySortBy];
+      let vb: any = b[categorySortBy];
+      if (categorySortBy === 'name') { va = (a.name||'').toString().toLowerCase(); vb = (b.name||'').toString().toLowerCase(); }
+      if (va == null) va = 0; if (vb == null) vb = 0;
+      if (va < vb) return categorySortDir === 'asc' ? -1 : 1;
+      if (va > vb) return categorySortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return filtered;
+  }, [analysis.catStats, categoryFilter, categorySortBy, categorySortDir]);
+
+  const exportCategoryCsv = React.useCallback(() => {
+    const header = ['Catégorie','Moyenne','Meilleur hôtel', ...resorts.map(r => r.name)];
+    const lines = [header.join(',')];
+    for (const stat of categoryRows) {
+      const best = (stat.hotels || []).slice().sort((x: any, y: any) => y.val - x.val)[0];
+      const safeName = (stat.name || '').toString().replace(/"/g, '""');
+      const bestLabel = best ? (best.name + ' (' + Number(best.val).toFixed(2) + ')') : '';
+      const base = ['"' + safeName + '"', stat.avg != null ? Number(stat.avg).toFixed(2) : '', '"' + (bestLabel.replace(/"/g,'""')) + '"'];
+      const cols = resorts.map(r => {
+        const f = (stat.hotels || []).find((h: any) => h.key === r.key);
+        return f ? Number(f.val).toFixed(2) : '';
+      });
+      lines.push(base.concat(cols).join(','));
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'comparaison_categories.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }, [categoryRows, resorts]);
+
+  const exportCategoryJson = React.useCallback(() => {
+    const blob = new Blob([JSON.stringify(categoryRows, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'comparaison_categories.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }, [categoryRows]);
+
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-[16rem_1fr] bg-gray-50">
       <Sidebar />
@@ -379,7 +426,40 @@ export default function Analyses() {
 
           <section className="bg-white rounded-md p-4 shadow-sm mt-6">
             <h3 className="text-lg font-semibold mb-3">Comparaison par catégorie (tous les hôtels)</h3>
-            <div className="text-sm text-muted-foreground mb-3">Tableau comparatif des moyennes par catégorie pour chaque hôtel. Les catégories sont triées par moyenne (meilleure en premier).</div>
+            <div className="text-sm text-muted-foreground mb-3">Tableau comparatif des moyennes par catégorie pour chaque hôtel.</div>
+
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-muted-foreground">Rechercher</label>
+                <input
+                  id="category-filter"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="border rounded px-2 py-1 text-sm"
+                  placeholder="Nom de la catégorie..."
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-muted-foreground">Trier par</label>
+                <select id="category-sort" value={categorySortBy} onChange={(e) => setCategorySortBy(e.target.value as any)} className="border rounded px-2 py-1 text-sm">
+                  <option value="avg">Moyenne</option>
+                  <option value="std">Écart-type</option>
+                  <option value="count">Nombre d'hôtels</option>
+                  <option value="name">Nom</option>
+                </select>
+
+                <select id="category-sort-dir" value={categorySortDir} onChange={(e) => setCategorySortDir(e.target.value as any)} className="border rounded px-2 py-1 text-sm">
+                  <option value="desc">Desc</option>
+                  <option value="asc">Asc</option>
+                </select>
+              </div>
+
+              <div className="ml-auto flex items-center gap-2">
+                <button onClick={exportCategoryCsv} className="px-3 py-1 rounded-md border text-sm">Exporter CSV</button>
+                <button onClick={exportCategoryJson} className="px-3 py-1 rounded-md border text-sm">Exporter JSON</button>
+              </div>
+            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full table-fixed text-sm">
@@ -394,12 +474,12 @@ export default function Analyses() {
                   </tr>
                 </thead>
                 <tbody>
-                  {analysis.catStats.slice().reverse().map((stat: any) => {
+                  {categoryRows.map((stat: any) => {
                     const best = (stat.hotels || []).slice().sort((a: any, b: any) => b.val - a.val)[0];
                     return (
                       <tr key={stat.name} className="border-t">
                         <td className="p-2 align-top">{stat.name}</td>
-                        <td className="p-2 font-semibold">{Number(stat.avg).toFixed(2)}</td>
+                        <td className="p-2 font-semibold">{stat.avg != null ? Number(stat.avg).toFixed(2) : '—'}</td>
                         <td className="p-2">{best ? `${best.name} (${Number(best.val).toFixed(2)})` : '—'}</td>
                         {resorts.map((r) => {
                           const found = (stat.hotels || []).find((h: any) => h.key === r.key);
