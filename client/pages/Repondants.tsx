@@ -415,13 +415,13 @@ export default function Repondants() {
         if (serverResp && (serverResp.overall ?? serverResp.overallAverage ?? serverResp.overallScore ?? serverResp.overall) != null) {
           return serverResp;
         }
-        // fallback to client-side matrice lookup
+        // fallback to client-side matrice lookup for detailed categories
         try {
           const cfg = resorts.find((r) => r.key === selectedResortKey);
           if (cfg && cfg.gidMatrice) {
             const mod = await import('@/lib/sheets');
-            const overall = await mod.fetchRespondentOverallFromMatrice(cfg.sheetId, cfg.gidMatrice, { email: selected?.email, name: selected?.name, date: selected?.date });
-            if (overall != null) return { overall } as any;
+            const details = await mod.fetchRespondentDetailsFromSheet(cfg.sheetId, cfg.gidMatrice, { email: selected?.email, name: selected?.name, date: selected?.date });
+            if (details) return details as any;
           }
         } catch (e) {
           // ignore
