@@ -95,6 +95,12 @@ export const STATIC_RESORTS = [
     sheetId: "12bWFjpJ449YIUMHtV7-W7oggIL78hxjUGiFjGSO8NoA",
     gidMatrice: "578780649",
   },
+  {
+    key: "h-tel-baia-malva-italie",
+    name: "Hôtel Baia Malva - Italie",
+    sheetId: "1uq0WpYNgdLokw-XNe-kBSybq6awhdJAp25EDfaBGPcE",
+    gidMatrice: "140358848",
+  },
 ];
 
 export const RESORTS = STATIC_RESORTS;
