@@ -718,7 +718,7 @@ export default function Repondants() {
           selectedResortKey,
           all,
           (done: number, total: number) => {
-            btn.textContent = `Exportation ${done}/${total}…`;
+            btn.textContent = `Exportation ${done}/${total}��`;
           },
         );
         btn.textContent = "Téléchargement terminé";
@@ -757,26 +757,51 @@ export default function Repondants() {
               <div className="font-normal px-6 pb-6">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <input
-                      type="text"
-                      placeholder="Rechercher par nom"
-                      value={nameFilter}
-                      onChange={(e) => {
-                        setNameFilter(e.target.value);
-                        setPage(1);
-                      }}
-                      className="rounded-md border px-3 py-2 text-sm w-56"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Agence de voyage"
-                      value={agencyFilter}
-                      onChange={(e) => {
-                        setAgencyFilter(e.target.value);
-                        setPage(1);
-                      }}
-                      className="rounded-md border px-3 py-2 text-sm w-56"
-                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Rechercher par nom"
+                        value={nameFilter}
+                        onChange={(e) => {
+                          setNameFilter(e.target.value);
+                          setPage(1);
+                        }}
+                        className="rounded-md border px-3 py-2 text-sm w-56"
+                      />
+                      <button
+                        onClick={() => {
+                          setSearchAllMode((prev) => (prev === 'name' ? 'none' : 'name'));
+                          setPage(1);
+                        }}
+                        className={`px-2 py-2 text-sm rounded-md border ${searchAllMode === 'name' ? 'bg-primary text-white' : ''}`}
+                        title="Rechercher dans tous les hôtels"
+                      >
+                        Tous les hôtels
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Agence de voyage"
+                        value={agencyFilter}
+                        onChange={(e) => {
+                          setAgencyFilter(e.target.value);
+                          setPage(1);
+                        }}
+                        className="rounded-md border px-3 py-2 text-sm w-56"
+                      />
+                      <button
+                        onClick={() => {
+                          setSearchAllMode((prev) => (prev === 'agency' ? 'none' : 'agency'));
+                          setPage(1);
+                        }}
+                        className={`px-2 py-2 text-sm rounded-md border ${searchAllMode === 'agency' ? 'bg-primary text-white' : ''}`}
+                        title="Rechercher dans tous les hôtels"
+                      >
+                        Tous les hôtels
+                      </button>
+                    </div>
                     <div className="flex items-center gap-2">
                       <label className="text-sm">Du</label>
                       <input
@@ -1003,7 +1028,7 @@ export default function Repondants() {
                   return selectedSnapshotName || rowToShow?.name || rowToShow?.label || rowToShow?.email || "Anonyme";
                 })()}
               </DialogTitle>
-              <DialogDescription id="respondent-dialog-desc">Détails et moyennes pour le répondant sélectionné</DialogDescription>
+              <DialogDescription id="respondent-dialog-desc">Détails et moyennes pour le répondant s��lectionné</DialogDescription>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-lg border p-4 bg-white" style={{ borderColor: "#e6edf3" }}>
