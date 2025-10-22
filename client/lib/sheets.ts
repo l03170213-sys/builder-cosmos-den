@@ -293,9 +293,9 @@ export async function fetchRespondentDetailsFromSheet(
     }
     let respColIndex = -1;
     const targetNameNorm = normalizeDiacritics(nameKey).replace(/\s+/g, "");
-    const targetEmail = emailKey;
+    const targetEmailHeader = emailKey;
     for (const lblKey of Object.keys(headerIndexMap)) {
-      if (targetEmail && lblKey.includes(targetEmail)) {
+      if (targetEmailHeader && lblKey.includes(targetEmailHeader)) {
         respColIndex = headerIndexMap[lblKey];
         break;
       }
