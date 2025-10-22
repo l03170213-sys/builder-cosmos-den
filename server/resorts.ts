@@ -83,8 +83,8 @@ export const RESORTS: Record<
     name: "Hôtel Ariel Cala d'Or - Majorque",
   },
   "h-tel-baia-malva-italie": {
-    sheetId: "1JjFeeAu1D5nFccACgE4Z8BDrBr5OS8by7LtYejsTiLY",
-    gidMatrice: "1146096914",
+    sheetId: "1uq0WpYNgdLokw-XNe-kBSybq6awhdJAp25EDfaBGPcE",
+    gidMatrice: "140358848",
     name: "Hôtel Baia Malva - Italie",
   },
 };
