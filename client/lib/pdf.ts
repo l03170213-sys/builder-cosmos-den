@@ -392,3 +392,31 @@ export async function exportAllRespondentsPdf(
     options && options.filename ? options.filename : `respondents-all.pdf`;
   doc.save(filename);
 }
+
+export async function exportAgencyCategoryAveragesPdf(
+  resortKey: string,
+  agencyName: string,
+  categoryAverages: { name: string; average: number | null; count: number }[],
+  options?: { filename?: string; title?: string },
+) {
+  const doc = new jsPDF();
+  doc.setFontSize(20);
+  doc.setTextColor(20,20,20);
+  doc.text(options?.title || `Moyennes par catégorie`, 20, 30);
+  doc.setFontSize(12);
+  doc.text(`Hôtel: ${resortKey}`, 20, 46);
+  doc.text(`Agence: ${agencyName}`, 20, 56);
+  let y = 76;
+  doc.setFontSize(12);
+  for (const c of categoryAverages) {
+    if (y > 270) {
+      doc.addPage();
+      y = 30;
+    }
+    const avg = c.average != null ? String(c.average.toFixed(1)).replace('.', ',') : '—';
+    doc.text(`- ${c.name}: ${avg} (${c.count})`, 20, y);
+    y += 10;
+  }
+  const filename = options?.filename || `moyennes-agence-${(agencyName||'all').replace(/[^a-z0-9_\-]/gi,'_')}.pdf`;
+  doc.save(filename);
+}
