@@ -192,6 +192,8 @@ export default function Repondants() {
   const [startDateFilter, setStartDateFilter] = React.useState<string>(""); // yyyy-mm-dd
   const [endDateFilter, setEndDateFilter] = React.useState<string>("");
   const [sortDateDir, setSortDateDir] = React.useState<string>("desc"); // 'asc' | 'desc' | ''
+  // Search across all resorts mode: 'none' | 'name' | 'agency'
+  const [searchAllMode, setSearchAllMode] = React.useState<'none'|'name'|'agency'>('none');
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [
