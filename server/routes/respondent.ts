@@ -163,9 +163,13 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       }
     }
     const TARGET_FEEDBACK_TITLE = "Votre avis compte pour nous ! :)";
-    const feedbackColExactInSheet1 = scols.findIndex(
-      (c) => normalize(c) === normalize(TARGET_FEEDBACK_TITLE),
-    );
+    // detect feedback column by exact title, then by partial match, then fallback to BT (index 71) when available
+    let feedbackColIdx = scols.findIndex((c) => normalize(c) === normalize(TARGET_FEEDBACK_TITLE));
+    if (feedbackColIdx === -1) {
+      const lowerNames = scols.map((c) => normalize(c || ""));
+      feedbackColIdx = lowerNames.findIndex((h) => h.includes("votre avis") || h.includes("votre avis compte"));
+    }
+    if (feedbackColIdx === -1 && scols.length > 71) feedbackColIdx = 71;
 
     // Try to find respondent row in sheet1 by email/name/date
     const findRespondentRowInSheet1 = () => {
