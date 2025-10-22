@@ -909,7 +909,7 @@ export default function Repondants() {
                             const avgStr = avg != null ? avg.toFixed(1).replace('.',',') : null;
                             // call export function with overall average option
                             const mod = await import('@/lib/pdf');
-                            await mod.exportAllRespondentsPdf(sel, items, { overallAverage: avgStr, title: `Agence: ${agencyFilter || 'Toutes'}` }, (done:number,total:number)=>{
+                            await mod.exportAllRespondentsPdf(sel, items, { overallAverage: avgStr, title: `Agence: ${agencyFilter || 'Toutes'}`, count: items.length, filename: `respondents-agence-${(agencyFilter||'all').replace(/[^a-z0-9_\-]/gi,'_')}.pdf` }, (done:number,total:number)=>{
                               const btn = document.getElementById('export-single-agency-btn') as HTMLButtonElement | null;
                               if (btn) btn.textContent = `Exportation ${done}/${total}…`;
                             });
