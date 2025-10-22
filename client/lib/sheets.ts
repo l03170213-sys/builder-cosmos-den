@@ -418,7 +418,10 @@ export async function fetchRespondentDetailsFromSheet(
       const norm = cells.map((c: any) =>
         normalizeDiacritics(cellToStringLocal(c) || "").replace(/\s+/g, ""),
       );
-      if (targetEmailRow && norm.some((v: any) => v && v.includes(targetEmailRow))) {
+      if (
+        targetEmailRow &&
+        norm.some((v: any) => v && v.includes(targetEmailRow))
+      ) {
         matchedRowIdx = ri;
         break;
       }

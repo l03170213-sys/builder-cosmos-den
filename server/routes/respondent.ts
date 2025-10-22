@@ -120,12 +120,10 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     const sr = await fetch(sheet1Url);
     if (!sr.ok) {
       if (isDebug) {
-        return res
-          .status(502)
-          .json({
-            error: "Unable to fetch sheet1 (respondents)",
-            _debug: { sheet1Url, status: sr.status },
-          });
+        return res.status(502).json({
+          error: "Unable to fetch sheet1 (respondents)",
+          _debug: { sheet1Url, status: sr.status },
+        });
       }
       return res
         .status(502)
@@ -164,10 +162,14 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     }
     const TARGET_FEEDBACK_TITLE = "Votre avis compte pour nous ! :)";
     // detect feedback column by exact title, then by partial match, then fallback to BT (index 71) when available
-    let feedbackColIdx = scols.findIndex((c) => normalize(c) === normalize(TARGET_FEEDBACK_TITLE));
+    let feedbackColIdx = scols.findIndex(
+      (c) => normalize(c) === normalize(TARGET_FEEDBACK_TITLE),
+    );
     if (feedbackColIdx === -1) {
       const lowerNames = scols.map((c) => normalize(c || ""));
-      feedbackColIdx = lowerNames.findIndex((h) => h.includes("votre avis") || h.includes("votre avis compte"));
+      feedbackColIdx = lowerNames.findIndex(
+        (h) => h.includes("votre avis") || h.includes("votre avis compte"),
+      );
     }
     if (feedbackColIdx === -1 && scols.length > 71) feedbackColIdx = 71;
 
@@ -595,11 +597,16 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       };
 
       // feedback from sheet1: prefer detected header index (feedbackColIdx), else BT (index 71)
-    let fcell: any = null;
-    if (typeof feedbackColIdx !== "undefined" && feedbackColIdx !== -1 && scells[feedbackColIdx] && scells[feedbackColIdx].v != null)
-      fcell = scells[feedbackColIdx];
-    else if (scells[71] && scells[71].v != null) fcell = scells[71];
-    result.feedback = fcell ? String(fcell.v) : null;
+      let fcell: any = null;
+      if (
+        typeof feedbackColIdx !== "undefined" &&
+        feedbackColIdx !== -1 &&
+        scells[feedbackColIdx] &&
+        scells[feedbackColIdx].v != null
+      )
+        fcell = scells[feedbackColIdx];
+      else if (scells[71] && scells[71].v != null) fcell = scells[71];
+      result.feedback = fcell ? String(fcell.v) : null;
 
       // attach meta fields (date, age BK, postal, duration, name, email) from sheet1 when available
       try {
@@ -1159,12 +1166,10 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     const rr = await fetch(gurl);
     if (!rr.ok) {
       if (isDebug)
-        return res
-          .status(502)
-          .json({
-            error: "Unable to fetch matrice",
-            _debug: { gurl, status: rr.status },
-          });
+        return res.status(502).json({
+          error: "Unable to fetch matrice",
+          _debug: { gurl, status: rr.status },
+        });
       return res.status(502).json({ error: "Unable to fetch matrice" });
     }
     const text = await rr.text();
@@ -1208,7 +1213,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       const overall = overallCell ? String(overallCell.v) : null;
       // extract exact feedback column value if present (use detected feedbackColIdx or fallback to BT)
       let feedbackCell: any = null;
-      if (typeof feedbackColIdx !== "undefined" && feedbackColIdx !== -1 && cells[feedbackColIdx] && cells[feedbackColIdx].v != null)
+      if (
+        typeof feedbackColIdx !== "undefined" &&
+        feedbackColIdx !== -1 &&
+        cells[feedbackColIdx] &&
+        cells[feedbackColIdx].v != null
+      )
         feedbackCell = cells[feedbackColIdx];
       else if (cells[71] && cells[71].v != null) feedbackCell = cells[71];
       const feedback = feedbackCell ? String(feedbackCell.v) : null;
@@ -1451,7 +1461,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
           const overall = overallCell ? String(overallCell.v) : null;
           // extract exact feedback column value if present (use detected feedbackColIdx or fallback to BT)
           let feedbackCell: any = null;
-          if (typeof feedbackColIdx !== "undefined" && feedbackColIdx !== -1 && cells[feedbackColIdx] && cells[feedbackColIdx].v != null)
+          if (
+            typeof feedbackColIdx !== "undefined" &&
+            feedbackColIdx !== -1 &&
+            cells[feedbackColIdx] &&
+            cells[feedbackColIdx].v != null
+          )
             feedbackCell = cells[feedbackColIdx];
           else if (cells[71] && cells[71].v != null) feedbackCell = cells[71];
           const feedback = feedbackCell ? String(feedbackCell.v) : null;
@@ -1467,15 +1482,13 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
     }
 
     if (isDebug)
-      return res
-        .status(404)
-        .json({
-          error: "Respondent not found in matrice",
-          _debug: {
-            sheet1RowIdx:
-              typeof sheet1RowIdx !== "undefined" ? sheet1RowIdx : null,
-          },
-        });
+      return res.status(404).json({
+        error: "Respondent not found in matrice",
+        _debug: {
+          sheet1RowIdx:
+            typeof sheet1RowIdx !== "undefined" ? sheet1RowIdx : null,
+        },
+      });
     return res.status(404).json({ error: "Respondent not found in matrice" });
   } catch (err) {
     console.error("Failed to fetch respondent details:", err);
