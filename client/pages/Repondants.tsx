@@ -1008,8 +1008,7 @@ export default function Repondants() {
                                 ? avg.toFixed(1).replace(".", ",")
                                 : null;
                             // call export function with overall average option
-                            const mod = await import("@/lib/pdf");
-                            await mod.exportAllRespondentsPdf(
+                            await pdfLib.exportAllRespondentsPdf(
                               sel,
                               items,
                               {
