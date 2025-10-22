@@ -107,7 +107,12 @@ export const RESORTS = STATIC_RESORTS;
 
 const STORAGE_KEY = "customResorts";
 
-export type Resort = { key: string; name: string; sheetId: string; gidMatrice: string };
+export type Resort = {
+  key: string;
+  name: string;
+  sheetId: string;
+  gidMatrice: string;
+};
 
 export function getStoredResorts(): Resort[] {
   if (typeof window === "undefined") return [];
@@ -153,6 +158,9 @@ export function removeResort(key: string) {
 }
 
 export function formatResortsArray(arr: Resort[]) {
-  const lines = arr.map((r) => `  {\n    key: \"${r.key}\",\n    name: \"${r.name.replace(/\"/g, '\\\"')}\",\n    sheetId: \"${r.sheetId}\",\n    gidMatrice: \"${r.gidMatrice}\",\n  },`);
+  const lines = arr.map(
+    (r) =>
+      `  {\n    key: \"${r.key}\",\n    name: \"${r.name.replace(/\"/g, '\\\"')}\",\n    sheetId: \"${r.sheetId}\",\n    gidMatrice: \"${r.gidMatrice}\",\n  },`,
+  );
   return `export const RESORTS = [\n${lines.join("\n\n")}\n];`;
 }
