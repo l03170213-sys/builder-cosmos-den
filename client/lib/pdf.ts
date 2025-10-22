@@ -311,6 +311,23 @@ export async function exportAllRespondentsPdf(
       doc.setFontSize(12);
       doc.text(`Nombre de répondants: ${String(options.count)}`, 20, 100);
     }
+
+    // If category averages are provided, print them under the overall average
+    if (options.categoryAverages && Array.isArray(options.categoryAverages)) {
+      doc.setFontSize(12);
+      doc.text("Moyennes par catégorie:", 20, 120);
+      let y = 132;
+      for (const c of options.categoryAverages) {
+        if (y > 270) {
+          doc.addPage();
+          y = 30;
+        }
+        const avg = c.average != null ? String(c.average.toFixed(1)).replace('.', ',') : '—';
+        const name = String(c.name || '').trim();
+        doc.text(`- ${name}: ${avg} (${c.count})`, 20, y);
+        y += 8;
+      }
+    }
   }
 
   const perRespondentDelayMs = settings
