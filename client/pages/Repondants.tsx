@@ -1487,7 +1487,6 @@ export default function Repondants() {
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogContent
               className="max-w-3xl max-h-[80vh] overflow-auto"
-              aria-describedby="respondent-dialog-desc"
             >
               {
                 // Resolve the displayed row by looking up the latest row in the current page by key.
