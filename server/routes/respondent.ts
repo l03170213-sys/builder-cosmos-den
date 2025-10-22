@@ -681,16 +681,16 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
 
           const fixedCategoryMapping = [
             { colIndex: 0, name: "Nom" },
-            { colIndex: 1, name: "" },
-            { colIndex: 2, name: "" },
-            { colIndex: 3, name: "" },
-            { colIndex: 4, name: "" },
-            { colIndex: 5, name: "" },
-            { colIndex: 6, name: "" },
-            { colIndex: 7, name: "" },
-            { colIndex: 8, name: "" },
-            { colIndex: 9, name: "" },
-            { colIndex: 10, name: "" },
+            { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
+            { colIndex: 2, name: "✈️ TRANSPORTS Aérien" },
+            { colIndex: 3, name: "🚐 Car navette" },
+            { colIndex: 4, name: "🏨 HÉBERGEMENT" },
+            { colIndex: 5, name: "🛏️ CHAMBRES" },
+            { colIndex: 6, name: "🏊 PISCINE" },
+            { colIndex: 7, name: "🎉 ANIMATION" },
+            { colIndex: 8, name: "👥 ÉQUIPES" },
+            { colIndex: 9, name: "🤝 Représentant Top of Travel" },
+            { colIndex: 10, name: "🌍 EXCURSIONS" },
             { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
           ];
 
