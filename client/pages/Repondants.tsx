@@ -1481,9 +1481,7 @@ export default function Repondants() {
           </Card>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent
-              className="max-w-3xl max-h-[80vh] overflow-auto"
-            >
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
               {
                 // Resolve the displayed row by looking up the latest row in the current page by key.
                 // This prevents mismatches when React reuses DOM nodes or data updates reorder items.
