@@ -400,7 +400,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
         { colIndex: 2, name: "✈️ TRANSPORTS Aérien" },
         { colIndex: 3, name: "🚐 Car navette" },
-        { colIndex: 4, name: "🏨 HÉBERGEMENT" },
+        { colIndex: 4, name: "��� HÉBERGEMENT" },
         { colIndex: 5, name: "🛏️ CHAMBRES" },
         { colIndex: 6, name: "🏊 PISCINE" },
         { colIndex: 7, name: "🎉 ANIMATION" },
@@ -1449,15 +1449,10 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
               ? cells[overallIndex]
               : null;
           const overall = overallCell ? String(overallCell.v) : null;
-          // extract exact feedback column value if present
+          // extract exact feedback column value if present (use detected feedbackColIdx or fallback to BT)
           let feedbackCell: any = null;
-          if (
-            typeof feedbackColExactInSheet1 !== "undefined" &&
-            feedbackColExactInSheet1 !== -1 &&
-            cells[feedbackColExactInSheet1] &&
-            cells[feedbackColExactInSheet1].v != null
-          )
-            feedbackCell = cells[feedbackColExactInSheet1];
+          if (typeof feedbackColIdx !== "undefined" && feedbackColIdx !== -1 && cells[feedbackColIdx] && cells[feedbackColIdx].v != null)
+            feedbackCell = cells[feedbackColIdx];
           else if (cells[71] && cells[71].v != null) feedbackCell = cells[71];
           const feedback = feedbackCell ? String(feedbackCell.v) : null;
           result.categories = cats;
