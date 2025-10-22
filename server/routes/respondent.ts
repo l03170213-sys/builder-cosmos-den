@@ -594,16 +594,12 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         email: null as null | string,
       };
 
-      // feedback from sheet1: prefer exact header, else BT
-      let fcell: any = null;
-      if (
-        feedbackColExactInSheet1 !== -1 &&
-        scells[feedbackColExactInSheet1] &&
-        scells[feedbackColExactInSheet1].v != null
-      )
-        fcell = scells[feedbackColExactInSheet1];
-      else if (scells[71] && scells[71].v != null) fcell = scells[71];
-      result.feedback = fcell ? String(fcell.v) : null;
+      // feedback from sheet1: prefer detected header index (feedbackColIdx), else BT (index 71)
+    let fcell: any = null;
+    if (typeof feedbackColIdx !== "undefined" && feedbackColIdx !== -1 && scells[feedbackColIdx] && scells[feedbackColIdx].v != null)
+      fcell = scells[feedbackColIdx];
+    else if (scells[71] && scells[71].v != null) fcell = scells[71];
+    result.feedback = fcell ? String(fcell.v) : null;
 
       // attach meta fields (date, age BK, postal, duration, name, email) from sheet1 when available
       try {
