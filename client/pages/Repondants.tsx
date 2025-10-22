@@ -815,9 +815,8 @@ export default function Repondants() {
             pageIdx++;
           }
         }
-        // dynamically import pdf helper
-        const mod = await import("@/lib/pdf");
-        await mod.exportAllRespondentsPdf(
+        // use static pdf helper
+        await pdfLib.exportAllRespondentsPdf(
           selectedResortKey,
           all,
           (done: number, total: number) => {
