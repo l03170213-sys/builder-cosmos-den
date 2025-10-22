@@ -826,6 +826,80 @@ export default function Repondants() {
                         className="rounded-md border px-2 py-1 text-sm"
                       />
                     </div>
+
+                    {/* Agencies dropdown and download button for selected resort */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm">Agences</label>
+                      <select
+                        value={agencyFilter}
+                        onChange={(e) => {
+                          setAgencyFilter(e.target.value);
+                          setPage(1);
+                        }}
+                        className="rounded-md border px-3 py-2 text-sm"
+                      >
+                        <option value="">Toutes les agences</option>
+                        {(() => {
+                          // agenciesQuery provided below via useQuery
+                          try {
+                            const ags = agencies || [];
+                            return ags.map((a: string, idx: number) => (
+                              <option key={idx} value={a}>
+                                {a}
+                              </option>
+                            ));
+                          } catch (e) {
+                            return null;
+                          }
+                        })()}
+                      </select>
+
+                      <button
+                        onClick={async () => {
+                          try {
+                            const sel = selectedResortKey;
+                            if (!sel) return;
+                            // fetch all respondents for agency
+                            const params = new URLSearchParams();
+                            params.set('page', '1');
+                            params.set('pageSize', '500');
+                            if (agencyFilter) params.set('agency', agencyFilter);
+                            if (startDateFilter) params.set('startDate', startDateFilter);
+                            if (endDateFilter) params.set('endDate', endDateFilter);
+                            const apiUrl = `/api/resort/${sel}/respondents?${params.toString()}`;
+                            const resp = await fetch(apiUrl, { credentials: 'same-origin' });
+                            if (!resp.ok) throw new Error('Impossible de récupérer les répondants');
+                            const json = await resp.json();
+                            const items = json.items || [];
+                            // compute average of numeric notes
+                            const nums: number[] = items.map((it:any)=>{
+                              const v = it.note || '';
+                              const n = Number(String(v).replace(',', '.'));
+                              return Number.isFinite(n)?n:NaN;
+                            }).filter((n)=>!Number.isNaN(n));
+                            const avg = nums.length ? nums.reduce((a,b)=>a+b,0)/nums.length : null;
+                            const avgStr = avg != null ? avg.toFixed(1).replace('.',',') : null;
+                            // call export function with overall average option
+                            const mod = await import('@/lib/pdf');
+                            await mod.exportAllRespondentsPdf(sel, items, { overallAverage: avgStr, title: `Agence: ${agencyFilter || 'Toutes'}` }, (done:number,total:number)=>{
+                              const btn = document.getElementById('export-single-agency-btn') as HTMLButtonElement | null;
+                              if (btn) btn.textContent = `Exportation ${done}/${total}…`;
+                            });
+                          } catch (e:any) {
+                            console.error('Export agency failed', e);
+                            toast({ title: 'Échec', description: String(e && (e.message || e)) });
+                          } finally {
+                            const btn = document.getElementById('export-single-agency-btn') as HTMLButtonElement | null;
+                            if (btn) setTimeout(()=>{ btn.textContent = 'Télécharger l\'agence'; }, 2000);
+                          }
+                        }}
+                        id="export-single-agency-btn"
+                        className="px-3 py-2 rounded-md bg-primary text-white"
+                      >
+                        Télécharger l'agence
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => {
                         setNameFilter("");
