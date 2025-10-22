@@ -1047,6 +1047,61 @@ export default function Repondants() {
                       >
                         Télécharger l'agence
                       </button>
+
+                      <button
+                        onClick={async () => {
+                          try {
+                            const sel = selectedResortKey;
+                            if (!sel) return;
+                            const params = new URLSearchParams();
+                            params.set('page','1');
+                            params.set('pageSize','500');
+                            if (agencyFilter) params.set('agency', agencyFilter);
+                            if (startDateFilter) params.set('startDate', startDateFilter);
+                            if (endDateFilter) params.set('endDate', endDateFilter);
+                            const apiUrl = `/api/resort/${sel}/respondents?${params.toString()}`;
+                            const resp = await fetch(apiUrl, { credentials: 'same-origin' });
+                            if (!resp.ok) throw new Error('Impossible de récupérer les répondants');
+                            const json = await resp.json();
+                            const items = json.items || [];
+                            // For each respondent fetch categories
+                            const catMap: Record<string, { sum: number; count: number }> = {};
+                            for (let i=0;i<items.length;i++) {
+                              const it = items[i];
+                              const p = new URLSearchParams();
+                              if (it.email) p.set('email', it.email);
+                              if (it.name) p.set('name', it.name);
+                              if (it.date) p.set('date', it.date);
+                              const url = `/api/resort/${sel}/respondent?${p.toString()}`;
+                              const details = await fetch(url, { credentials:'same-origin' }).then(r=>r.ok? r.json().catch(()=>null): null).catch(()=>null);
+                              const cats = details?.categories || null;
+                              if (cats && Array.isArray(cats)) {
+                                for (const c of cats) {
+                                  const key = String((c.name||'').trim()).toLowerCase();
+                                  const v = Number(String(c.value||'').replace(',', '.'));
+                                  if (!Number.isFinite(v)) continue;
+                                  if (!catMap[key]) catMap[key] = { sum: 0, count: 0 };
+                                  catMap[key].sum += v;
+                                  catMap[key].count += 1;
+                                }
+                              }
+                              // small throttle
+                              await new Promise(r=>setTimeout(r, 200));
+                            }
+                            const averages = Object.keys(catMap).map(k=>({ name: k, average: catMap[k].count? catMap[k].sum / catMap[k].count : null, count: catMap[k].count }));
+                            // normalize display names (capitalize)
+                            const display = averages.map(a=>({ name: a.name.replace(/^./, s=>s.toUpperCase()), average: a.average, count: a.count }));
+                            const mod = await import('@/lib/pdf');
+                            await mod.exportAgencyCategoryAveragesPdf(sel, agencyFilter || 'Toutes', display, { title: `Moyennes par catégorie - ${agencyFilter || 'Toutes'}`, filename: `moyennes-agence-${(agencyFilter||'all').replace(/[^a-z0-9_\\-]/gi,'_')}.pdf` });
+                          } catch (e:any) {
+                            console.error('Moyennes agence failed', e);
+                            toast({ title: 'Échec', description: String(e && (e.message || e)) });
+                          }
+                        }}
+                        className="px-3 py-2 rounded-md border text-sm"
+                      >
+                        Moyenne par catégorie
+                      </button>
                     </div>
 
                     <button
