@@ -411,14 +411,14 @@ export async function fetchRespondentDetailsFromSheet(
 
     // rows-as-respondents: try find row matching name/email
     const targetName = nameKey.toString().trim().toLowerCase();
-    const targetEmail = emailKey.toString().trim().toLowerCase();
+    const targetEmailRow = emailKey.toString().trim().toLowerCase();
     let matchedRowIdx = -1;
     for (let ri = 0; ri < mrows.length; ri++) {
       const cells = mrows[ri].c || [];
       const norm = cells.map((c: any) =>
         normalizeDiacritics(cellToStringLocal(c) || "").replace(/\s+/g, ""),
       );
-      if (targetEmail && norm.some((v: any) => v && v.includes(targetEmail))) {
+      if (targetEmailRow && norm.some((v: any) => v && v.includes(targetEmailRow))) {
         matchedRowIdx = ri;
         break;
       }
