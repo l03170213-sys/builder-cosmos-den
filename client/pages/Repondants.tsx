@@ -1007,12 +1007,40 @@ export default function Repondants() {
                               avg != null
                                 ? avg.toFixed(1).replace(".", ",")
                                 : null;
-                            // call export function with overall average option
+                            // compute category averages by fetching respondent details
+                            const catMap: Record<string, { sum: number; count: number }> = {};
+                            for (let i = 0; i < items.length; i++) {
+                              const it = items[i];
+                              const p = new URLSearchParams();
+                              if (it.email) p.set('email', it.email);
+                              if (it.name) p.set('name', it.name);
+                              if (it.date) p.set('date', it.date);
+                              const url = `/api/resort/${sel}/respondent?${p.toString()}`;
+                              const details = await fetch(url, { credentials: 'same-origin' }).then(r => r.ok ? r.json().catch(()=>null) : null).catch(()=>null);
+                              const cats = details?.categories || null;
+                              if (cats && Array.isArray(cats)) {
+                                for (const c of cats) {
+                                  const key = String((c.name || '').trim());
+                                  const v = Number(String(c.value || '').replace(',', '.'));
+                                  if (!Number.isFinite(v)) continue;
+                                  const lk = key.toLowerCase();
+                                  if (!catMap[lk]) catMap[lk] = { sum: 0, count: 0 };
+                                  catMap[lk].sum += v;
+                                  catMap[lk].count += 1;
+                                }
+                              }
+                              // small throttle
+                              await new Promise(r => setTimeout(r, 200));
+                            }
+                            const categoryAverages = Object.keys(catMap).map(k => ({ name: k.replace(/^./, s => s.toUpperCase()), average: catMap[k].count ? catMap[k].sum / catMap[k].count : null, count: catMap[k].count }));
+
+                            // call export function with overall average and category averages
                             await pdfLib.exportAllRespondentsPdf(
                               sel,
                               items,
                               {
                                 overallAverage: avgStr,
+                                categoryAverages,
                                 title: `Agence: ${agencyFilter || "Toutes"}`,
                                 count: items.length,
                                 filename: `respondents-agence-${(agencyFilter || "all").replace(/[^a-z0-9_\-]/gi, "_")}.pdf`,
