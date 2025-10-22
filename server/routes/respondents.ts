@@ -1,4 +1,3 @@
-import type { RequestHandler } from "express";
 import { RESORTS } from "../resorts";
 
 function parseGviz(text: string) {
@@ -16,6 +15,58 @@ function cellToString(c: any) {
   return "";
 }
 
+function tryParseDate(s: string): Date | null {
+  if (!s) return null;
+  let str = String(s).trim();
+  // Normalize NBSP and multiple spaces
+  str = str.replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
+
+  // Google Sheets Date(YYYY,M,D,...)
+  const sheetsDate = str.match(/^Date\(\s*(\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/);
+  if (sheetsDate) {
+    const y = Number(sheetsDate[1]);
+    const m = Number(sheetsDate[2]);
+    const d = Number(sheetsDate[3]);
+    // month in this representation may be 0-based; attempt both by creating date and checking
+    const dt = new Date(y, m, d);
+    if (!isNaN(dt.getTime())) return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  }
+
+  // DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY
+  const dmY = str.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})/);
+  if (dmY) {
+    let day = Number(dmY[1]);
+    let month = Number(dmY[2]) - 1;
+    let year = Number(dmY[3]);
+    if (String(year).length === 2) year = 2000 + year;
+    const dt = new Date(year, month, day);
+    if (!isNaN(dt.getTime())) return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  }
+
+  // ISO 2025-07-09T... or 2025-07-09
+  const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const y = Number(iso[1]);
+    const m = Number(iso[2]) - 1;
+    const d = Number(iso[3]);
+    const dt = new Date(y, m, d);
+    if (!isNaN(dt.getTime())) return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  }
+
+  // Try numeric Excel serial (days since 1899-12-30)
+  const num = Number(str);
+  if (!Number.isNaN(num) && num > 0) {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const dt = new Date(excelEpoch.getTime() + Math.round(num) * 24 * 60 * 60 * 1000);
+    return new Date(dt.getUTCFullYear(), dt.getUTCMonth(), dt.getUTCDate());
+  }
+
+  // Last resort: Date constructor
+  const dt = new Date(str);
+  if (!isNaN(dt.getTime())) return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  return null;
+}
+
 export const getResortRespondents: RequestHandler = async (req, res) => {
   try {
     const resortKey = req.params.resort as string;
@@ -29,12 +80,10 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
     if (!rr.ok) return res.status(502).json({ error: "Unable to fetch sheet" });
     const text = await rr.text();
     const json = parseGviz(text);
-    const cols: string[] = (json.table.cols || []).map((c: any) =>
-      (c.label || "").toString(),
-    );
+    const cols: string[] = (json.table.cols || []).map((c: any) => (c.label || "").toString());
     const rows: any[] = (json.table.rows || []) as any[];
 
-    // Determine column indices using heuristics that match VM Resort expectations
+    // Determine columns
     const findCol = (keywords: string[]) => {
       const lower = cols.map((c) => (c || "").toString().toLowerCase());
       for (let k of keywords) {
@@ -52,6 +101,7 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
         .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
+
     const TARGET_FEEDBACK_TITLE = "Votre avis compte pour nous ! :)";
     const feedbackColExact = cols.findIndex(
       (c) => normalizeHeader(c) === normalizeHeader(TARGET_FEEDBACK_TITLE),
@@ -68,6 +118,8 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
     ]);
     // Use column C (index 2) as the date column for all resorts per request
     const dateCol = 2;
+    // Agency per user request is column H (index 7)
+    const agencyCol = 7;
     // Per request, age should be read from column BK (zero-based index 62)
     const ageCol = 62;
     const postalCol = findCol(["postal", "code postal", "postcode", "zip"]);
@@ -89,11 +141,10 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       "votre avis compte pour nous ! :)",
     ]);
 
-    // Fallbacks: if noteCol not found, try column 11 (L) as in original heuristics
+    // Fallbacks: if noteCol not found, try column 11 (L)
     let resolvedNoteCol = noteCol;
     if (resolvedNoteCol === -1 && cols.length > 11) resolvedNoteCol = 11;
 
-    // Determine name column (prefer headers, fallback to E (4) or A (0))
     const nameCol = findCol(["nom", "name", "client", "label"]) !== -1 ? findCol(["nom", "name", "client", "label"]) : (cols.length > 4 ? 4 : 0);
     const resolvedEmailCol = emailCol !== -1 ? emailCol : (cols.length > 3 ? 3 : -1);
     const resolvedPostalCol = postalCol !== -1 ? postalCol : (cols.length > 8 ? 8 : -1);
@@ -102,16 +153,13 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
     for (let r = 0; r < rows.length; r++) {
       const row = rows[r];
       const c = row.c || [];
-      // skip empty rows
       const hasAny = (c || []).some(
-        (cell: any) =>
-          cell && cell.v != null && String(cell.v).toString().trim() !== "",
+        (cell: any) => cell && cell.v != null && String(cell.v).toString().trim() !== "",
       );
       if (!hasAny) continue;
 
       const obj: any = {};
       obj.id = r + 1;
-      // Use detected columns for name/email/postal to match VM Resort behaviour across all hotels
       obj.label = cellToString(c[nameCol]);
       obj.email = resolvedEmailCol !== -1 ? cellToString(c[resolvedEmailCol]) : cellToString(c[3]);
       obj.note = "";
@@ -119,7 +167,8 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       obj.age = ageCol !== -1 ? cellToString(c[ageCol]) : "";
       obj.postal = resolvedPostalCol !== -1 ? cellToString(c[resolvedPostalCol]) : cellToString(c[8]);
       obj.duration = durationCol !== -1 ? cellToString(c[durationCol]) : "";
-      // Prefer exact header match (TARGET_FEEDBACK_TITLE) or BT (index 71) specifically; else fallback to known feedback column
+      obj.agency = agencyCol !== -1 ? cellToString(c[agencyCol]) : "";
+
       if (feedbackColExact !== -1) {
         obj.feedback = cellToString(c[feedbackColExact]);
       } else if (c[71] && c[71].v != null) {
@@ -130,15 +179,12 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
         obj.feedback = "";
       }
 
-      // If email empty, try to infer from label
       if (!obj.email && obj.label && obj.label.includes("@")) obj.email = obj.label;
-
-      // alias for compatibility with client which expects 'name'
       obj.name = obj.label;
       respondents.push(obj);
     }
 
-    // Try to enrich respondents with overall note from matrice sheet (prefer rows-as-respondents and column L per respondent)
+    // Try to enrich respondents with overall note from matrice sheet
     try {
       if (cfg.gidMatrice) {
         const mgurl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${cfg.gidMatrice}`;
@@ -149,7 +195,6 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
           const mcols: string[] = (mjson.table.cols || []).map((c: any) => (c.label || '').toString());
           const mrows: any[] = mjson.table.rows || [];
 
-          // First pass: for each respondent, try to find a row in mrows that contains their email or label (use cellToString for robust matching)
           for (let ridx = 0; ridx < respondents.length; ridx++) {
             const resp = respondents[ridx];
             const eKey = (resp.email || '').toString().trim().toLowerCase();
@@ -158,10 +203,8 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
             let matched = false;
             for (let ri = 0; ri < mrows.length; ri++) {
               const cells = (mrows[ri].c || []) as any[];
-              // build normalized cell strings using cellToString
               const normCells = cells.map((cell: any) => (cellToString(cell) || '').toString().trim().toLowerCase());
 
-              // PRIORITY 1: match respondent name against first column of matrice row
               if (lKey) {
                 const firstCell = (cellToString(cells[0]) || '').toString().trim().toLowerCase();
                 if (firstCell && (firstCell === lKey || firstCell.includes(lKey) || lKey.includes(firstCell))) {
@@ -173,7 +216,6 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
                 }
               }
 
-              // PRIORITY 2: exact email match anywhere in row
               if (eKey) {
                 for (const txt of normCells) {
                   if (!txt) continue;
@@ -188,7 +230,6 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
                 if (matched) break;
               }
 
-              // PRIORITY 3: partial email or name match anywhere in row
               if (eKey) {
                 for (const txt of normCells) {
                   if (!txt) continue;
@@ -219,7 +260,6 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
             }
           }
 
-          // Second pass: if some respondents still have no note, try cols-as-respondents fallback (column header matching)
           const colLabelLower = mcols.map((c) => (c || '').toString().trim().toLowerCase());
           const byEmail: Record<string, number[]> = {};
           const byLabel: Record<string, number[]> = {};
@@ -233,7 +273,6 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
           for (let ci = 0; ci < colLabelLower.length; ci++) {
             const lbl = colLabelLower[ci];
             if (!lbl) continue;
-            // exact email matches
             if (byEmail[lbl]) {
               for (const ridx of byEmail[lbl]) {
                 if (respondents[ridx].note && respondents[ridx].note !== '') continue;
@@ -252,7 +291,6 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
               }
               continue;
             }
-            // partial match
             for (const eKey of Object.keys(byEmail)) {
               if (lbl.includes(eKey) && eKey) {
                 for (const ridx of byEmail[eKey]) {
@@ -275,7 +313,6 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
             }
           }
 
-          // Third pass: fallback by row index mapping (if still missing)
           for (let i = 0; i < respondents.length; i++) {
             if (respondents[i].note && respondents[i].note !== '') continue;
             const mrow = mrows[i];
@@ -291,38 +328,72 @@ export const getResortRespondents: RequestHandler = async (req, res) => {
       console.error("Failed to enrich respondents from matrice:", e);
     }
 
-    // Fallback: if some respondents still have no note, try to map by row index to matrice (column L = index 11)
+    // Apply filtering from query params (name, agency, startDate, endDate)
     try {
-      if (cfg.gidMatrice) {
-        const mgurl2 = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${cfg.gidMatrice}`;
-        const mr2 = await fetch(mgurl2);
-        if (mr2.ok) {
-          const mtext2 = await mr2.text();
-          const mjson2 = parseGviz(mtext2);
-          const mrows2: any[] = mjson2.table.rows || [];
-          for (let i = 0; i < respondents.length; i++) {
-            if (respondents[i].note && respondents[i].note !== "") continue;
-            const mrow = mrows2[i];
-            if (!mrow) continue;
-            const mcells = mrow.c || [];
-            const overallIdx =
-              11 < mcells.length ? 11 : Math.max(0, mcells.length - 1);
-            const overallCell = mcells[overallIdx];
-            if (overallCell && overallCell.v != null)
-              respondents[i].note = String(overallCell.v);
-          }
-        }
+      const qName = (req.query.name || "").toString().trim().toLowerCase();
+      const qAgency = (req.query.agency || "").toString().trim().toLowerCase();
+      const qStart = (req.query.startDate || "").toString().trim();
+      const qEnd = (req.query.endDate || "").toString().trim();
+      const sortDate = (req.query.sortDate || "").toString().toLowerCase(); // 'asc' or 'desc'
+
+      let filtered = respondents;
+
+      if (qName) {
+        filtered = filtered.filter((r) => {
+          const name = (r.name || r.label || "").toString().toLowerCase();
+          return name.includes(qName);
+        });
       }
+
+      if (qAgency) {
+        filtered = filtered.filter((r) => {
+          const agency = (r.agency || "").toString().toLowerCase();
+          return agency.includes(qAgency);
+        });
+      }
+
+      if (qStart || qEnd) {
+        const start = qStart ? tryParseDate(qStart) : null;
+        const end = qEnd ? tryParseDate(qEnd) : null;
+        filtered = filtered.filter((r) => {
+          const d = tryParseDate(r.date || "");
+          if (!d) return false;
+          if (start && d.getTime() < start.getTime()) return false;
+          if (end && d.getTime() > end.getTime()) return false;
+          return true;
+        });
+      }
+
+      // Sort by date if requested
+      if (sortDate === "asc" || sortDate === "desc") {
+        filtered.sort((a, b) => {
+          const da = tryParseDate(a.date || "");
+          const db = tryParseDate(b.date || "");
+          const ta = da ? da.getTime() : 0;
+          const tb = db ? db.getTime() : 0;
+          if (ta === tb) return 0;
+          if (sortDate === "asc") return ta - tb;
+          return tb - ta;
+        });
+      }
+
+      // Support pagination via query params: page (1-based) and pageSize
+      const page = Math.max(1, parseInt(String(req.query.page || "1"), 10) || 1);
+      const pageSize = Math.max(1, Math.min(500, parseInt(String(req.query.pageSize || "50"), 10) || 50));
+      const total = filtered.length;
+      const startIdx = (page - 1) * pageSize;
+      const endIdx = Math.min(total, startIdx + pageSize);
+      const pageItems = filtered.slice(startIdx, endIdx);
+
+      res.status(200).json({ items: pageItems, total, page, pageSize });
+      return;
     } catch (e) {
-      console.error("Fallback row-index mapping failed:", e);
+      console.error("Failed to filter respondents:", e);
     }
 
-    // Support pagination via query params: page (1-based) and pageSize
+    // Fallback: pagination without filtering
     const page = Math.max(1, parseInt(String(req.query.page || "1"), 10) || 1);
-    const pageSize = Math.max(
-      1,
-      Math.min(500, parseInt(String(req.query.pageSize || "50"), 10) || 50),
-    );
+    const pageSize = Math.max(1, Math.min(500, parseInt(String(req.query.pageSize || "50"), 10) || 50));
     const total = respondents.length;
     const start = (page - 1) * pageSize;
     const end = Math.min(total, start + pageSize);
