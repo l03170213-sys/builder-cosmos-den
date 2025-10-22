@@ -317,7 +317,7 @@ export async function fetchRespondentDetailsFromSheet(
           "",
         );
         if (!lbl) continue;
-        if (targetEmail && lbl.includes(targetEmail)) {
+        if (targetEmailHeader && lbl.includes(targetEmailHeader)) {
           respColIndex = ci;
           break;
         }
@@ -353,7 +353,7 @@ export async function fetchRespondentDetailsFromSheet(
       { colIndex: 5, name: "🛏️ CHAMBRES" },
       { colIndex: 6, name: "🏊 PISCINE" },
       { colIndex: 7, name: "🎉 ANIMATION" },
-      { colIndex: 8, name: "👥 ÉQUIPES" },
+      { colIndex: 8, name: "�� ÉQUIPES" },
       { colIndex: 9, name: "🤝 Représentant Top of Travel" },
       { colIndex: 10, name: "🌍 EXCURSIONS" },
       { colIndex: 11, name: "MOYENNE GÉNÉRALE" },
