@@ -401,7 +401,7 @@ export async function exportAgencyCategoryAveragesPdf(
 ) {
   const doc = new jsPDF();
   doc.setFontSize(20);
-  doc.setTextColor(20,20,20);
+  doc.setTextColor(20, 20, 20);
   doc.text(options?.title || `Moyennes par catégorie`, 20, 30);
   doc.setFontSize(12);
   doc.text(`Hôtel: ${resortKey}`, 20, 46);
@@ -413,10 +413,13 @@ export async function exportAgencyCategoryAveragesPdf(
       doc.addPage();
       y = 30;
     }
-    const avg = c.average != null ? String(c.average.toFixed(1)).replace('.', ',') : '—';
+    const avg =
+      c.average != null ? String(c.average.toFixed(1)).replace(".", ",") : "—";
     doc.text(`- ${c.name}: ${avg} (${c.count})`, 20, y);
     y += 10;
   }
-  const filename = options?.filename || `moyennes-agence-${(agencyName||'all').replace(/[^a-z0-9_\-]/gi,'_')}.pdf`;
+  const filename =
+    options?.filename ||
+    `moyennes-agence-${(agencyName || "all").replace(/[^a-z0-9_\-]/gi, "_")}.pdf`;
   doc.save(filename);
 }
