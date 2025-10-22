@@ -1124,8 +1124,7 @@ export default function Repondants() {
                               average: a.average,
                               count: a.count,
                             }));
-                            const mod = await import("@/lib/pdf");
-                            await mod.exportAgencyCategoryAveragesPdf(
+                            await pdfLib.exportAgencyCategoryAveragesPdf(
                               sel,
                               agencyFilter || "Toutes",
                               display,
