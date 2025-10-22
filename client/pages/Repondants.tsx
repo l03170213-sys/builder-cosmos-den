@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
+import * as pdfLib from "@/lib/pdf";
 import { loadSettings, saveSettings } from "@/lib/settings";
 import { useSelectedResort } from "@/hooks/use-selected-resort";
 import Sidebar from "@/components/Sidebar";
