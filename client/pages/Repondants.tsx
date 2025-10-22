@@ -375,6 +375,34 @@ export default function Repondants() {
     refetchIntervalInBackground: true,
   });
 
+  // fetch agencies for selected resort to populate dropdown
+  const { data: agencies, isLoading: loadingAgencies } = useQuery({
+    queryKey: ["resortAgencies", selectedResortKey],
+    queryFn: async () => {
+      try {
+        const sel = selectedResortKey;
+        if (!sel) return [];
+        const params = new URLSearchParams();
+        params.set('page','1');
+        params.set('pageSize','500');
+        const apiUrl = `/api/resort/${sel}/respondents?${params.toString()}`;
+        const resp = await fetch(apiUrl, { credentials: 'same-origin' });
+        if (!resp.ok) return [];
+        const json = await resp.json().catch(()=>({ items: [] }));
+        const items = json.items || [];
+        const set = new Set<string>();
+        for (const it of items) {
+          if (it && it.agency) set.add(String(it.agency).trim());
+        }
+        return Array.from(set).filter(Boolean).sort();
+      } catch (e) {
+        return [];
+      }
+    },
+    enabled: !!selectedResortKey,
+    refetchOnWindowFocus: false,
+  });
+
   // fetch global summary (respondents + recommendation rate)
   const { data: summary, isLoading: loadingSummary } = useQuery({
     queryKey: ["resortSummary", selectedResortKey],
