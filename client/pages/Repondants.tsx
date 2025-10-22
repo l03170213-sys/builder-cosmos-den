@@ -206,9 +206,67 @@ export default function Repondants() {
       startDateFilter,
       endDateFilter,
       sortDateDir,
+      searchAllMode,
+      resorts.map(r=>r.key).join(',')
     ],
     queryFn: async () => {
       try {
+        // If searching across all resorts, fetch each resort's respondents and merge
+        if (searchAllMode !== 'none') {
+          const allResults = await Promise.all(
+            resorts.map(async (rs) => {
+              try {
+                const params = new URLSearchParams();
+                params.set('page', '1');
+                params.set('pageSize', '500');
+                if (searchAllMode === 'name' && nameFilter) params.set('name', nameFilter);
+                if (searchAllMode === 'agency' && agencyFilter) params.set('agency', agencyFilter);
+                if (startDateFilter) params.set('startDate', startDateFilter);
+                if (endDateFilter) params.set('endDate', endDateFilter);
+                if (sortDateDir) params.set('sortDate', sortDateDir);
+                const apiUrl = `/api/resort/${rs.key}/respondents?${params.toString()}`;
+                const resp = await fetch(apiUrl, { credentials: 'same-origin' });
+                if (!resp.ok) return { items: [], total: 0 };
+                const json = await resp.json().catch(() => ({ items: [], total: 0 }));
+                return json;
+              } catch (e) {
+                return { items: [], total: 0 };
+              }
+            })
+          );
+
+          const allItems = allResults.flatMap((r:any)=>r.items || []);
+          // apply client-side date filtering if not already present
+          let filtered = allItems;
+          if (startDateFilter || endDateFilter) {
+            const sd = startDateFilter ? new Date(startDateFilter) : null;
+            const ed = endDateFilter ? new Date(endDateFilter) : null;
+            filtered = filtered.filter((r:any) => {
+              if (!r.date) return false;
+              const d = new Date(r.date.toString().replace(/Date\(|\)/g, ''));
+              if (isNaN(d.getTime())) return false;
+              if (sd && d.getTime() < sd.getTime()) return false;
+              if (ed && d.getTime() > ed.getTime()) return false;
+              return true;
+            });
+          }
+          if (sortDateDir === 'asc' || sortDateDir === 'desc') {
+            filtered.sort((a:any,b:any)=>{
+              const da = new Date(a.date || '');
+              const db = new Date(b.date || '');
+              const ta = isNaN(da.getTime())?0:da.getTime();
+              const tb = isNaN(db.getTime())?0:db.getTime();
+              return sortDateDir === 'asc' ? ta - tb : tb - ta;
+            });
+          }
+
+          const total = filtered.length;
+          const startIdx = (page - 1) * pageSize;
+          const pageItems = filtered.slice(startIdx, startIdx + pageSize);
+          return { items: pageItems, total, page, pageSize };
+        }
+
+        // default: fetch only selected resort
         const selected = selectedResortKey;
         const params = new URLSearchParams();
         params.set("page", String(page));
