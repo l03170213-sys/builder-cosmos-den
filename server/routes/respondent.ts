@@ -1350,17 +1350,17 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       const overallCell = lastRow && lastRow.c && lastRow.c[colIndex];
       const overall =
         overallCell && overallCell.v != null ? String(overallCell.v) : null;
-      // get feedback from exact feedback column if present (in last row) or fallback to BT (index 71)
+      // get feedback from detected feedback column index (in last row) or fallback to BT (index 71)
       let feedbackCell: any = null;
       if (
-        typeof feedbackColExactInSheet1 !== "undefined" &&
-        feedbackColExactInSheet1 !== -1 &&
+        typeof feedbackColIdx !== "undefined" &&
+        feedbackColIdx !== -1 &&
         lastRow &&
         lastRow.c &&
-        lastRow.c[feedbackColExactInSheet1] &&
-        lastRow.c[feedbackColExactInSheet1].v != null
+        lastRow.c[feedbackColIdx] &&
+        lastRow.c[feedbackColIdx].v != null
       )
-        feedbackCell = lastRow.c[feedbackColExactInSheet1];
+        feedbackCell = lastRow.c[feedbackColIdx];
       else if (lastRow && lastRow.c && lastRow.c[71] && lastRow.c[71].v != null)
         feedbackCell = lastRow.c[71];
       const feedback = feedbackCell ? String(feedbackCell.v) : null;
