@@ -302,7 +302,10 @@ export async function exportAllRespondentsPdf(
     doc.text(options.title || "Résumé des répondants", 20, 40);
     doc.setFontSize(36);
     doc.setTextColor(10, 10, 10);
-    const avgLabel = options.overallAverage != null ? `Note moyenne: ${String(options.overallAverage)}` : "";
+    const avgLabel =
+      options.overallAverage != null
+        ? `Note moyenne: ${String(options.overallAverage)}`
+        : "";
     doc.text(avgLabel, 20, 80);
     if (options.count != null) {
       doc.setFontSize(12);
@@ -343,7 +346,10 @@ export async function exportAllRespondentsPdf(
       }
 
       // If we added a summary page, shift respondent pages by +1 to avoid overwriting
-      const pageIdx = options && (options.overallAverage != null || options.title) ? i + 1 : i;
+      const pageIdx =
+        options && (options.overallAverage != null || options.title)
+          ? i + 1
+          : i;
 
       addRespondentPage(
         doc,
@@ -364,7 +370,10 @@ export async function exportAllRespondentsPdf(
       if (onProgress) onProgress(added, total);
     } catch (e) {
       // still continue
-      const pageIdx = options && (options.overallAverage != null || options.title) ? i + 1 : i;
+      const pageIdx =
+        options && (options.overallAverage != null || options.title)
+          ? i + 1
+          : i;
       addRespondentPage(
         doc,
         pageIdx,
@@ -379,6 +388,7 @@ export async function exportAllRespondentsPdf(
     }
   }
 
-  const filename = options && options.filename ? options.filename : `respondents-all.pdf`;
+  const filename =
+    options && options.filename ? options.filename : `respondents-all.pdf`;
   doc.save(filename);
 }
