@@ -272,8 +272,19 @@ export async function exportRespondentPdf(resortKey: string, respondent: any) {
 export async function exportAllRespondentsPdf(
   resortKey: string,
   allRespondents: any[],
-  onProgress?: (done: number, total: number) => void,
+  optionsOrOnProgress?: any,
+  maybeOnProgress?: (done: number, total: number) => void,
 ) {
+  // Backwards compatible signature: (resortKey, all, onProgress) or (resortKey, all, options, onProgress)
+  let options: any = {};
+  let onProgress: ((done: number, total: number) => void) | undefined;
+  if (typeof optionsOrOnProgress === "function") {
+    onProgress = optionsOrOnProgress;
+  } else if (optionsOrOnProgress) {
+    options = optionsOrOnProgress;
+    if (typeof maybeOnProgress === "function") onProgress = maybeOnProgress;
+  }
+
   const settings = typeof window !== "undefined" ? loadSettings() : null;
   const initialDelayMs = settings
     ? (settings.pdfExportDelaySeconds || 1) * 1000
@@ -282,6 +293,22 @@ export async function exportAllRespondentsPdf(
   const doc = new jsPDF();
   let added = 0;
   const total = allRespondents.length;
+
+  // If options.overallAverage provided, add a summary first page
+  if (options && (options.overallAverage != null || options.title)) {
+    // First page: summary
+    doc.setFontSize(20);
+    doc.setTextColor(20, 20, 20);
+    doc.text(options.title || "Résumé des répondants", 20, 40);
+    doc.setFontSize(36);
+    doc.setTextColor(10, 10, 10);
+    const avgLabel = options.overallAverage != null ? `Note moyenne: ${String(options.overallAverage)}` : "";
+    doc.text(avgLabel, 20, 80);
+    if (options.count != null) {
+      doc.setFontSize(12);
+      doc.text(`Nombre de répondants: ${String(options.count)}`, 20, 100);
+    }
+  }
 
   const perRespondentDelayMs = settings
     ? (settings.pdfExportDelaySeconds || 1) * 1000
@@ -315,9 +342,12 @@ export async function exportAllRespondentsPdf(
         if (details) break;
       }
 
+      // If we added a summary page, shift respondent pages by +1 to avoid overwriting
+      const pageIdx = options && (options.overallAverage != null || options.title) ? i + 1 : i;
+
       addRespondentPage(
         doc,
-        i,
+        pageIdx,
         total,
         r.name || r.label || r.email || `Respondent ${i + 1}`,
         details?.overall || r.note || "",
@@ -334,9 +364,10 @@ export async function exportAllRespondentsPdf(
       if (onProgress) onProgress(added, total);
     } catch (e) {
       // still continue
+      const pageIdx = options && (options.overallAverage != null || options.title) ? i + 1 : i;
       addRespondentPage(
         doc,
-        i,
+        pageIdx,
         total,
         r.name || r.label || r.email || `Respondent ${i + 1}`,
         r.note || "",
@@ -348,5 +379,6 @@ export async function exportAllRespondentsPdf(
     }
   }
 
-  doc.save(`respondents-all.pdf`);
+  const filename = options && options.filename ? options.filename : `respondents-all.pdf`;
+  doc.save(filename);
 }
