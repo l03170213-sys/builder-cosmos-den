@@ -690,27 +690,29 @@ export default function Repondants() {
         btn.textContent = "Préparation...";
         // wait 5s per requirement
         await new Promise((res) => setTimeout(res, 5000));
-        // fetch all respondents pages sequentially
-        const selected = selectedResortKey;
+        // decide resort keys to fetch
+        const resortKeys = searchAllMode === 'none' ? [selectedResortKey] : resorts.map(r=>r.key);
         const all: any[] = [];
-        let pageIdx = 1;
-        while (true) {
-          const params = new URLSearchParams();
-          params.set("page", String(pageIdx));
-          params.set("pageSize", String(500));
-          if (nameFilter) params.set("name", nameFilter);
-          if (agencyFilter) params.set("agency", agencyFilter);
-          if (startDateFilter) params.set("startDate", startDateFilter);
-          if (endDateFilter) params.set("endDate", endDateFilter);
-          if (sortDateDir) params.set("sortDate", sortDateDir);
-          const apiUrl = `/api/resort/${selected}/respondents?${params.toString()}`;
-          const resp = await fetch(apiUrl, { credentials: "same-origin" });
-          if (!resp.ok) break;
-          const json = await resp.json().catch(() => null);
-          if (!json || !Array.isArray(json.items)) break;
-          all.push(...json.items);
-          if (all.length >= json.total) break;
-          pageIdx++;
+        for (const rk of resortKeys) {
+          let pageIdx = 1;
+          while (true) {
+            const params = new URLSearchParams();
+            params.set("page", String(pageIdx));
+            params.set("pageSize", String(500));
+            if (nameFilter && (searchAllMode === 'none' || searchAllMode === 'name')) params.set("name", nameFilter);
+            if (agencyFilter && (searchAllMode === 'none' || searchAllMode === 'agency')) params.set("agency", agencyFilter);
+            if (startDateFilter) params.set("startDate", startDateFilter);
+            if (endDateFilter) params.set("endDate", endDateFilter);
+            if (sortDateDir) params.set("sortDate", sortDateDir);
+            const apiUrl = `/api/resort/${rk}/respondents?${params.toString()}`;
+            const resp = await fetch(apiUrl, { credentials: "same-origin" });
+            if (!resp.ok) break;
+            const json = await resp.json().catch(() => null);
+            if (!json || !Array.isArray(json.items)) break;
+            all.push(...json.items);
+            if (all.length >= json.total) break;
+            pageIdx++;
+          }
         }
         // dynamically import pdf helper
         const mod = await import("@/lib/pdf");
@@ -718,7 +720,7 @@ export default function Repondants() {
           selectedResortKey,
           all,
           (done: number, total: number) => {
-            btn.textContent = `Exportation ${done}/${total}��`;
+            btn.textContent = `Exportation ${done}/${total}…`;
           },
         );
         btn.textContent = "Téléchargement terminé";
@@ -736,7 +738,7 @@ export default function Repondants() {
     };
     btn.addEventListener("click", handler);
     return () => btn.removeEventListener("click", handler);
-  }, [selectedResortKey, nameFilter, agencyFilter, startDateFilter, endDateFilter, sortDateDir]);
+  }, [selectedResortKey, nameFilter, agencyFilter, startDateFilter, endDateFilter, sortDateDir, searchAllMode, resorts]);
 
   React.useEffect(() => {
     if (!dialogOpen) {
@@ -1028,7 +1030,7 @@ export default function Repondants() {
                   return selectedSnapshotName || rowToShow?.name || rowToShow?.label || rowToShow?.email || "Anonyme";
                 })()}
               </DialogTitle>
-              <DialogDescription id="respondent-dialog-desc">Détails et moyennes pour le répondant s��lectionné</DialogDescription>
+              <DialogDescription id="respondent-dialog-desc">Détails et moyennes pour le répondant sélectionné</DialogDescription>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-lg border p-4 bg-white" style={{ borderColor: "#e6edf3" }}>
