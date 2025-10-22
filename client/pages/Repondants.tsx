@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import { loadSettings, saveSettings } from "@/lib/settings";
@@ -185,12 +184,38 @@ export default function Repondants() {
   const [page, setPage] = React.useState(1);
   const [pageSize] = React.useState(10);
   const [gotoPage, setGotoPage] = React.useState<string>("");
+
+  // New filter and sort states
+  const [nameFilter, setNameFilter] = React.useState<string>("");
+  const [agencyFilter, setAgencyFilter] = React.useState<string>("");
+  const [startDateFilter, setStartDateFilter] = React.useState<string>(""); // yyyy-mm-dd
+  const [endDateFilter, setEndDateFilter] = React.useState<string>("");
+  const [sortDateDir, setSortDateDir] = React.useState<string>("desc"); // 'asc' | 'desc' | ''
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["repondants", selectedResortKey, page, pageSize],
+    queryKey: [
+      "repondants",
+      selectedResortKey,
+      page,
+      pageSize,
+      nameFilter,
+      agencyFilter,
+      startDateFilter,
+      endDateFilter,
+      sortDateDir,
+    ],
     queryFn: async () => {
       try {
         const selected = selectedResortKey;
-        const apiUrl = `/api/resort/${selected}/respondents?page=${page}&pageSize=${pageSize}`;
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("pageSize", String(pageSize));
+        if (nameFilter) params.set("name", nameFilter);
+        if (agencyFilter) params.set("agency", agencyFilter);
+        if (startDateFilter) params.set("startDate", startDateFilter);
+        if (endDateFilter) params.set("endDate", endDateFilter);
+        if (sortDateDir) params.set("sortDate", sortDateDir);
+        const apiUrl = `/api/resort/${selected}/respondents?${params.toString()}`;
         // server returns { items, total, page, pageSize }
         return await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
       } catch (err) {
@@ -234,11 +259,46 @@ export default function Repondants() {
             obj.postal = cellToString(c[8]);
             obj.duration = "";
             obj.feedback = "";
+            // agency column H
+            obj.agency = cellToString(c[7]);
             items.push(obj);
           }
-          const total = items.length;
+
+          // apply client-side filtering in fallback
+          let filtered = items;
+          if (nameFilter) {
+            const nf = nameFilter.toLowerCase();
+            filtered = filtered.filter((r) => (r.name || "").toLowerCase().includes(nf));
+          }
+          if (agencyFilter) {
+            const af = agencyFilter.toLowerCase();
+            filtered = filtered.filter((r) => (r.agency || "").toLowerCase().includes(af));
+          }
+          if (startDateFilter || endDateFilter) {
+            const sd = startDateFilter ? new Date(startDateFilter) : null;
+            const ed = endDateFilter ? new Date(endDateFilter) : null;
+            filtered = filtered.filter((r) => {
+              if (!r.date) return false;
+              const d = new Date(r.date.toString().replace(/Date\(|\)/g, ""));
+              if (isNaN(d.getTime())) return false;
+              if (sd && d.getTime() < sd.getTime()) return false;
+              if (ed && d.getTime() > ed.getTime()) return false;
+              return true;
+            });
+          }
+          if (sortDateDir === "asc" || sortDateDir === "desc") {
+            filtered.sort((a, b) => {
+              const da = new Date(a.date || "");
+              const db = new Date(b.date || "");
+              const ta = isNaN(da.getTime()) ? 0 : da.getTime();
+              const tb = isNaN(db.getTime()) ? 0 : db.getTime();
+              return sortDateDir === "asc" ? ta - tb : tb - ta;
+            });
+          }
+
+          const total = filtered.length;
           const start = (page - 1) * pageSize;
-          const pageItems = items.slice(start, start + pageSize);
+          const pageItems = filtered.slice(start, start + pageSize);
           return { items: pageItems, total, page, pageSize };
         } catch (e) {
           console.error(
@@ -304,23 +364,12 @@ export default function Repondants() {
   // respondent details query (poll while dialog open)
   // state to hold selected respondent and per-category values
   const [selected, setSelected] = React.useState<any>(null);
-  const [selectedSnapshotName, setSelectedSnapshotName] = React.useState<
-    string | null
-  >(null);
-  const [categoriesByRespondent, setCategoriesByRespondent] = React.useState<
-    { name: string; value: string }[] | null
-  >(null);
-  const [loadingRespondentData, setLoadingRespondentData] =
-    React.useState(false);
-  const [respondentNoteGeneral, setRespondentNoteGeneral] = React.useState<
-    string | null
-  >(null);
-  const [respondentColumnLetter, setRespondentColumnLetter] = React.useState<
-    string | null
-  >(null);
-  const [respondentFeedback, setRespondentFeedback] = React.useState<
-    string | null
-  >(null);
+  const [selectedSnapshotName, setSelectedSnapshotName] = React.useState<string | null>(null);
+  const [categoriesByRespondent, setCategoriesByRespondent] = React.useState<{ name: string; value: string }[] | null>(null);
+  const [loadingRespondentData, setLoadingRespondentData] = React.useState(false);
+  const [respondentNoteGeneral, setRespondentNoteGeneral] = React.useState<string | null>(null);
+  const [respondentColumnLetter, setRespondentColumnLetter] = React.useState<string | null>(null);
+  const [respondentFeedback, setRespondentFeedback] = React.useState<string | null>(null);
 
   // helper to convert 0-based index to column letter (A, B, ... Z, AA...)
   const indexToColumn = (idx: number) => {
@@ -335,9 +384,7 @@ export default function Repondants() {
   };
 
   // map to store fetched per-respondent overall notes
-  const [respondentNotesMap, setRespondentNotesMap] = React.useState<
-    Record<string, string>
-  >({});
+  const [respondentNotesMap, setRespondentNotesMap] = React.useState<Record<string, string>>({});
 
   const getRowKey = (row: any) => {
     if (!row) return "";
@@ -345,9 +392,7 @@ export default function Repondants() {
     if (row.email && row.date)
       return `e:${String(row.email).toLowerCase()}|d:${String(row.date)}`;
     if (row.email) return `e:${String(row.email).toLowerCase()}`;
-    return `n:${String(row.name || "")
-      .trim()
-      .toLowerCase()}|${String(row.date || "")}`;
+    return `n:${String(row.name || "").trim().toLowerCase()}|${String(row.date || "")}`;
   };
 
   React.useEffect(() => {
@@ -366,15 +411,8 @@ export default function Repondants() {
           if (it.name) params.set("name", it.name);
           if (it.date) params.set("date", it.date);
           const apiUrl = `/api/resort/${selectedResortKey}/respondent?${params.toString()}`;
-          let resp = await fetchJsonSafe(apiUrl, {
-            credentials: "same-origin",
-          }).catch(() => null);
-          let noteVal =
-            resp &&
-            (resp.overall ??
-              resp.overallAverage ??
-              resp.overallScore ??
-              resp.overall);
+          let resp = await fetchJsonSafe(apiUrl, { credentials: "same-origin" }).catch(() => null);
+          let noteVal = resp && (resp.overall ?? resp.overallAverage ?? resp.overallScore ?? resp.overall);
 
           // fallback: client-side matrice lookup for locally added resorts
           if (noteVal == null || noteVal === "") {
@@ -436,16 +474,8 @@ export default function Repondants() {
       }
       const apiUrl = `/api/resort/${selectedResortKey}/respondent?${params.toString()}`;
       try {
-        const serverResp = await fetchJsonSafe(apiUrl, {
-          credentials: "same-origin",
-        }).catch(() => null);
-        if (
-          serverResp &&
-          (serverResp.overall ??
-            serverResp.overallAverage ??
-            serverResp.overallScore ??
-            serverResp.overall) != null
-        ) {
+        const serverResp = await fetchJsonSafe(apiUrl, { credentials: "same-origin" }).catch(() => null);
+        if (serverResp && (serverResp.overall ?? serverResp.overallAverage ?? serverResp.overallScore ?? serverResp.overall) != null) {
           return serverResp;
         }
         // fallback to client-side matrice lookup for detailed categories
@@ -485,12 +515,7 @@ export default function Repondants() {
       setCategoriesByRespondent(d?.categories || null);
       const overall =
         d &&
-        (d.overall ??
-          d.overallAverage ??
-          d.overallScore ??
-          d.overall_score ??
-          d.overall_value ??
-          null);
+        (d.overall ?? d.overallAverage ?? d.overallScore ?? d.overall_score ?? d.overall_value ?? null);
       // do not overwrite the note from the list row if present — prefer row.note
       if (!selected?.note) {
         setRespondentNoteGeneral(overall != null ? overall : null);
@@ -531,14 +556,10 @@ export default function Repondants() {
         if (selected?.name) params.set("name", selected.name);
         if (selected?.date) params.set("date", selected.date);
         // If we have the respondent row id from the list, pass it to the server to perform an exact row lookup
-        if ((selected as any)?.id)
-          params.set("row", String((selected as any).id));
+        if ((selected as any)?.id) params.set("row", String((selected as any).id));
         // include debug flag automatically when inspecting KIEHL to surface server _debug
         try {
-          const selName = (selected?.name || "")
-            .toString()
-            .trim()
-            .toLowerCase();
+          const selName = (selected?.name || "").toString().trim().toLowerCase();
           if (selName === "kiehl") params.set("debug", "1");
         } catch (ex) {
           // ignore
@@ -551,24 +572,15 @@ export default function Repondants() {
           window.location.origin,
         ).toString();
         try {
-          const dataResp = await fetchJsonSafe(apiUrl, {
-            credentials: "same-origin",
-          });
+          const dataResp = await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
           if (mounted && (selected?._selId || null) === capturedSelId) {
             setCategoriesByRespondent(dataResp.categories || null);
             const overallResp =
               dataResp &&
-              (dataResp.overall ??
-                dataResp.overallAverage ??
-                dataResp.overallScore ??
-                dataResp.overall_score ??
-                dataResp.overall_value ??
-                null);
+              (dataResp.overall ?? dataResp.overallAverage ?? dataResp.overallScore ?? dataResp.overall_score ?? dataResp.overall_value ?? dataResp.overall ?? null);
             // Do not overwrite the note coming from the list row; prefer selected.row note when present
             if (!selected?.note) {
-              setRespondentNoteGeneral(
-                overallResp != null ? overallResp : null,
-              );
+              setRespondentNoteGeneral(overallResp != null ? overallResp : null);
             }
             setRespondentColumnLetter(dataResp.column ?? null);
             setRespondentFeedback(dataResp.feedback ?? null);
@@ -622,7 +634,15 @@ export default function Repondants() {
         const all: any[] = [];
         let pageIdx = 1;
         while (true) {
-          const apiUrl = `/api/resort/${selected}/respondents?page=${pageIdx}&pageSize=500`;
+          const params = new URLSearchParams();
+          params.set("page", String(pageIdx));
+          params.set("pageSize", String(500));
+          if (nameFilter) params.set("name", nameFilter);
+          if (agencyFilter) params.set("agency", agencyFilter);
+          if (startDateFilter) params.set("startDate", startDateFilter);
+          if (endDateFilter) params.set("endDate", endDateFilter);
+          if (sortDateDir) params.set("sortDate", sortDateDir);
+          const apiUrl = `/api/resort/${selected}/respondents?${params.toString()}`;
           const resp = await fetch(apiUrl, { credentials: "same-origin" });
           if (!resp.ok) break;
           const json = await resp.json().catch(() => null);
@@ -655,7 +675,7 @@ export default function Repondants() {
     };
     btn.addEventListener("click", handler);
     return () => btn.removeEventListener("click", handler);
-  }, [selectedResortKey]);
+  }, [selectedResortKey, nameFilter, agencyFilter, startDateFilter, endDateFilter, sortDateDir]);
 
   React.useEffect(() => {
     if (!dialogOpen) {
@@ -675,7 +695,63 @@ export default function Repondants() {
             <CardContent className="p-0">
               <div className="font-normal px-6 pb-6">
                 <div className="flex items-center justify-between mb-3">
-                  <div />
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      placeholder="Rechercher par nom"
+                      value={nameFilter}
+                      onChange={(e) => {
+                        setNameFilter(e.target.value);
+                        setPage(1);
+                      }}
+                      className="rounded-md border px-3 py-2 text-sm w-56"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Agence de voyage"
+                      value={agencyFilter}
+                      onChange={(e) => {
+                        setAgencyFilter(e.target.value);
+                        setPage(1);
+                      }}
+                      className="rounded-md border px-3 py-2 text-sm w-56"
+                    />
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm">Du</label>
+                      <input
+                        type="date"
+                        value={startDateFilter}
+                        onChange={(e) => {
+                          setStartDateFilter(e.target.value);
+                          setPage(1);
+                        }}
+                        className="rounded-md border px-2 py-1 text-sm"
+                      />
+                      <label className="text-sm">Au</label>
+                      <input
+                        type="date"
+                        value={endDateFilter}
+                        onChange={(e) => {
+                          setEndDateFilter(e.target.value);
+                          setPage(1);
+                        }}
+                        className="rounded-md border px-2 py-1 text-sm"
+                      />
+                    </div>
+                    <button
+                      onClick={() => {
+                        setNameFilter("");
+                        setAgencyFilter("");
+                        setStartDateFilter("");
+                        setEndDateFilter("");
+                        setSortDateDir("desc");
+                        setPage(1);
+                      }}
+                      className="px-3 py-2 rounded-md border text-sm"
+                    >
+                      Effacer
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       id="export-all-btn"
@@ -692,46 +768,19 @@ export default function Repondants() {
                         const id = toast({
                           title: "Actualisation",
                           description:
-                            "Récupération des données depuis Google Sheets���",
+                            "Récupération des données depuis Google Sheets…",
                         });
                         try {
-                          // Invalidate and refetch relevant queries for the currently selected resort
-                          await qc.invalidateQueries([
-                            "repondants",
-                            selectedResortKey,
-                          ]);
-                          await qc.invalidateQueries([
-                            "resortSummary",
-                            selectedResortKey,
-                          ]);
-                          await qc.invalidateQueries([
-                            "resortAverages",
-                            selectedResortKey,
-                          ]);
-                          // Trigger refetch
-                          await qc.refetchQueries({
-                            queryKey: ["repondants", selectedResortKey],
-                            exact: false,
-                          });
-                          await qc.refetchQueries({
-                            queryKey: ["resortSummary", selectedResortKey],
-                            exact: false,
-                          });
-                          await qc.refetchQueries({
-                            queryKey: ["resortAverages", selectedResortKey],
-                            exact: false,
-                          });
-                          toast({
-                            title: "Actualisation terminée",
-                            description: "Les données ont été mises à jour.",
-                          });
+                          await qc.invalidateQueries(["repondants", selectedResortKey]);
+                          await qc.invalidateQueries(["resortSummary", selectedResortKey]);
+                          await qc.invalidateQueries(["resortAverages", selectedResortKey]);
+                          await qc.refetchQueries({ queryKey: ["repondants", selectedResortKey], exact: false });
+                          await qc.refetchQueries({ queryKey: ["resortSummary", selectedResortKey], exact: false });
+                          await qc.refetchQueries({ queryKey: ["resortAverages", selectedResortKey], exact: false });
+                          toast({ title: "Actualisation terminée", description: "Les données ont été mises à jour." });
                         } catch (e) {
                           console.error("Refresh failed", e);
-                          toast({
-                            title: "Erreur",
-                            description: "Impossible d'actualiser les données.",
-                            variant: "destructive" as any,
-                          });
+                          toast({ title: "Erreur", description: "Impossible d'actualiser les données.", variant: "destructive" as any });
                         }
                       }}
                       className="px-3 py-2 rounded-md border text-sm"
@@ -742,9 +791,7 @@ export default function Repondants() {
                 </div>
                 {isLoading && <div>Chargement…</div>}
                 {isError && (
-                  <div className="text-red-600">
-                    Impossible de charger les répondants.
-                  </div>
+                  <div className="text-red-600">Impossible de charger les répondants.</div>
                 )}
 
                 {data && (
@@ -752,27 +799,13 @@ export default function Repondants() {
                     <table className="min-w-full divide-y divide-gray-200 table-auto">
                       <thead className="bg-white">
                         <tr>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            Nom
-                          </th>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            Note Général
-                          </th>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            Date
-                          </th>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            Âges
-                          </th>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            Code postal
-                          </th>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            Durée du voyage
-                          </th>
-                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                            Actions
-                          </th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Nom</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Note Général</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Date</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Âges</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Code postal</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Durée du voyage</th>
+                          <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-100">
@@ -781,58 +814,33 @@ export default function Repondants() {
                             key={
                               row && row.id != null
                                 ? `id:${row.id}`
-                                : getRowKey(row) ||
-                                  `${i}-${String(row.email || row.name || "")}`
+                                : getRowKey(row) || `${i}-${String(row.email || row.name || "")}`
                             }
                             className="hover:bg-gray-50"
                           >
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {row.name || row.label || row.email}
-                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{row.name || row.label || row.email}</td>
                             <td className="px-4 py-3 text-sm text-gray-700">
                               {(() => {
                                 const key = getRowKey(row);
-                                const noteRaw =
-                                  row.note ??
-                                  (key
-                                    ? (respondentNotesMap as any)[key]
-                                    : undefined);
+                                const noteRaw = row.note ?? (key ? (respondentNotesMap as any)[key] : undefined);
                                 if (noteRaw != null && noteRaw !== "")
                                   return formatAverage(noteRaw);
-                                if (
-                                  averages &&
-                                  (averages as any).overallAverage
-                                )
-                                  return formatAverage(
-                                    (averages as any).overallAverage,
-                                  );
+                                if (averages && (averages as any).overallAverage)
+                                  return formatAverage((averages as any).overallAverage);
                                 return "—";
                               })()}
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {formatDateToFR(row.date)}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {row.age || "—"}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {row.postal}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-700">
-                              {row.duration}
-                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{formatDateToFR(row.date)}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{row.age || "—"}</td>
+                            <td className="px-4 py-3 text-sm text-gray-600">{row.postal}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{row.duration}</td>
                             <td className="px-4 py-3 text-sm text-gray-700">
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => {
                                     const selId = `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
                                     setSelected({ ...row, _selId: selId });
-                                    setSelectedSnapshotName(
-                                      row?.name ||
-                                        row?.label ||
-                                        row?.email ||
-                                        null,
-                                    );
+                                    setSelectedSnapshotName(row?.name || row?.label || row?.email || null);
                                     setDialogOpen(true);
                                   }}
                                   className="inline-flex items-center gap-2 rounded-full border p-2 hover:bg-gray-100"
@@ -843,18 +851,13 @@ export default function Repondants() {
                                 <button
                                   onClick={async () => {
                                     try {
-                                      const btn = document.getElementById(
-                                        "export-single-btn-" + i,
-                                      ) as HTMLButtonElement | null;
+                                      const btn = document.getElementById("export-single-btn-" + i) as HTMLButtonElement | null;
                                       if (btn) {
                                         btn.disabled = true;
                                         btn.textContent = "Préparation...";
                                       }
                                       const mod = await import("@/lib/pdf");
-                                      await mod.exportRespondentPdf(
-                                        selectedResortKey,
-                                        row,
-                                      );
+                                      await mod.exportRespondentPdf(selectedResortKey, row);
                                       if (btn) btn.textContent = "Téléchargé";
                                       setTimeout(() => {
                                         if (btn) {
@@ -863,21 +866,11 @@ export default function Repondants() {
                                         }
                                       }, 2000);
                                     } catch (e) {
-                                      console.error(
-                                        "Export respondent failed",
-                                        e,
-                                      );
+                                      console.error("Export respondent failed", e);
                                       try {
-                                        toast({
-                                          title: "Échec de l'export PDF",
-                                          description: String(
-                                            e && (e.message || e),
-                                          ),
-                                        });
+                                        toast({ title: "Échec de l'export PDF", description: String(e && (e.message || e)) });
                                       } catch (_) {}
-                                      const btn = document.getElementById(
-                                        "export-single-btn-" + i,
-                                      ) as HTMLButtonElement | null;
+                                      const btn = document.getElementById("export-single-btn-" + i) as HTMLButtonElement | null;
                                       if (btn) {
                                         btn.textContent = "Erreur";
                                         setTimeout(() => {
@@ -903,91 +896,27 @@ export default function Repondants() {
 
                     <div className="flex items-center justify-between mt-3">
                       <div className="text-sm text-muted-foreground">
-                        Affichage {(data.page - 1) * data.pageSize + 1} -{" "}
-                        {Math.min(data.total, data.page * data.pageSize)} sur{" "}
-                        {data.total}
+                        Affichage {(data.page - 1) * data.pageSize + 1} - {Math.min(data.total, data.page * data.pageSize)} sur {data.total}
                       </div>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setPage(Math.max(1, page - 1))}
-                          disabled={page <= 1}
-                          className="px-3 py-1 border rounded"
-                        >
-                          Préc
-                        </button>
-                        <div className="text-sm">
-                          Page {data.page} /{" "}
-                          {Math.max(1, Math.ceil(data.total / data.pageSize))}
-                        </div>
-                        <button
-                          onClick={() =>
-                            setPage(
-                              Math.min(
-                                Math.ceil(data.total / data.pageSize),
-                                page + 1,
-                              ),
-                            )
-                          }
-                          disabled={
-                            page >= Math.ceil(data.total / data.pageSize)
-                          }
-                          className="px-3 py-1 border rounded"
-                        >
-                          Suiv
-                        </button>
+                        <button onClick={() => setPage(Math.max(1, page - 1))} disabled={page <= 1} className="px-3 py-1 border rounded">Préc</button>
+                        <div className="text-sm">Page {data.page} / {Math.max(1, Math.ceil(data.total / data.pageSize))}</div>
+                        <button onClick={() => setPage(Math.min(Math.ceil(data.total / data.pageSize), page + 1))} disabled={page >= Math.ceil(data.total / data.pageSize)} className="px-3 py-1 border rounded">Suiv</button>
 
                         {/* Quick jump input */}
                         <div className="flex items-center gap-2">
                           <label className="text-sm">Aller à</label>
-                          <input
-                            type="number"
-                            min={1}
-                            max={Math.max(
-                              1,
-                              Math.ceil(data.total / data.pageSize),
-                            )}
-                            value={gotoPage}
-                            onChange={(e) => setGotoPage(e.target.value)}
-                            className="w-20 rounded-md border px-2 py-1 text-sm"
-                            placeholder="n° page"
-                          />
-                          <button
-                            onClick={() => {
-                              const totalPages = Math.max(
-                                1,
-                                Math.ceil(data.total / data.pageSize),
-                              );
-                              const target = Number(gotoPage) || 1;
-                              const clamped = Math.min(
-                                Math.max(1, Math.floor(target)),
-                                totalPages,
-                              );
-                              setPage(clamped);
-                            }}
-                            className="px-3 py-1 border rounded"
-                          >
-                            Aller
-                          </button>
+                          <input type="number" min={1} max={Math.max(1, Math.ceil(data.total / data.pageSize))} value={gotoPage} onChange={(e) => setGotoPage(e.target.value)} className="w-20 rounded-md border px-2 py-1 text-sm" placeholder="n° page" />
+                          <button onClick={() => {
+                            const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize));
+                            const target = Number(gotoPage) || 1;
+                            const clamped = Math.min(Math.max(1, Math.floor(target)), totalPages);
+                            setPage(clamped);
+                          }} className="px-3 py-1 border rounded">Aller</button>
 
                           {/* Quick page 10 shortcut if available */}
-                          {Math.max(1, Math.ceil(data.total / data.pageSize)) >=
-                            10 && (
-                            <button
-                              onClick={() =>
-                                setPage(
-                                  Math.min(
-                                    10,
-                                    Math.max(
-                                      1,
-                                      Math.ceil(data.total / data.pageSize),
-                                    ),
-                                  ),
-                                )
-                              }
-                              className="px-3 py-1 border rounded"
-                            >
-                              Page 10
-                            </button>
+                          {Math.max(1, Math.ceil(data.total / data.pageSize)) >= 10 && (
+                            <button onClick={() => setPage(Math.min(10, Math.max(1, Math.ceil(data.total / data.pageSize))))} className="px-3 py-1 border rounded">Page 10</button>
                           )}
                         </div>
                       </div>
@@ -999,10 +928,7 @@ export default function Repondants() {
           </Card>
 
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent
-              className="max-w-3xl max-h-[80vh] overflow-auto"
-              aria-describedby="respondent-dialog-desc"
-            >
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto" aria-describedby="respondent-dialog-desc">
               {
                 // Resolve the displayed row by looking up the latest row in the current page by key.
                 // This prevents mismatches when React reuses DOM nodes or data updates reorder items.
@@ -1010,32 +936,17 @@ export default function Repondants() {
               <DialogTitle>
                 {(() => {
                   const key = getRowKey(selected);
-                  const live = ((data && (data as any).items) || []).find(
-                    (r: any) => getRowKey(r) === key,
-                  );
+                  const live = ((data && (data as any).items) || []).find((r: any) => getRowKey(r) === key);
                   const rowToShow = live || selected;
                   // Prefer the exact name the user clicked (snapshot) to avoid mismatches
-                  return (
-                    selectedSnapshotName ||
-                    rowToShow?.name ||
-                    rowToShow?.label ||
-                    rowToShow?.email ||
-                    "Anonyme"
-                  );
+                  return selectedSnapshotName || rowToShow?.name || rowToShow?.label || rowToShow?.email || "Anonyme";
                 })()}
               </DialogTitle>
-              <DialogDescription id="respondent-dialog-desc">
-                Détails et moyennes pour le répondant sélectionné
-              </DialogDescription>
+              <DialogDescription id="respondent-dialog-desc">Détails et moyennes pour le répondant sélectionné</DialogDescription>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div
-                  className="rounded-lg border p-4 bg-white"
-                  style={{ borderColor: "#e6edf3" }}
-                >
-                  <div className="text-xs text-muted-foreground">
-                    Note Général
-                  </div>
+                <div className="rounded-lg border p-4 bg-white" style={{ borderColor: "#e6edf3" }}>
+                  <div className="text-xs text-muted-foreground">Note Général</div>
                   <div className="mt-2 text-2xl font-extrabold">
                     {loadingRespondentData
                       ? "…"
@@ -1043,95 +954,51 @@ export default function Repondants() {
                         ? `${formatAverage(respondentNoteGeneral)}/5`
                         : (() => {
                             const key = getRowKey(selected);
-                            const fromMap = key
-                              ? (respondentNotesMap as any)[key]
-                              : null;
+                            const fromMap = key ? (respondentNotesMap as any)[key] : null;
                             if (fromMap) return `${formatAverage(fromMap)}/5`;
-                            if (averages && (averages as any).overallAverage)
-                              return `${formatAverage((averages as any).overallAverage)}/5`;
+                            if (averages && (averages as any).overallAverage) return `${formatAverage((averages as any).overallAverage)}/5`;
                             return "—";
                           })()}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {respondentColumnLetter
-                      ? `Colonne ${respondentColumnLetter} de la fiche matrice (correspondant au répondant)`
-                      : "Colonne L de la fiche matrice (correspondant au répondant) / 5"}
+                    {respondentColumnLetter ? `Colonne ${respondentColumnLetter} de la fiche matrice (correspondant au répondant)` : "Colonne L de la fiche matrice (correspondant au répondant) / 5"}
                   </div>
                 </div>
 
-                <div
-                  className="md:col-span-2 rounded-lg border p-4 bg-white"
-                  style={{ borderColor: "#e6edf3" }}
-                >
-                  <div className="text-xs text-muted-foreground">
-                    Votre avis
-                  </div>
-                  <div className="mt-2 text-sm whitespace-pre-line">
-                    {loadingRespondentData
-                      ? "…"
-                      : respondentFeedback
-                        ? respondentFeedback
-                        : "—"}
-                  </div>
+                <div className="md:col-span-2 rounded-lg border p-4 bg-white" style={{ borderColor: "#e6edf3" }}>
+                  <div className="text-xs text-muted-foreground">Votre avis</div>
+                  <div className="mt-2 text-sm whitespace-pre-line">{loadingRespondentData ? "…" : respondentFeedback ? respondentFeedback : "—"}</div>
                 </div>
 
-                <div
-                  className="rounded-lg border p-4 bg-white"
-                  style={{ borderColor: "#e6edf3" }}
-                >
-                  <div className="text-xs text-muted-foreground">
-                    Moyennes par catégorie (répondant)
-                  </div>
+                <div className="rounded-lg border p-4 bg-white" style={{ borderColor: "#e6edf3" }}>
+                  <div className="text-xs text-muted-foreground">Moyennes par catégorie (répondant)</div>
                   <div className="mt-2 text-sm">
                     {loadingRespondentData && <div>Chargement…</div>}
-                    {!loadingRespondentData &&
-                      categoriesByRespondent &&
-                      categoriesByRespondent.length === 0 && (
-                        <div className="text-sm text-muted-foreground">
-                          Aucune donnée de catégories trouvée pour ce répondant.
-                        </div>
-                      )}
-                    {!loadingRespondentData &&
-                      categoriesByRespondent &&
-                      categoriesByRespondent.length > 0 && (
-                        <div className="space-y-2 max-h-72 overflow-auto">
-                          {categoriesByRespondent.map((c, idx) => (
-                            <div
-                              key={idx}
-                              className="flex justify-between items-center px-2 py-1 border-b last:border-b-0"
-                            >
-                              <div className="text-sm text-gray-700">
-                                {c.name}
-                              </div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {(() => {
-                                  const nameKeys = /^(nom|name|client)$/i;
-                                  const isNameCategory =
-                                    c.name &&
-                                    nameKeys.test(String(c.name).trim());
-                                  if (isNameCategory) {
-                                    return (
-                                      selectedSnapshotName ||
-                                      selected?.name ||
-                                      selected?.label ||
-                                      selected?.email ||
-                                      "—"
-                                    );
-                                  }
-                                  return c.value ? formatAverage(c.value) : "—";
-                                })()}
-                              </div>
+                    {!loadingRespondentData && categoriesByRespondent && categoriesByRespondent.length === 0 && (
+                      <div className="text-sm text-muted-foreground">Aucune donnée de catégories trouvée pour ce répondant.</div>
+                    )}
+                    {!loadingRespondentData && categoriesByRespondent && categoriesByRespondent.length > 0 && (
+                      <div className="space-y-2 max-h-72 overflow-auto">
+                        {categoriesByRespondent.map((c, idx) => (
+                          <div key={idx} className="flex justify-between items-center px-2 py-1 border-b last:border-b-0">
+                            <div className="text-sm text-gray-700">{c.name}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {(() => {
+                                const nameKeys = /^(nom|name|client)$/i;
+                                const isNameCategory = c.name && nameKeys.test(String(c.name).trim());
+                                if (isNameCategory) {
+                                  return selectedSnapshotName || selected?.name || selected?.label || selected?.email || "—";
+                                }
+                                return c.value ? formatAverage(c.value) : "—";
+                              })()}
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    {!loadingRespondentData &&
-                      categoriesByRespondent === null && (
-                        <div className="text-sm text-muted-foreground">
-                          Impossible de déterminer les moyennes par catégorie
-                          pour ce répondant.
-                        </div>
-                      )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {!loadingRespondentData && categoriesByRespondent === null && (
+                      <div className="text-sm text-muted-foreground">Impossible de déterminer les moyennes par catégorie pour ce répondant.</div>
+                    )}
                   </div>
                 </div>
               </div>
