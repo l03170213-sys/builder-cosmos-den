@@ -1333,8 +1333,7 @@ export default function Repondants() {
                                         btn.disabled = true;
                                         btn.textContent = "Préparation...";
                                       }
-                                      const mod = await import("@/lib/pdf");
-                                      await mod.exportRespondentPdf(
+                                      await pdfLib.exportRespondentPdf(
                                         selectedResortKey,
                                         row,
                                       );
