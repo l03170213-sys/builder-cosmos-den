@@ -343,7 +343,7 @@ export async function exportAllRespondentsPdf(
         for (let i = start; i < end; i++) {
           const it = items[i];
           const avgText = it.average != null ? String(it.average.toFixed(1)).replace(".", ",") : "—";
-          const text = `${it.name}: ${avgText} (${it.count})`;
+          const text = `${it.name}: ${avgText}`;
           // split into lines that fit column width
           const lines = doc.splitTextToSize(text, colWidth);
           for (const line of lines) {
@@ -470,7 +470,7 @@ export async function exportAgencyCategoryAveragesPdf(
     }
     const nameSan = sanitizeText(c.name || "");
     const avg = c.average != null ? String(c.average.toFixed(1)).replace(".", ",") : "—";
-    doc.text(`- ${nameSan}: ${avg} (${c.count})`, 20, y);
+    doc.text(`- ${nameSan}: ${avg}`, 20, y);
     y += 10;
   }
   const filename =
