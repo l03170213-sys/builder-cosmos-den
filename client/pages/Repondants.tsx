@@ -1188,9 +1188,9 @@ export default function Repondants() {
                                 for (const c of cats) {
                                   const rawName = pdfLib.sanitizeText(c.name || "");
                                   const key = rawName || String((c.name || "").trim());
-                                  const v = Number(
-                                    String(c.value || "").replace(",", "."),
-                                  );
+                                  const rawVal = String(c.value ?? "").trim();
+                                  if (rawVal === "") continue;
+                                  const v = Number(rawVal.replace(",", "."));
                                   if (!Number.isFinite(v)) continue;
                                   const lk = key.toLowerCase();
                                   if (!catMap[lk]) {
@@ -1311,9 +1311,9 @@ export default function Repondants() {
                                 for (const c of cats) {
                                   const rawName = pdfLib.sanitizeText(c.name || "");
                                   const key = (rawName || String((c.name || "").trim())).toLowerCase();
-                                  const v = Number(
-                                    String(c.value || "").replace(",", "."),
-                                  );
+                                  const rawVal = String(c.value ?? "").trim();
+                                  if (rawVal === "") continue;
+                                  const v = Number(rawVal.replace(",", "."));
                                   if (!Number.isFinite(v)) continue;
                                   if (!catMap[key]) {
                                     catMap[key] = { sum: 0, count: 0 };
