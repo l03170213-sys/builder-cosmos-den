@@ -1299,6 +1299,8 @@ export default function Repondants() {
                               if (it.email) p.set("email", it.email);
                               if (it.name) p.set("name", it.name);
                               if (it.date) p.set("date", it.date);
+                              // prefer exact row lookup when available
+                              if ((it as any).id) p.set("row", String((it as any).id));
                               const url = `/api/resort/${sel}/respondent?${p.toString()}`;
                               let details: any = null;
                               try {
