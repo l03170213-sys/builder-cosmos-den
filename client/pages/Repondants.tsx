@@ -976,7 +976,16 @@ export default function Repondants() {
                       <select
                         value={agencyFilter}
                         onChange={(e) => {
-                          setAgencyFilter(e.target.value);
+                          const val = e.target.value;
+                          setAgencyFilter(val);
+                          // find corresponding queryValue
+                          try {
+                            const found = (agencies || []).find((a: any) => a.display === val);
+                            if (found) setAgencyQueryValue(found.queryValue || val);
+                            else setAgencyQueryValue(val);
+                          } catch (err) {
+                            setAgencyQueryValue(val);
+                          }
                           setPage(1);
                         }}
                         className="rounded-md border px-3 py-2 text-sm"
