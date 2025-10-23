@@ -462,6 +462,15 @@ export async function exportAgencyCategoryAveragesPdf(
   doc.text(`Hôtel: ${resortKey}`, 20, 46);
   doc.text(`Agence: ${agencyName}`, 20, 56);
   let y = 76;
+  // If an overall average was provided, render it under the agency line
+  if (options && options.overallAverage != null) {
+    const overallVal =
+      typeof options.overallAverage === "number"
+        ? String(options.overallAverage.toFixed(1)).replace(".", ",")
+        : String(options.overallAverage);
+    doc.text(`Note moyenne: ${overallVal}`, 20, 66);
+    y = 86;
+  }
   doc.setFontSize(12);
   for (const c of categoryAverages) {
     if (y > 270) {
