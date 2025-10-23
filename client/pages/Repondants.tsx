@@ -226,7 +226,7 @@ export default function Repondants() {
                 if (searchAllMode === "name" && nameFilter)
                   params.set("name", nameFilter);
                 if (searchAllMode === "agency" && agencyFilter)
-                  params.set("agency", agencyFilter);
+                  params.set("agency", agencyQueryValue || agencyFilter);
                 if (startDateFilter) params.set("startDate", startDateFilter);
                 if (endDateFilter) params.set("endDate", endDateFilter);
                 if (sortDateDir) params.set("sortDate", sortDateDir);
@@ -282,7 +282,7 @@ export default function Repondants() {
         params.set("page", String(page));
         params.set("pageSize", String(pageSize));
         if (nameFilter) params.set("name", nameFilter);
-        if (agencyFilter) params.set("agency", agencyFilter);
+        if (agencyFilter) params.set("agency", agencyQueryValue || agencyFilter);
         if (startDateFilter) params.set("startDate", startDateFilter);
         if (endDateFilter) params.set("endDate", endDateFilter);
         if (sortDateDir) params.set("sortDate", sortDateDir);
@@ -831,7 +831,7 @@ export default function Repondants() {
               agencyFilter &&
               (searchAllMode === "none" || searchAllMode === "agency")
             )
-              params.set("agency", agencyFilter);
+              params.set("agency", agencyQueryValue || agencyFilter);
             if (startDateFilter) params.set("startDate", startDateFilter);
             if (endDateFilter) params.set("endDate", endDateFilter);
             if (sortDateDir) params.set("sortDate", sortDateDir);
@@ -1015,7 +1015,7 @@ export default function Repondants() {
                             params.set("page", "1");
                             params.set("pageSize", "500");
                             if (agencyFilter)
-                              params.set("agency", agencyFilter);
+                              params.set("agency", agencyQueryValue || agencyFilter);
                             if (startDateFilter)
                               params.set("startDate", startDateFilter);
                             if (endDateFilter)
@@ -1122,7 +1122,7 @@ export default function Repondants() {
                             params.set("page", "1");
                             params.set("pageSize", "500");
                             if (agencyFilter)
-                              params.set("agency", agencyFilter);
+                              params.set("agency", agencyQueryValue || agencyFilter);
                             if (startDateFilter)
                               params.set("startDate", startDateFilter);
                             if (endDateFilter)
