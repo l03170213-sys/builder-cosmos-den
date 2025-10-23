@@ -386,6 +386,8 @@ export async function exportAllRespondentsPdf(
       if (r.email) params.set("email", r.email);
       if (r.name) params.set("name", r.name);
       if (r.date) params.set("date", r.date);
+      // prefer exact row lookup when available
+      if ((r as any).id) params.set("row", String((r as any).id));
       const url = `/api/resort/${resortKey}/respondent?${params.toString()}`;
 
       // try a number of times if the server hasn't populated the details yet
