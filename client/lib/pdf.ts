@@ -304,7 +304,15 @@ export async function exportAllRespondentsPdf(
     doc.text(options.title || "Résumé des répondants", 20, 40);
     doc.setFontSize(36);
     doc.setTextColor(10, 10, 10);
-    // Overall average intentionally omitted on the first summary page
+    // If provided, render note moyenne under the title
+    if (options.overallAverage != null) {
+      const overallVal =
+        typeof options.overallAverage === "number"
+          ? String(options.overallAverage.toFixed(1)).replace(".", ",")
+          : String(options.overallAverage);
+      doc.setFontSize(18);
+      doc.text(`Note moyenne: ${overallVal}`, 20, 80);
+    }
     if (options.count != null) {
       doc.setFontSize(12);
       doc.text(`Nombre de répondants: ${String(options.count)}`, 20, 100);
