@@ -230,6 +230,8 @@ export async function exportRespondentPdf(resortKey: string, respondent: any) {
     if (respondent.email) params.set("email", respondent.email);
     if (respondent.name) params.set("name", respondent.name);
     if (respondent.date) params.set("date", respondent.date);
+    // prefer exact row lookup when available
+    if ((respondent as any).id) params.set("row", String((respondent as any).id));
     const url = `/api/resort/${resortKey}/respondent?${params.toString()}`;
 
     let details: any = null;
