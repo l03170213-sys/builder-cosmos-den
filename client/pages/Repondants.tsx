@@ -491,9 +491,12 @@ export default function Repondants() {
         params.set("page", "1");
         params.set("pageSize", "500");
         const apiUrl = `/api/resort/${sel}/respondents?${params.toString()}`;
-        const resp = await fetch(apiUrl, { credentials: "same-origin" });
-        if (!resp.ok) return [];
-        const json = await resp.json().catch(() => ({ items: [] }));
+        let json: any = { items: [] };
+        try {
+          json = await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
+        } catch (e) {
+          return [];
+        }
         const items = json.items || [];
         // normalize and group similar agency names (case/spacing/diacritics differences)
         const normalize = (s: string) =>
