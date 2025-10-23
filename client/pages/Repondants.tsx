@@ -1176,7 +1176,9 @@ export default function Repondants() {
                               const url = `/api/resort/${sel}/respondent?${p.toString()}`;
                               let details: any = null;
                               try {
-                                details = await fetchJsonSafe(url, { credentials: "same-origin" });
+                                details = await fetchJsonSafe(url, {
+                                  credentials: "same-origin",
+                                });
                               } catch (e) {
                                 details = null;
                               }
@@ -1292,7 +1294,9 @@ export default function Repondants() {
                               const url = `/api/resort/${sel}/respondent?${p.toString()}`;
                               let details: any = null;
                               try {
-                                details = await fetchJsonSafe(url, { credentials: "same-origin" });
+                                details = await fetchJsonSafe(url, {
+                                  credentials: "same-origin",
+                                });
                               } catch (e) {
                                 details = null;
                               }
