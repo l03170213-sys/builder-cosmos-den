@@ -233,7 +233,7 @@ function clusterAgencies(items: any[]) {
   }
   const uniques = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
   const clusters: { repr: string; members: string[]; total: number }[] = [];
-  const THRESH = 0.35;
+  const THRESH = 0.25;
   for (const u of uniques) {
     let placed = false;
     for (const cl of clusters) {
