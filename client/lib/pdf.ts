@@ -452,7 +452,7 @@ export async function exportAgencyCategoryAveragesPdf(
   resortKey: string,
   agencyName: string,
   categoryAverages: { name: string; average: number | null; count: number }[],
-  options?: { filename?: string; title?: string },
+  options?: { filename?: string; title?: string; overallAverage?: number | string },
 ) {
   const doc = new jsPDF();
   doc.setFontSize(20);
