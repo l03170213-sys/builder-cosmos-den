@@ -404,11 +404,40 @@ export default function Repondants() {
         if (!resp.ok) return [];
         const json = await resp.json().catch(() => ({ items: [] }));
         const items = json.items || [];
-        const set = new Set<string>();
+        // normalize and group similar agency names (case/spacing/diacritics differences)
+        const normalize = (s: string) =>
+          s
+            .toString()
+            .normalize('NFD')
+            .replace(/\p{Diacritic}/gu, '')
+            .replace(/[^ -\u007F\s]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const groups: Record<string, Record<string, number>> = {};
         for (const it of items) {
-          if (it && it.agency) set.add(String(it.agency).trim());
+          if (!it || !it.agency) continue;
+          const raw = String(it.agency).trim();
+          if (!raw) continue;
+          const key = normalize(raw);
+          groups[key] = groups[key] || {};
+          groups[key][raw] = (groups[key][raw] || 0) + 1;
         }
-        return Array.from(set).filter(Boolean).sort();
+        const results: { display: string; queryValue: string }[] = [];
+        for (const key of Object.keys(groups)) {
+          const variants = groups[key];
+          // pick most common raw variant as queryValue and display candidate
+          const entries = Object.keys(variants).map((v) => ({ v, c: variants[v] }));
+          entries.sort((a, b) => b.c - a.c);
+          const most = entries[0];
+          // build a nicer display (title case) unless the raw variant has uppercase letters indicating branding
+          const rawHasUpper = /[A-Z]/.test(most.v);
+          const display = rawHasUpper ? most.v : key.split(' ').map(word => word.length>0? word[0].toUpperCase()+word.slice(1): '').join(' ');
+          results.push({ display, queryValue: most.v });
+        }
+        results.sort((a,b)=>a.display.localeCompare(b.display));
+        return results;
       } catch (e) {
         return [];
       }
