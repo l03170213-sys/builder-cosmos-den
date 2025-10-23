@@ -316,27 +316,48 @@ export async function exportAllRespondentsPdf(
     if (options.categoryAverages && Array.isArray(options.categoryAverages) && options.categoryAverages.length) {
       doc.setFontSize(12);
       doc.text("Moyennes par catégorie:", 20, 120);
-      // Render as two columns to fit on the first page and align nicely under the summary
-      const cols = 2;
-      const colWidth = 80; // space for each column
+      // Render as three columns with wrapping for long names
+      const cols = 3;
+      const pageWidthUsable = 210 - 40; // A4 width minus 20px margins
+      const gutter = 8;
+      const colWidth = Math.floor((pageWidthUsable - (cols - 1) * gutter) / cols);
       const startY = 132;
-      const lineHeight = 8;
-      let row = 0;
-      for (let i = 0; i < options.categoryAverages.length; i++) {
-        const c = options.categoryAverages[i];
-        const colIndex = i % cols;
-        row = Math.floor(i / cols);
-        const x = 20 + colIndex * (colWidth + 10);
-        const y = startY + row * lineHeight;
-        if (y > 270) {
-          // don't overflow first page summary area; stop listing further categories here
-          break;
+      const lineHeight = 7;
+
+      const items = options.categoryAverages.map((c: any) => ({
+        name: String(c.name || "").trim(),
+        average: c.average,
+        count: c.count || 0,
+      }));
+      const itemsPerCol = Math.ceil(items.length / cols);
+
+      for (let col = 0; col < cols; col++) {
+        const x = 20 + col * (colWidth + gutter);
+        let y = startY;
+        const start = col * itemsPerCol;
+        const end = Math.min(items.length, start + itemsPerCol);
+        for (let i = start; i < end; i++) {
+          const it = items[i];
+          const avg = it.average != null ? String(it.average.toFixed(1)).replace('.', ',') : '—';
+          const text = `${it.name}: ${avg} (${it.count})`;
+          // split into lines that fit column width
+          const lines = doc.splitTextToSize(text, colWidth);
+          for (const line of lines) {
+            if (y > 270) {
+              // overflow - move to next page and continue there
+              doc.addPage();
+              doc.setFontSize(12);
+              // re-render heading on new page for context
+              doc.text(options.title || 'Résumé des répondants', 20, 30);
+              doc.text('Moyennes par catégorie (suite):', 20, 44);
+              y = 56;
+            }
+            doc.text(line, x, y);
+            y += lineHeight;
+          }
+          // small extra gap between categories
+          y += 2;
         }
-        const avg = c.average != null ? String(c.average.toFixed(1)).replace('.', ',') : '—';
-        const name = String(c.name || '').trim();
-        // Limit name length to avoid wrapping
-        const shortName = name.length > 30 ? name.slice(0, 27) + '...' : name;
-        doc.text(`${shortName}: ${avg}`, x, y);
       }
     }
   }
