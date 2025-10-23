@@ -1174,13 +1174,12 @@ export default function Repondants() {
                               if (it.name) p.set("name", it.name);
                               if (it.date) p.set("date", it.date);
                               const url = `/api/resort/${sel}/respondent?${p.toString()}`;
-                              const details = await fetch(url, {
-                                credentials: "same-origin",
-                              })
-                                .then((r) =>
-                                  r.ok ? r.json().catch(() => null) : null,
-                                )
-                                .catch(() => null);
+                              let details: any = null;
+                              try {
+                                details = await fetchJsonSafe(url, { credentials: "same-origin" });
+                              } catch (e) {
+                                details = null;
+                              }
                               const cats = details?.categories || null;
                               if (cats && Array.isArray(cats)) {
                                 for (const c of cats) {
@@ -1291,13 +1290,12 @@ export default function Repondants() {
                               if (it.name) p.set("name", it.name);
                               if (it.date) p.set("date", it.date);
                               const url = `/api/resort/${sel}/respondent?${p.toString()}`;
-                              const details = await fetch(url, {
-                                credentials: "same-origin",
-                              })
-                                .then((r) =>
-                                  r.ok ? r.json().catch(() => null) : null,
-                                )
-                                .catch(() => null);
+                              let details: any = null;
+                              try {
+                                details = await fetchJsonSafe(url, { credentials: "same-origin" });
+                              } catch (e) {
+                                details = null;
+                              }
                               const cats = details?.categories || null;
                               if (cats && Array.isArray(cats)) {
                                 for (const c of cats) {
