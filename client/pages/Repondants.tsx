@@ -935,9 +935,12 @@ export default function Repondants() {
             if (endDateFilter) params.set("endDate", endDateFilter);
             if (sortDateDir) params.set("sortDate", sortDateDir);
             const apiUrl = `/api/resort/${rk}/respondents?${params.toString()}`;
-            const resp = await fetch(apiUrl, { credentials: "same-origin" });
-            if (!resp.ok) break;
-            const json = await resp.json().catch(() => null);
+            let json: any = null;
+            try {
+              json = await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
+            } catch (e) {
+              break;
+            }
             if (!json || !Array.isArray(json.items)) break;
             all.push(...json.items);
             if (all.length >= json.total) break;
