@@ -313,19 +313,30 @@ export async function exportAllRespondentsPdf(
     }
 
     // If category averages are provided, print them under the overall average
-    if (options.categoryAverages && Array.isArray(options.categoryAverages)) {
+    if (options.categoryAverages && Array.isArray(options.categoryAverages) && options.categoryAverages.length) {
       doc.setFontSize(12);
       doc.text("Moyennes par catégorie:", 20, 120);
-      let y = 132;
-      for (const c of options.categoryAverages) {
+      // Render as two columns to fit on the first page and align nicely under the summary
+      const cols = 2;
+      const colWidth = 80; // space for each column
+      const startY = 132;
+      const lineHeight = 8;
+      let row = 0;
+      for (let i = 0; i < options.categoryAverages.length; i++) {
+        const c = options.categoryAverages[i];
+        const colIndex = i % cols;
+        row = Math.floor(i / cols);
+        const x = 20 + colIndex * (colWidth + 10);
+        const y = startY + row * lineHeight;
         if (y > 270) {
-          doc.addPage();
-          y = 30;
+          // don't overflow first page summary area; stop listing further categories here
+          break;
         }
         const avg = c.average != null ? String(c.average.toFixed(1)).replace('.', ',') : '—';
         const name = String(c.name || '').trim();
-        doc.text(`- ${name}: ${avg} (${c.count})`, 20, y);
-        y += 8;
+        // Limit name length to avoid wrapping
+        const shortName = name.length > 30 ? name.slice(0, 27) + '...' : name;
+        doc.text(`${shortName}: ${avg}`, x, y);
       }
     }
   }
