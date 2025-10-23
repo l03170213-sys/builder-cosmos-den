@@ -1290,6 +1290,7 @@ export default function Repondants() {
                               string,
                               { sum: number; count: number }
                             > = {};
+                            const displayMap: Record<string, string> = {};
                             for (let i = 0; i < items.length; i++) {
                               const it = items[i];
                               const p = new URLSearchParams();
@@ -1308,15 +1309,16 @@ export default function Repondants() {
                               const cats = details?.categories || null;
                               if (cats && Array.isArray(cats)) {
                                 for (const c of cats) {
-                                  const key = String(
-                                    (c.name || "").trim(),
-                                  ).toLowerCase();
+                                  const rawName = pdfLib.sanitizeText(c.name || "");
+                                  const key = (rawName || String((c.name || "").trim())).toLowerCase();
                                   const v = Number(
                                     String(c.value || "").replace(",", "."),
                                   );
                                   if (!Number.isFinite(v)) continue;
-                                  if (!catMap[key])
+                                  if (!catMap[key]) {
                                     catMap[key] = { sum: 0, count: 0 };
+                                    displayMap[key] = rawName || key;
+                                  }
                                   catMap[key].sum += v;
                                   catMap[key].count += 1;
                                 }
@@ -1325,7 +1327,7 @@ export default function Repondants() {
                               await new Promise((r) => setTimeout(r, 200));
                             }
                             const averages = Object.keys(catMap).map((k) => ({
-                              name: k,
+                              name: displayMap[k] || k,
                               average: catMap[k].count
                                 ? catMap[k].sum / catMap[k].count
                                 : null,
@@ -1762,7 +1764,7 @@ export default function Repondants() {
                   </div>
                   <div className="mt-2 text-sm whitespace-pre-line">
                     {loadingRespondentData
-                      ? "���"
+                      ? "…"
                       : respondentFeedback
                         ? respondentFeedback
                         : "—"}
