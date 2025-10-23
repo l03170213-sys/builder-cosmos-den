@@ -518,7 +518,7 @@ export default function Repondants() {
           results.push({ display, queryValue: most.v });
         }
         results.sort((a,b)=>a.display.localeCompare(b.display));
-        return results;
+        return clusterAgencies(items);
       } catch (e) {
         return [];
       }
