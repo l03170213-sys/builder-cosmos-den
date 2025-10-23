@@ -303,16 +303,21 @@ export async function fetchJsonSafe(url: string, opts?: RequestInit) {
   } catch (err: any) {
     // If network error occurs, provide safe fallbacks for known API endpoints to avoid unhandled exceptions in the UI
     try {
-      if (typeof url === 'string' && url.includes('/respondents')) {
-        return { items: [], total: 0, page: 1, pageSize: Number((opts && (opts as any).pageSize) || 50) };
+      if (typeof url === "string" && url.includes("/respondents")) {
+        return {
+          items: [],
+          total: 0,
+          page: 1,
+          pageSize: Number((opts && (opts as any).pageSize) || 50),
+        };
       }
-      if (typeof url === 'string' && url.includes('/respondent')) {
+      if (typeof url === "string" && url.includes("/respondent")) {
         return null;
       }
-      if (typeof url === 'string' && url.includes('/averages')) {
+      if (typeof url === "string" && url.includes("/averages")) {
         return null;
       }
-      if (typeof url === 'string' && url.includes('/summary')) {
+      if (typeof url === "string" && url.includes("/summary")) {
         return null;
       }
     } catch (e) {

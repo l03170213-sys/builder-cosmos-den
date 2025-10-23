@@ -17,10 +17,10 @@ const root = ReactDOM.createRoot(document.getElementById("root")!);
 root.render(<App />);
 
 // Global handler for unhandled promise rejections to avoid noisy console errors
-if (typeof window !== 'undefined') {
-  window.addEventListener('unhandledrejection', (ev) => {
+if (typeof window !== "undefined") {
+  window.addEventListener("unhandledrejection", (ev) => {
     try {
-      console.warn('Unhandled promise rejection:', ev.reason);
+      console.warn("Unhandled promise rejection:", ev.reason);
       // prevent default to avoid browser-level logging duplication
       // ev.preventDefault(); // avoid calling preventDefault to keep normal behavior
     } catch (e) {
