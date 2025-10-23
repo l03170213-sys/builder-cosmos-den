@@ -1287,6 +1287,18 @@ export default function Repondants() {
                               );
                             }
                             const items = json.items || [];
+
+                            // compute overall average across selected respondents (all categories combined)
+                            const nums: number[] = items
+                              .map((it: any) => {
+                                const v = it.note || "";
+                                const n = Number(String(v).replace(",", "."));
+                                return Number.isFinite(n) ? n : NaN;
+                              })
+                              .filter((n) => !Number.isNaN(n));
+                            const avg = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+                            const avgStr = avg != null ? avg.toFixed(1).replace(".", ",") : null;
+
                             // For each respondent fetch categories
                             const catMap: Record<
                               string,
@@ -1352,6 +1364,7 @@ export default function Repondants() {
                               {
                                 title: `Moyennes par catégorie - ${agencyFilter || "Toutes"}`,
                                 filename: `moyennes-agence-${(agencyFilter || "all").replace(/[^a-z0-9_\\-]/gi, "_")}.pdf`,
+                                overallAverage: avgStr,
                               },
                             );
                           } catch (e: any) {
