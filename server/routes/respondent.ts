@@ -71,6 +71,31 @@ function formatDateToFR(raw: string) {
   return s;
 }
 
+// Helper to coerce a variety of spreadsheet cell values into a numeric value (0-5)
+function toNumber(val: unknown): number | null {
+  if (val == null) return null;
+  if (typeof val === "number") return Number.isFinite(val) ? (val as number) : null;
+  if (typeof val === "string") {
+    const cleaned = (val as string).replace("\u00A0", "");
+    const m = cleaned.match(/-?\d+[.,]?\d*/);
+    if (!m) return null;
+    const n = Number(m[0].replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  }
+  if (typeof val === "object" && val !== null) {
+    const anyVal: any = val as any;
+    if (anyVal.v != null) return toNumber(anyVal.v);
+    if (anyVal.f != null) return toNumber(anyVal.f);
+  }
+  return null;
+}
+
+function normalizeAverage(n: number | null): number | null {
+  if (n == null) return null;
+  if (n < 0 || n > 5) return null;
+  return n;
+}
+
 export const getResortRespondentDetails: RequestHandler = async (req, res) => {
   try {
     const resortKey = req.params.resort as string;
