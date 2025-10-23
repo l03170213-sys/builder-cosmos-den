@@ -313,14 +313,20 @@ export async function exportAllRespondentsPdf(
     }
 
     // If category averages are provided, print them under the overall average
-    if (options.categoryAverages && Array.isArray(options.categoryAverages) && options.categoryAverages.length) {
+    if (
+      options.categoryAverages &&
+      Array.isArray(options.categoryAverages) &&
+      options.categoryAverages.length
+    ) {
       doc.setFontSize(12);
       doc.text("Moyennes par catégorie:", 20, 120);
       // Render as three columns with wrapping for long names
       const cols = 3;
       const pageWidthUsable = 210 - 40; // A4 width minus 20px margins
       const gutter = 8;
-      const colWidth = Math.floor((pageWidthUsable - (cols - 1) * gutter) / cols);
+      const colWidth = Math.floor(
+        (pageWidthUsable - (cols - 1) * gutter) / cols,
+      );
       const startY = 132;
       const lineHeight = 7;
 
@@ -338,7 +344,10 @@ export async function exportAllRespondentsPdf(
         const end = Math.min(items.length, start + itemsPerCol);
         for (let i = start; i < end; i++) {
           const it = items[i];
-          const avg = it.average != null ? String(it.average.toFixed(1)).replace('.', ',') : '—';
+          const avg =
+            it.average != null
+              ? String(it.average.toFixed(1)).replace(".", ",")
+              : "—";
           const text = `${it.name}: ${avg} (${it.count})`;
           // split into lines that fit column width
           const lines = doc.splitTextToSize(text, colWidth);
@@ -348,8 +357,8 @@ export async function exportAllRespondentsPdf(
               doc.addPage();
               doc.setFontSize(12);
               // re-render heading on new page for context
-              doc.text(options.title || 'Résumé des répondants', 20, 30);
-              doc.text('Moyennes par catégorie (suite):', 20, 44);
+              doc.text(options.title || "Résumé des répondants", 20, 30);
+              doc.text("Moyennes par catégorie (suite):", 20, 44);
               y = 56;
             }
             doc.text(line, x, y);

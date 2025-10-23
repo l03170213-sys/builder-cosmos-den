@@ -184,27 +184,33 @@ function clusterAgencies(items: any[]) {
   const normalize = (s: string) =>
     s
       .toString()
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .replace(/[^\u0000-\u007F\s]/g, '')
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/[^\u0000-\u007F\s]/g, "")
       .toLowerCase()
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .replace(/\s+/g, ' ')
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
       .trim();
   const levenshtein = (a: string, b: string) => {
-    const A = a || '';
-    const B = b || '';
+    const A = a || "";
+    const B = b || "";
     const n = A.length;
     const m = B.length;
     if (n === 0) return m;
     if (m === 0) return n;
-    const dp: number[][] = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
+    const dp: number[][] = Array.from({ length: n + 1 }, () =>
+      Array(m + 1).fill(0),
+    );
     for (let i = 0; i <= n; i++) dp[i][0] = i;
     for (let j = 0; j <= m; j++) dp[0][j] = j;
     for (let i = 1; i <= n; i++) {
       for (let j = 1; j <= m; j++) {
         const cost = A[i - 1] === B[j - 1] ? 0 : 1;
-        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + cost,
+        );
       }
     }
     return dp[n][m];
@@ -244,17 +250,19 @@ function clusterAgencies(items: any[]) {
       clusters.push({ repr: u, members: [u], total: counts[u] });
     }
   }
-  const results: { display: string; queryValue: string }[] = clusters.map((cl) => {
-    const most = cl.repr;
-    const rawHasUpper = /[A-Z]/.test(most);
-    const display = rawHasUpper
-      ? most
-      : normalize(most)
-          .split(' ')
-          .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : ''))
-          .join(' ');
-    return { display, queryValue: most };
-  });
+  const results: { display: string; queryValue: string }[] = clusters.map(
+    (cl) => {
+      const most = cl.repr;
+      const rawHasUpper = /[A-Z]/.test(most);
+      const display = rawHasUpper
+        ? most
+        : normalize(most)
+            .split(" ")
+            .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : ""))
+            .join(" ");
+      return { display, queryValue: most };
+    },
+  );
   results.sort((a, b) => a.display.localeCompare(b.display));
   return results;
 }
@@ -363,7 +371,8 @@ export default function Repondants() {
         params.set("page", String(page));
         params.set("pageSize", String(pageSize));
         if (nameFilter) params.set("name", nameFilter);
-        if (agencyFilter) params.set("agency", agencyQueryValue || agencyFilter);
+        if (agencyFilter)
+          params.set("agency", agencyQueryValue || agencyFilter);
         if (startDateFilter) params.set("startDate", startDateFilter);
         if (endDateFilter) params.set("endDate", endDateFilter);
         if (sortDateDir) params.set("sortDate", sortDateDir);
@@ -489,12 +498,12 @@ export default function Repondants() {
         const normalize = (s: string) =>
           s
             .toString()
-            .normalize('NFD')
-            .replace(/\p{Diacritic}/gu, '')
-            .replace(/[^ -\u007F\s]/g, '')
+            .normalize("NFD")
+            .replace(/\p{Diacritic}/gu, "")
+            .replace(/[^ -\u007F\s]/g, "")
             .toLowerCase()
-            .replace(/[^a-z0-9\s]/g, ' ')
-            .replace(/\s+/g, ' ')
+            .replace(/[^a-z0-9\s]/g, " ")
+            .replace(/\s+/g, " ")
             .trim();
         const groups: Record<string, Record<string, number>> = {};
         for (const it of items) {
@@ -509,15 +518,25 @@ export default function Repondants() {
         for (const key of Object.keys(groups)) {
           const variants = groups[key];
           // pick most common raw variant as queryValue and display candidate
-          const entries = Object.keys(variants).map((v) => ({ v, c: variants[v] }));
+          const entries = Object.keys(variants).map((v) => ({
+            v,
+            c: variants[v],
+          }));
           entries.sort((a, b) => b.c - a.c);
           const most = entries[0];
           // build a nicer display (title case) unless the raw variant has uppercase letters indicating branding
           const rawHasUpper = /[A-Z]/.test(most.v);
-          const display = rawHasUpper ? most.v : key.split(' ').map(word => word.length>0? word[0].toUpperCase()+word.slice(1): '').join(' ');
+          const display = rawHasUpper
+            ? most.v
+            : key
+                .split(" ")
+                .map((word) =>
+                  word.length > 0 ? word[0].toUpperCase() + word.slice(1) : "",
+                )
+                .join(" ");
           results.push({ display, queryValue: most.v });
         }
-        results.sort((a,b)=>a.display.localeCompare(b.display));
+        results.sort((a, b) => a.display.localeCompare(b.display));
         return clusterAgencies(items);
       } catch (e) {
         return [];
@@ -1061,8 +1080,11 @@ export default function Repondants() {
                           setAgencyFilter(val);
                           // find corresponding queryValue
                           try {
-                            const found = (agencies || []).find((a: any) => a.display === val);
-                            if (found) setAgencyQueryValue(found.queryValue || val);
+                            const found = (agencies || []).find(
+                              (a: any) => a.display === val,
+                            );
+                            if (found)
+                              setAgencyQueryValue(found.queryValue || val);
                             else setAgencyQueryValue(val);
                           } catch (err) {
                             setAgencyQueryValue(val);
@@ -1096,7 +1118,10 @@ export default function Repondants() {
                             params.set("page", "1");
                             params.set("pageSize", "500");
                             if (agencyFilter)
-                              params.set("agency", agencyQueryValue || agencyFilter);
+                              params.set(
+                                "agency",
+                                agencyQueryValue || agencyFilter,
+                              );
                             if (startDateFilter)
                               params.set("startDate", startDateFilter);
                             if (endDateFilter)
@@ -1127,31 +1152,51 @@ export default function Repondants() {
                                 ? avg.toFixed(1).replace(".", ",")
                                 : null;
                             // compute category averages by fetching respondent details
-                            const catMap: Record<string, { sum: number; count: number }> = {};
+                            const catMap: Record<
+                              string,
+                              { sum: number; count: number }
+                            > = {};
                             for (let i = 0; i < items.length; i++) {
                               const it = items[i];
                               const p = new URLSearchParams();
-                              if (it.email) p.set('email', it.email);
-                              if (it.name) p.set('name', it.name);
-                              if (it.date) p.set('date', it.date);
+                              if (it.email) p.set("email", it.email);
+                              if (it.name) p.set("name", it.name);
+                              if (it.date) p.set("date", it.date);
                               const url = `/api/resort/${sel}/respondent?${p.toString()}`;
-                              const details = await fetch(url, { credentials: 'same-origin' }).then(r => r.ok ? r.json().catch(()=>null) : null).catch(()=>null);
+                              const details = await fetch(url, {
+                                credentials: "same-origin",
+                              })
+                                .then((r) =>
+                                  r.ok ? r.json().catch(() => null) : null,
+                                )
+                                .catch(() => null);
                               const cats = details?.categories || null;
                               if (cats && Array.isArray(cats)) {
                                 for (const c of cats) {
-                                  const key = String((c.name || '').trim());
-                                  const v = Number(String(c.value || '').replace(',', '.'));
+                                  const key = String((c.name || "").trim());
+                                  const v = Number(
+                                    String(c.value || "").replace(",", "."),
+                                  );
                                   if (!Number.isFinite(v)) continue;
                                   const lk = key.toLowerCase();
-                                  if (!catMap[lk]) catMap[lk] = { sum: 0, count: 0 };
+                                  if (!catMap[lk])
+                                    catMap[lk] = { sum: 0, count: 0 };
                                   catMap[lk].sum += v;
                                   catMap[lk].count += 1;
                                 }
                               }
                               // small throttle
-                              await new Promise(r => setTimeout(r, 200));
+                              await new Promise((r) => setTimeout(r, 200));
                             }
-                            const categoryAverages = Object.keys(catMap).map(k => ({ name: k.replace(/^./, s => s.toUpperCase()), average: catMap[k].count ? catMap[k].sum / catMap[k].count : null, count: catMap[k].count }));
+                            const categoryAverages = Object.keys(catMap).map(
+                              (k) => ({
+                                name: k.replace(/^./, (s) => s.toUpperCase()),
+                                average: catMap[k].count
+                                  ? catMap[k].sum / catMap[k].count
+                                  : null,
+                                count: catMap[k].count,
+                              }),
+                            );
 
                             // call export function with overall average and category averages
                             await pdfLib.exportAllRespondentsPdf(
@@ -1203,7 +1248,10 @@ export default function Repondants() {
                             params.set("page", "1");
                             params.set("pageSize", "500");
                             if (agencyFilter)
-                              params.set("agency", agencyQueryValue || agencyFilter);
+                              params.set(
+                                "agency",
+                                agencyQueryValue || agencyFilter,
+                              );
                             if (startDateFilter)
                               params.set("startDate", startDateFilter);
                             if (endDateFilter)
