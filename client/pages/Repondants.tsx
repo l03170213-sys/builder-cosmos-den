@@ -178,6 +178,87 @@ function formatAverage(raw: any) {
   return s.replace(".", ",");
 }
 
+function clusterAgencies(items: any[]) {
+  if (!items || !Array.isArray(items)) return [];
+  // normalize helper
+  const normalize = (s: string) =>
+    s
+      .toString()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/[^\u0000-\u007F\s]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  const levenshtein = (a: string, b: string) => {
+    const A = a || '';
+    const B = b || '';
+    const n = A.length;
+    const m = B.length;
+    if (n === 0) return m;
+    if (m === 0) return n;
+    const dp: number[][] = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
+    for (let i = 0; i <= n; i++) dp[i][0] = i;
+    for (let j = 0; j <= m; j++) dp[0][j] = j;
+    for (let i = 1; i <= n; i++) {
+      for (let j = 1; j <= m; j++) {
+        const cost = A[i - 1] === B[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      }
+    }
+    return dp[n][m];
+  };
+  const similarity = (a: string, b: string) => {
+    const A = normalize(a);
+    const B = normalize(b);
+    if (A === B) return 1;
+    const maxLen = Math.max(A.length, B.length);
+    if (maxLen === 0) return 1;
+    const dist = levenshtein(A, B);
+    return 1 - dist / maxLen;
+  };
+  const counts: Record<string, number> = {};
+  for (const it of items) {
+    if (!it || !it.agency) continue;
+    const raw = String(it.agency).trim();
+    if (!raw) continue;
+    counts[raw] = (counts[raw] || 0) + 1;
+  }
+  const uniques = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  const clusters: { repr: string; members: string[]; total: number }[] = [];
+  const THRESH = 0.8;
+  for (const u of uniques) {
+    let placed = false;
+    for (const cl of clusters) {
+      const sim = similarity(u, cl.repr);
+      if (sim >= THRESH) {
+        cl.members.push(u);
+        cl.total += counts[u];
+        if (counts[u] > (counts[cl.repr] || 0)) cl.repr = u;
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) {
+      clusters.push({ repr: u, members: [u], total: counts[u] });
+    }
+  }
+  const results: { display: string; queryValue: string }[] = clusters.map((cl) => {
+    const most = cl.repr;
+    const rawHasUpper = /[A-Z]/.test(most);
+    const display = rawHasUpper
+      ? most
+      : normalize(most)
+          .split(' ')
+          .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : ''))
+          .join(' ');
+    return { display, queryValue: most };
+  });
+  results.sort((a, b) => a.display.localeCompare(b.display));
+  return results;
+}
+
 export default function Repondants() {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { resort: selectedResortKey } = useSelectedResort();
