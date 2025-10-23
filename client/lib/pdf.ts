@@ -319,7 +319,7 @@ export async function exportAllRespondentsPdf(
       options.categoryAverages.length
     ) {
       doc.setFontSize(12);
-      doc.text("Totaux par catégorie (somme des notes):", 20, 120);
+      doc.text("Moyennes par catégorie:", 20, 120);
       // Render as three columns with wrapping for long names
       const cols = 3;
       const pageWidthUsable = 210 - 40; // A4 width minus 20px margins
@@ -334,7 +334,6 @@ export async function exportAllRespondentsPdf(
         name: sanitizeText(c.name || ""),
         average: c.average,
         count: c.count || 0,
-        sum: c.average != null && c.count ? c.average * c.count : null,
       }));
       const itemsPerCol = Math.ceil(items.length / cols);
 
@@ -345,9 +344,8 @@ export async function exportAllRespondentsPdf(
         const end = Math.min(items.length, start + itemsPerCol);
         for (let i = start; i < end; i++) {
           const it = items[i];
-          const sumVal = it.sum != null ? it.sum : (it.average != null && it.count ? it.average * it.count : null);
-          const sumText = sumVal != null ? String(sumVal.toFixed(1)).replace(".", ",") : "—";
-          const text = `${it.name}: ${sumText} (${it.count})`;
+          const avgText = it.average != null ? String(it.average.toFixed(1)).replace(".", ",") : "—";
+          const text = `${it.name}: ${avgText} (${it.count})`;
           // split into lines that fit column width
           const lines = doc.splitTextToSize(text, colWidth);
           for (const line of lines) {
@@ -357,7 +355,7 @@ export async function exportAllRespondentsPdf(
               doc.setFontSize(12);
               // re-render heading on new page for context
               doc.text(options.title || "Résumé des répondants", 20, 30);
-              doc.text("Totaux par catégorie (suite):", 20, 44);
+              doc.text("Moyennes par catégorie (suite):", 20, 44);
               y = 56;
             }
             doc.text(line, x, y);
@@ -459,7 +457,7 @@ export async function exportAgencyCategoryAveragesPdf(
   const doc = new jsPDF();
   doc.setFontSize(20);
   doc.setTextColor(20, 20, 20);
-  doc.text(options?.title || `Totaux par catégorie`, 20, 30);
+  doc.text(options?.title || `Moyennes par catégorie`, 20, 30);
   doc.setFontSize(12);
   doc.text(`Hôtel: ${resortKey}`, 20, 46);
   doc.text(`Agence: ${agencyName}`, 20, 56);
@@ -471,9 +469,8 @@ export async function exportAgencyCategoryAveragesPdf(
       y = 30;
     }
     const nameSan = sanitizeText(c.name || "");
-    const sumVal = c.average != null && c.count ? c.average * c.count : null;
-    const sumText = sumVal != null ? String(sumVal.toFixed(1)).replace(".", ",") : "—";
-    doc.text(`- ${nameSan}: ${sumText} (${c.count})`, 20, y);
+    const avg = c.average != null ? String(c.average.toFixed(1)).replace(".", ",") : "—";
+    doc.text(`- ${nameSan}: ${avg} (${c.count})`, 20, y);
     y += 10;
   }
   const filename =
