@@ -190,6 +190,7 @@ export default function Repondants() {
   // New filter and sort states
   const [nameFilter, setNameFilter] = React.useState<string>("");
   const [agencyFilter, setAgencyFilter] = React.useState<string>("");
+  const [agencyQueryValue, setAgencyQueryValue] = React.useState<string>("");
   const [startDateFilter, setStartDateFilter] = React.useState<string>(""); // yyyy-mm-dd
   const [endDateFilter, setEndDateFilter] = React.useState<string>("");
   const [sortDateDir, setSortDateDir] = React.useState<string>("desc"); // 'asc' | 'desc' | ''
