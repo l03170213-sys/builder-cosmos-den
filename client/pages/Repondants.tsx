@@ -344,7 +344,7 @@ export default function Repondants() {
             );
           }
           if (agencyFilter) {
-            const af = agencyFilter.toLowerCase();
+            const af = (agencyQueryValue || agencyFilter).toLowerCase();
             filtered = filtered.filter((r) =>
               (r.agency || "").toLowerCase().includes(af),
             );
