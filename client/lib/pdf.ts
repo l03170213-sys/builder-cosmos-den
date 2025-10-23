@@ -71,7 +71,7 @@ function pause(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
-function sanitizeText(s: any) {
+export function sanitizeText(s: any) {
   if (s == null) return "";
   try {
     let str = String(s).normalize("NFKC");
@@ -331,7 +331,7 @@ export async function exportAllRespondentsPdf(
       const lineHeight = 7;
 
       const items = options.categoryAverages.map((c: any) => ({
-        name: String(c.name || "").trim(),
+        name: sanitizeText(c.name || ""),
         average: c.average,
         count: c.count || 0,
       }));
@@ -471,9 +471,10 @@ export async function exportAgencyCategoryAveragesPdf(
       doc.addPage();
       y = 30;
     }
+    const nameSan = sanitizeText(c.name || "");
     const avg =
       c.average != null ? String(c.average.toFixed(1)).replace(".", ",") : "—";
-    doc.text(`- ${c.name}: ${avg} (${c.count})`, 20, y);
+    doc.text(`- ${nameSan}: ${avg} (${c.count})`, 20, y);
     y += 10;
   }
   const filename =
