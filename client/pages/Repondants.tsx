@@ -1129,14 +1129,12 @@ export default function Repondants() {
                             if (endDateFilter)
                               params.set("endDate", endDateFilter);
                             const apiUrl = `/api/resort/${sel}/respondents?${params.toString()}`;
-                            const resp = await fetch(apiUrl, {
-                              credentials: "same-origin",
-                            });
-                            if (!resp.ok)
-                              throw new Error(
-                                "Impossible de récupérer les répondants",
-                              );
-                            const json = await resp.json();
+                            let json: any = { items: [], total: 0 };
+                            try {
+                              json = await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
+                            } catch (e) {
+                              throw new Error("Impossible de récupérer les répondants");
+                            }
                             const items = json.items || [];
                             // compute average of numeric notes
                             const nums: number[] = items
