@@ -322,7 +322,9 @@ export default function Repondants() {
                 const apiUrl = `/api/resort/${rs.key}/respondents?${params.toString()}`;
                 let json: any = { items: [], total: 0 };
                 try {
-                  json = await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
+                  json = await fetchJsonSafe(apiUrl, {
+                    credentials: "same-origin",
+                  });
                 } catch (e) {
                   json = { items: [], total: 0 };
                 }
@@ -937,7 +939,9 @@ export default function Repondants() {
             const apiUrl = `/api/resort/${rk}/respondents?${params.toString()}`;
             let json: any = null;
             try {
-              json = await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
+              json = await fetchJsonSafe(apiUrl, {
+                credentials: "same-origin",
+              });
             } catch (e) {
               break;
             }
@@ -1131,9 +1135,13 @@ export default function Repondants() {
                             const apiUrl = `/api/resort/${sel}/respondents?${params.toString()}`;
                             let json: any = { items: [], total: 0 };
                             try {
-                              json = await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
+                              json = await fetchJsonSafe(apiUrl, {
+                                credentials: "same-origin",
+                              });
                             } catch (e) {
-                              throw new Error("Impossible de récupérer les répondants");
+                              throw new Error(
+                                "Impossible de récupérer les répondants",
+                              );
                             }
                             const items = json.items || [];
                             // compute average of numeric notes
@@ -1259,9 +1267,13 @@ export default function Repondants() {
                             const apiUrl = `/api/resort/${sel}/respondents?${params.toString()}`;
                             let json: any = { items: [], total: 0 };
                             try {
-                              json = await fetchJsonSafe(apiUrl, { credentials: "same-origin" });
+                              json = await fetchJsonSafe(apiUrl, {
+                                credentials: "same-origin",
+                              });
                             } catch (e) {
-                              throw new Error("Impossible de récupérer les répondants");
+                              throw new Error(
+                                "Impossible de récupérer les répondants",
+                              );
                             }
                             const items = json.items || [];
                             // For each respondent fetch categories
