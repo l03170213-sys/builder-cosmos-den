@@ -231,7 +231,8 @@ export async function exportRespondentPdf(resortKey: string, respondent: any) {
     if (respondent.name) params.set("name", respondent.name);
     if (respondent.date) params.set("date", respondent.date);
     // prefer exact row lookup when available
-    if ((respondent as any).id) params.set("row", String((respondent as any).id));
+    if ((respondent as any).id)
+      params.set("row", String((respondent as any).id));
     const url = `/api/resort/${resortKey}/respondent?${params.toString()}`;
 
     let details: any = null;
@@ -350,7 +351,10 @@ export async function exportAllRespondentsPdf(
         const end = Math.min(items.length, start + itemsPerCol);
         for (let i = start; i < end; i++) {
           const it = items[i];
-          const avgText = it.average != null ? String(it.average.toFixed(1)).replace(".", ",") : "—";
+          const avgText =
+            it.average != null
+              ? String(it.average.toFixed(1)).replace(".", ",")
+              : "—";
           const text = `${it.name}: ${avgText}`;
           // split into lines that fit column width
           const lines = doc.splitTextToSize(text, colWidth);
@@ -460,7 +464,11 @@ export async function exportAgencyCategoryAveragesPdf(
   resortKey: string,
   agencyName: string,
   categoryAverages: { name: string; average: number | null; count: number }[],
-  options?: { filename?: string; title?: string; overallAverage?: number | string },
+  options?: {
+    filename?: string;
+    title?: string;
+    overallAverage?: number | string;
+  },
 ) {
   const doc = new jsPDF();
   doc.setFontSize(20);
@@ -486,7 +494,8 @@ export async function exportAgencyCategoryAveragesPdf(
       y = 30;
     }
     const nameSan = sanitizeText(c.name || "");
-    const avg = c.average != null ? String(c.average.toFixed(1)).replace(".", ",") : "—";
+    const avg =
+      c.average != null ? String(c.average.toFixed(1)).replace(".", ",") : "—";
     doc.text(`- ${nameSan}: ${avg}`, 20, y);
     y += 10;
   }

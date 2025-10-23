@@ -1175,7 +1175,8 @@ export default function Repondants() {
                               if (it.name) p.set("name", it.name);
                               if (it.date) p.set("date", it.date);
                               // prefer exact row lookup when available
-                              if ((it as any).id) p.set("row", String((it as any).id));
+                              if ((it as any).id)
+                                p.set("row", String((it as any).id));
                               const url = `/api/resort/${sel}/respondent?${p.toString()}`;
                               let details: any = null;
                               try {
@@ -1188,8 +1189,11 @@ export default function Repondants() {
                               const cats = details?.categories || null;
                               if (cats && Array.isArray(cats)) {
                                 for (const c of cats) {
-                                  const rawName = pdfLib.sanitizeText(c.name || "");
-                                  const key = rawName || String((c.name || "").trim());
+                                  const rawName = pdfLib.sanitizeText(
+                                    c.name || "",
+                                  );
+                                  const key =
+                                    rawName || String((c.name || "").trim());
                                   const rawVal = String(c.value ?? "").trim();
                                   if (rawVal === "") continue;
                                   const v = Number(rawVal.replace(",", "."));
@@ -1209,7 +1213,8 @@ export default function Repondants() {
                             const categoryAverages = Object.keys(catMap).map(
                               (k) => ({
                                 name:
-                                  (displayMap[k] || k.replace(/^./, (s) => s.toUpperCase())),
+                                  displayMap[k] ||
+                                  k.replace(/^./, (s) => s.toUpperCase()),
                                 average: catMap[k].count
                                   ? catMap[k].sum / catMap[k].count
                                   : null,
@@ -1296,8 +1301,13 @@ export default function Repondants() {
                                 return Number.isFinite(n) ? n : NaN;
                               })
                               .filter((n) => !Number.isNaN(n));
-                            const avg = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
-                            const avgStr = avg != null ? avg.toFixed(1).replace(".", ",") : null;
+                            const avg = nums.length
+                              ? nums.reduce((a, b) => a + b, 0) / nums.length
+                              : null;
+                            const avgStr =
+                              avg != null
+                                ? avg.toFixed(1).replace(".", ",")
+                                : null;
 
                             // For each respondent fetch categories
                             const catMap: Record<
@@ -1312,7 +1322,8 @@ export default function Repondants() {
                               if (it.name) p.set("name", it.name);
                               if (it.date) p.set("date", it.date);
                               // prefer exact row lookup when available
-                              if ((it as any).id) p.set("row", String((it as any).id));
+                              if ((it as any).id)
+                                p.set("row", String((it as any).id));
                               const url = `/api/resort/${sel}/respondent?${p.toString()}`;
                               let details: any = null;
                               try {
@@ -1325,8 +1336,12 @@ export default function Repondants() {
                               const cats = details?.categories || null;
                               if (cats && Array.isArray(cats)) {
                                 for (const c of cats) {
-                                  const rawName = pdfLib.sanitizeText(c.name || "");
-                                  const key = (rawName || String((c.name || "").trim())).toLowerCase();
+                                  const rawName = pdfLib.sanitizeText(
+                                    c.name || "",
+                                  );
+                                  const key = (
+                                    rawName || String((c.name || "").trim())
+                                  ).toLowerCase();
                                   const rawVal = String(c.value ?? "").trim();
                                   if (rawVal === "") continue;
                                   const v = Number(rawVal.replace(",", "."));

@@ -74,7 +74,8 @@ function formatDateToFR(raw: string) {
 // Helper to coerce a variety of spreadsheet cell values into a numeric value (0-5)
 function toNumber(val: unknown): number | null {
   if (val == null) return null;
-  if (typeof val === "number") return Number.isFinite(val) ? (val as number) : null;
+  if (typeof val === "number")
+    return Number.isFinite(val) ? (val as number) : null;
   if (typeof val === "string") {
     const cleaned = (val as string).replace("\u00A0", "");
     const m = cleaned.match(/-?\d+[.,]?\d*/);
