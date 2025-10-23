@@ -983,12 +983,11 @@ export default function Repondants() {
                       >
                         <option value="">Toutes les agences</option>
                         {(() => {
-                          // agenciesQuery provided below via useQuery
                           try {
                             const ags = agencies || [];
-                            return ags.map((a: string, idx: number) => (
-                              <option key={idx} value={a}>
-                                {a}
+                            return ags.map((a: any, idx: number) => (
+                              <option key={idx} value={a.display}>
+                                {a.display}
                               </option>
                             ));
                           } catch (e) {
