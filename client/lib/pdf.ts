@@ -337,11 +337,22 @@ export async function exportAllRespondentsPdf(
       const startY = 132;
       const lineHeight = 7;
 
-      const items = options.categoryAverages.map((c: any) => ({
-        name: sanitizeText(c.name || ""),
-        average: c.average,
-        count: c.count || 0,
-      }));
+      // Normalize and sort categories: put 'APPRÉCIATION GLOBALE' first, 'MOYENNE GÉNÉRALE' last, else alphabetical
+      const items = options.categoryAverages
+        .map((c: any) => ({
+          name: sanitizeText(c.name || ""),
+          average: c.average,
+          count: c.count || 0,
+        }))
+        .sort((a: any, b: any) => {
+          const ka = (a.name || "").toString().toLowerCase();
+          const kb = (b.name || "").toString().toLowerCase();
+          if (ka.includes("appréciation globale") || ka.includes("appreciation globale") || ka === "appréciation globale") return -1;
+          if (kb.includes("appréciation globale") || kb.includes("appreciation globale") || kb === "appréciation globale") return 1;
+          if (ka.includes("moyenne générale") || ka.includes("moyenne generale") || ka === "moyenne générale") return 1;
+          if (kb.includes("moyenne générale") || kb.includes("moyenne generale") || kb === "moyenne générale") return -1;
+          return ka < kb ? -1 : ka > kb ? 1 : 0;
+        });
       const itemsPerCol = Math.ceil(items.length / cols);
 
       for (let col = 0; col < cols; col++) {
