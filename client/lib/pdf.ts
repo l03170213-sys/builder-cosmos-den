@@ -477,6 +477,10 @@ export async function exportAllRespondentsPdf(
         r.note || "",
         r.feedback || "",
         null,
+        {
+          startDate: options && options.startDate ? options.startDate : null,
+          endDate: options && options.endDate ? options.endDate : null,
+        },
       );
       added++;
       if (onProgress) onProgress(added, total);
