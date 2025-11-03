@@ -1380,6 +1380,8 @@ export default function Repondants() {
                                 title: `Moyennes par catégorie - ${agencyFilter || "Toutes"}`,
                                 filename: `moyennes-agence-${(agencyFilter || "all").replace(/[^a-z0-9_\\-]/gi, "_")}.pdf`,
                                 overallAverage: avgStr,
+                                startDate: startDateFilter || null,
+                                endDate: endDateFilter || null,
                               },
                             );
                           } catch (e: any) {
