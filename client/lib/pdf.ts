@@ -451,10 +451,14 @@ export async function exportAllRespondentsPdf(
         details?.feedback || r.feedback || "",
         (details && details.categories) || null,
         {
+          // per-respondent meta
           date: details?.date || r.date || null,
           age: details?.age || r.age || null,
           postal: details?.postal || r.postal || null,
           duration: details?.duration || r.duration || null,
+          // global period from options if present
+          startDate: options && options.startDate ? options.startDate : null,
+          endDate: options && options.endDate ? options.endDate : null,
         },
       );
       added++;
