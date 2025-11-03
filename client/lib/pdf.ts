@@ -500,18 +500,19 @@ export async function exportAgencyCategoryAveragesPdf(
     if (parts.length) {
       doc.setFontSize(11);
       doc.text(`Période: ${parts.join(" — ")}`, 20, 66);
-      y = 78;
+      y = 80;
     }
   }
 
-  // If an overall average was provided, render it under the agency line (after period if present)
+  // If an overall average was provided, render it under the period (or under agency if no period)
   if (options && options.overallAverage != null) {
     const overallVal =
       typeof options.overallAverage === "number"
         ? String(options.overallAverage.toFixed(1)).replace(".", ",")
         : String(options.overallAverage);
-    doc.text(`Note moyenne: ${overallVal}`, 20, y - 10);
-    y = y + 10;
+    doc.setFontSize(12);
+    doc.text(`Note moyenne: ${overallVal}`, 20, y);
+    y += 12;
   }
   doc.setFontSize(12);
   // Sort categories with same rules as summary: appreciation global first, moyenne generale last, otherwise alphabetical
