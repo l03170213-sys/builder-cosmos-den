@@ -479,6 +479,8 @@ export async function exportAgencyCategoryAveragesPdf(
     filename?: string;
     title?: string;
     overallAverage?: number | string;
+    startDate?: string | null;
+    endDate?: string | null;
   },
 ) {
   const doc = new jsPDF();
