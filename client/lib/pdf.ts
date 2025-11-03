@@ -166,6 +166,19 @@ function addRespondentPage(
   // meta info line
   doc.setFontSize(11);
   const metaParts: string[] = [];
+
+  // If a global period was passed via meta.startDate/meta.endDate, render it first
+  if (meta?.startDate || meta?.endDate) {
+    const s = meta.startDate ? formatDateForPdf(meta.startDate) : null;
+    const e = meta.endDate ? formatDateForPdf(meta.endDate) : null;
+    const parts: string[] = [];
+    if (s) parts.push(s);
+    if (e) parts.push(e);
+    if (parts.length) {
+      metaParts.push(`Période: ${parts.join(" — ")}`);
+    }
+  }
+
   if (meta?.date) {
     const formatted = formatDateForPdf(meta.date);
     metaParts.push(
