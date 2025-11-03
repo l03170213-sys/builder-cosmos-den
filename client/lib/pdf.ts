@@ -360,10 +360,30 @@ export async function exportAllRespondentsPdf(
         .sort((a: any, b: any) => {
           const ka = (a.name || "").toString().toLowerCase();
           const kb = (b.name || "").toString().toLowerCase();
-          if (ka.includes("appréciation globale") || ka.includes("appreciation globale") || ka === "appréciation globale") return -1;
-          if (kb.includes("appréciation globale") || kb.includes("appreciation globale") || kb === "appréciation globale") return 1;
-          if (ka.includes("moyenne générale") || ka.includes("moyenne generale") || ka === "moyenne générale") return 1;
-          if (kb.includes("moyenne générale") || kb.includes("moyenne generale") || kb === "moyenne générale") return -1;
+          if (
+            ka.includes("appréciation globale") ||
+            ka.includes("appreciation globale") ||
+            ka === "appréciation globale"
+          )
+            return -1;
+          if (
+            kb.includes("appréciation globale") ||
+            kb.includes("appreciation globale") ||
+            kb === "appréciation globale"
+          )
+            return 1;
+          if (
+            ka.includes("moyenne générale") ||
+            ka.includes("moyenne generale") ||
+            ka === "moyenne générale"
+          )
+            return 1;
+          if (
+            kb.includes("moyenne générale") ||
+            kb.includes("moyenne generale") ||
+            kb === "moyenne générale"
+          )
+            return -1;
           return ka < kb ? -1 : ka > kb ? 1 : 0;
         });
       const itemsPerCol = Math.ceil(items.length / cols);
@@ -515,7 +535,9 @@ export async function exportAgencyCategoryAveragesPdf(
 
   // If a date range was provided in options, render it under the agency line
   if (options && (options.startDate || options.endDate)) {
-    const start = options.startDate ? formatDateForPdf(options.startDate) : null;
+    const start = options.startDate
+      ? formatDateForPdf(options.startDate)
+      : null;
     const end = options.endDate ? formatDateForPdf(options.endDate) : null;
     const parts: string[] = [];
     if (start) parts.push(start);
@@ -544,10 +566,30 @@ export async function exportAgencyCategoryAveragesPdf(
     .sort((a, b) => {
       const ka = (a.name || "").toString().toLowerCase();
       const kb = (b.name || "").toString().toLowerCase();
-      if (ka.includes("appréciation globale") || ka.includes("appreciation globale") || ka === "appréciation globale") return -1;
-      if (kb.includes("appréciation globale") || kb.includes("appreciation globale") || kb === "appréciation globale") return 1;
-      if (ka.includes("moyenne générale") || ka.includes("moyenne generale") || ka === "moyenne générale") return 1;
-      if (kb.includes("moyenne générale") || kb.includes("moyenne generale") || kb === "moyenne générale") return -1;
+      if (
+        ka.includes("appréciation globale") ||
+        ka.includes("appreciation globale") ||
+        ka === "appréciation globale"
+      )
+        return -1;
+      if (
+        kb.includes("appréciation globale") ||
+        kb.includes("appreciation globale") ||
+        kb === "appréciation globale"
+      )
+        return 1;
+      if (
+        ka.includes("moyenne générale") ||
+        ka.includes("moyenne generale") ||
+        ka === "moyenne générale"
+      )
+        return 1;
+      if (
+        kb.includes("moyenne générale") ||
+        kb.includes("moyenne generale") ||
+        kb === "moyenne générale"
+      )
+        return -1;
       return ka < kb ? -1 : ka > kb ? 1 : 0;
     });
 
