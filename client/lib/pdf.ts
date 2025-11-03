@@ -499,12 +499,25 @@ export async function exportAgencyCategoryAveragesPdf(
     y = 86;
   }
   doc.setFontSize(12);
-  for (const c of categoryAverages) {
+  // Sort categories with same rules as summary: appreciation global first, moyenne generale last, otherwise alphabetical
+  const sortedCats = (categoryAverages || [])
+    .map((c) => ({ ...c, name: sanitizeText(c.name || "") }))
+    .sort((a, b) => {
+      const ka = (a.name || "").toString().toLowerCase();
+      const kb = (b.name || "").toString().toLowerCase();
+      if (ka.includes("appréciation globale") || ka.includes("appreciation globale") || ka === "appréciation globale") return -1;
+      if (kb.includes("appréciation globale") || kb.includes("appreciation globale") || kb === "appréciation globale") return 1;
+      if (ka.includes("moyenne générale") || ka.includes("moyenne generale") || ka === "moyenne générale") return 1;
+      if (kb.includes("moyenne générale") || kb.includes("moyenne generale") || kb === "moyenne générale") return -1;
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+
+  for (const c of sortedCats) {
     if (y > 270) {
       doc.addPage();
       y = 30;
     }
-    const nameSan = sanitizeText(c.name || "");
+    const nameSan = c.name;
     const avg =
       c.average != null ? String(c.average.toFixed(1)).replace(".", ",") : "—";
     doc.text(`- ${nameSan}: ${avg}`, 20, y);
