@@ -489,14 +489,29 @@ export async function exportAgencyCategoryAveragesPdf(
   doc.text(`Hôtel: ${resortKey}`, 20, 46);
   doc.text(`Agence: ${agencyName}`, 20, 56);
   let y = 76;
-  // If an overall average was provided, render it under the agency line
+
+  // If a date range was provided in options, render it under the agency line
+  if (options && (options.startDate || options.endDate)) {
+    const start = options.startDate ? formatDateForPdf(options.startDate) : null;
+    const end = options.endDate ? formatDateForPdf(options.endDate) : null;
+    const parts: string[] = [];
+    if (start) parts.push(start);
+    if (end) parts.push(end);
+    if (parts.length) {
+      doc.setFontSize(11);
+      doc.text(`Période: ${parts.join(" — ")}`, 20, 66);
+      y = 78;
+    }
+  }
+
+  // If an overall average was provided, render it under the agency line (after period if present)
   if (options && options.overallAverage != null) {
     const overallVal =
       typeof options.overallAverage === "number"
         ? String(options.overallAverage.toFixed(1)).replace(".", ",")
         : String(options.overallAverage);
-    doc.text(`Note moyenne: ${overallVal}`, 20, 66);
-    y = 86;
+    doc.text(`Note moyenne: ${overallVal}`, 20, y - 10);
+    y = y + 10;
   }
   doc.setFontSize(12);
   // Sort categories with same rules as summary: appreciation global first, moyenne generale last, otherwise alphabetical
