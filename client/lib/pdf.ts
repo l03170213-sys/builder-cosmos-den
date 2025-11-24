@@ -157,6 +157,8 @@ function addRespondentPage(
     postal?: string | null;
     duration?: string | null;
     address?: string | null;
+    email?: string | null;
+    agency?: string | null;
     startDate?: string | null;
     endDate?: string | null;
   },
@@ -166,8 +168,22 @@ function addRespondentPage(
   doc.setTextColor(20, 20, 20);
   doc.text(`${sanitizeText(name) || "Anonyme"}`, 20, 30);
 
-  // Address on next line if available
+  // Agency and email info below name
   let startY = 42;
+  const infoLines: string[] = [];
+  if (meta?.agency) infoLines.push(`Agence: ${sanitizeText(meta.agency)}`);
+  if (meta?.email) infoLines.push(`Email: ${sanitizeText(meta.email)}`);
+
+  if (infoLines.length > 0) {
+    doc.setFontSize(10);
+    for (const line of infoLines) {
+      doc.text(line, 20, startY);
+      startY += 6;
+    }
+    startY += 2;
+  }
+
+  // Address on next line if available
   if (meta?.address) {
     doc.setFontSize(11);
     const addressText = sanitizeText(meta.address);
