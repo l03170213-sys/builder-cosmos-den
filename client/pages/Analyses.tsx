@@ -459,40 +459,50 @@ export default function Analyses() {
           </section>
 
           <section className="bg-white rounded-md p-4 shadow-sm mt-6">
-            <h3 className="text-lg font-semibold mb-2">Comparaison par catégorie</h3>
-
-            <div className="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b">
-              <input
-                id="category-filter"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="border rounded px-2 py-1 text-sm"
-                placeholder="🔍 Catégorie..."
-              />
-
-              <div className="flex items-center gap-1">
-                <input value={categoryMin} onChange={(e)=>setCategoryMin(e.target.value)} placeholder="min" className="border rounded px-2 py-1 text-xs w-16" />
-                <span className="text-xs text-gray-400">à</span>
-                <input value={categoryMax} onChange={(e)=>setCategoryMax(e.target.value)} placeholder="max" className="border rounded px-2 py-1 text-xs w-16" />
-              </div>
-
-              <select id="category-sort" value={categorySortBy} onChange={(e) => setCategorySortBy(e.target.value as any)} className="border rounded px-2 py-1 text-xs">
-                <option value="avg">Moyenne</option>
-                <option value="std">Écart-type</option>
-                <option value="count"># hôtels</option>
-                <option value="name">Nom</option>
-              </select>
-
-              <button onClick={() => setCategorySortDir(d => d === 'desc' ? 'asc' : 'desc')} className="text-xs px-2 py-1 border rounded hover:bg-gray-100">
-                {categorySortDir === 'desc' ? '↓ Desc' : '↑ Asc'}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold">Comparaison par catégorie</h3>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="text-xs px-2 py-1 text-gray-500 hover:text-gray-700"
+              >
+                {showFilters ? '⤴ Masquer filtres' : '⤵ Afficher filtres'}
               </button>
-
-              <div className="ml-auto flex items-center gap-2">
-                <button onClick={exportCategoryCsv} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">CSV</button>
-                <button onClick={exportCategoryJson} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">JSON</button>
-                <button onClick={exportCategoryExcel} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">Excel</button>
-              </div>
             </div>
+
+            {showFilters && (
+              <div className="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b">
+                <input
+                  id="category-filter"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="border rounded px-2 py-1 text-sm"
+                  placeholder="🔍 Catégorie..."
+                />
+
+                <div className="flex items-center gap-1">
+                  <input value={categoryMin} onChange={(e)=>setCategoryMin(e.target.value)} placeholder="min" className="border rounded px-2 py-1 text-xs w-16" />
+                  <span className="text-xs text-gray-400">à</span>
+                  <input value={categoryMax} onChange={(e)=>setCategoryMax(e.target.value)} placeholder="max" className="border rounded px-2 py-1 text-xs w-16" />
+                </div>
+
+                <select id="category-sort" value={categorySortBy} onChange={(e) => setCategorySortBy(e.target.value as any)} className="border rounded px-2 py-1 text-xs">
+                  <option value="avg">Moyenne</option>
+                  <option value="std">Écart-type</option>
+                  <option value="count"># hôtels</option>
+                  <option value="name">Nom</option>
+                </select>
+
+                <button onClick={() => setCategorySortDir(d => d === 'desc' ? 'asc' : 'desc')} className="text-xs px-2 py-1 border rounded hover:bg-gray-100">
+                  {categorySortDir === 'desc' ? '↓ Desc' : '↑ Asc'}
+                </button>
+
+                <div className="ml-auto flex items-center gap-2">
+                  <button onClick={exportCategoryCsv} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">CSV</button>
+                  <button onClick={exportCategoryJson} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">JSON</button>
+                  <button onClick={exportCategoryExcel} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">Excel</button>
+                </div>
+              </div>
+            )}
 
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
