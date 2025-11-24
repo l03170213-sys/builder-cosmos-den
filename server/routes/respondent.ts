@@ -619,6 +619,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         postal: null as null | string,
         duration: null as null | string,
         address: null as null | string,
+        agency: null as null | string,
         name: null as null | string,
         email: null as null | string,
       };
