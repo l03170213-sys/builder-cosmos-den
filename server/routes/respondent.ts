@@ -634,7 +634,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       else if (scells[71] && scells[71].v != null) fcell = scells[71];
       result.feedback = fcell ? String(fcell.v) : null;
 
-      // attach meta fields (date, age BK, postal, duration, name, email) from sheet1 when available
+      // attach meta fields (date, age BK, postal, duration, address, name, email) from sheet1 when available
       try {
         result.date =
           scells[2] && scells[2].v != null ? String(scells[2].v) : null;
@@ -646,6 +646,20 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       try {
         result.postal =
           scells[8] && scells[8].v != null ? String(scells[8].v) : null;
+      } catch (e) {}
+      try {
+        // attempt to find address column by header heuristics
+        const addrIdx = scols.findIndex((h: string) => {
+          const nh = normalize(h || "");
+          return (
+            nh.includes("adresse") ||
+            nh.includes("address") ||
+            nh.includes("lieu") ||
+            nh.includes("location")
+          );
+        });
+        if (addrIdx !== -1 && scells[addrIdx] && scells[addrIdx].v != null)
+          result.address = String(scells[addrIdx].v);
       } catch (e) {}
       try {
         // attempt to find duration column by header heuristics
