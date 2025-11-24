@@ -288,6 +288,7 @@ export async function exportRespondentPdf(resortKey: string, respondent: any) {
         age: details?.age || respondent.age || null,
         postal: details?.postal || respondent.postal || null,
         duration: details?.duration || respondent.duration || null,
+        address: details?.address || respondent.address || null,
       },
     );
     doc.save(
