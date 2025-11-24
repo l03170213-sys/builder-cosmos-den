@@ -184,6 +184,20 @@ export default async function exportToPdf(options: {
     container.style.backgroundPosition = "center";
     container.style.backgroundRepeat = "no-repeat";
 
+    // Hotel name header
+    const hotelHeader = document.createElement("div");
+    hotelHeader.style.marginBottom = "16px";
+    try {
+      const selectedKey =
+        window.localStorage.getItem("selectedResort") || "vm-resort-albanie";
+      const resorts = getResorts();
+      const cfg = resorts.find((r: any) => r.key === selectedKey) || resorts[0];
+      hotelHeader.innerHTML = `<h1 style="margin:0;font-size:24px;font-weight:800;color:#0f172a">${cfg.name}</h1><div style="margin-top:4px;color:#475569;font-size:14px">Rapport de satisfaction</div>`;
+    } catch (e) {
+      hotelHeader.innerHTML = `<h1 style="margin:0;font-size:24px;font-weight:800;color:#0f172a">Rapport</h1><div style="margin-top:4px;color:#475569;font-size:14px">Rapport de satisfaction</div>`;
+    }
+    container.appendChild(hotelHeader);
+
     // Header row with three cards
     const cardsRow = document.createElement("div");
     cardsRow.style.display = "flex";
