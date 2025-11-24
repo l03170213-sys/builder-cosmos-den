@@ -156,12 +156,24 @@ function addRespondentPage(
     age?: string | null;
     postal?: string | null;
     duration?: string | null;
+    address?: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
   },
 ) {
   if (idx > 0) doc.addPage();
   doc.setFontSize(18);
   doc.setTextColor(20, 20, 20);
   doc.text(`${sanitizeText(name) || "Anonyme"}`, 20, 30);
+
+  // Address on next line if available
+  let startY = 42;
+  if (meta?.address) {
+    doc.setFontSize(11);
+    const addressText = sanitizeText(meta.address);
+    doc.text(addressText, 20, startY);
+    startY += 8;
+  }
 
   // meta info line
   doc.setFontSize(11);
@@ -190,7 +202,8 @@ function addRespondentPage(
   if (meta?.duration) metaParts.push(`Durée: ${sanitizeText(meta.duration)}`);
   if (metaParts.length) {
     doc.setFontSize(10);
-    doc.text(metaParts.join(" — "), 20, 42);
+    doc.text(metaParts.join(" — "), 20, startY);
+    startY += 8;
   }
 
   doc.setFontSize(12);
