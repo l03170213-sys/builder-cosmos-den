@@ -399,62 +399,61 @@ export default function Analyses() {
           </section>
 
           <section className="bg-white rounded-md p-4 shadow-sm">
-            <h3 className="text-lg font-semibold mb-3">Alertes & Points faibles</h3>
-            <p className="text-sm text-muted-foreground mb-3">Analyse automatique pour détecter les hôtels ou catégories nécessitant une attention (faible moyenne, forte variance, peu de répondants).</p>
+            <h3 className="text-lg font-semibold mb-2">Résumé & Alertes</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="bg-white border p-3 rounded flex flex-col justify-between">
-                <div className="text-sm text-muted-foreground">Meilleur hôtel</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="border rounded-lg p-3 bg-gradient-to-br from-green-50 to-emerald-50">
+                <div className="text-xs font-medium text-green-700 uppercase">🏆 Meilleur</div>
                 {bestHotel ? (
                   <>
-                    <div className="mt-2 text-lg font-semibold">{bestHotel.name}</div>
-                    <div className="mt-1 text-sm">Moyenne: {Number(bestHotel.overall).toFixed(2)}/5</div>
-                    <div className="mt-3">
-                      <button
-                        onClick={() => openModal(bestHotel.key)}
-                        className="px-3 py-1 rounded-md bg-primary text-white text-sm"
-                      >Voir</button>
-                    </div>
+                    <div className="mt-2 font-bold text-sm text-gray-900">{bestHotel.name}</div>
+                    <div className="mt-1 text-lg font-bold text-green-700">{Number(bestHotel.overall).toFixed(2)}/5</div>
+                    <button
+                      onClick={() => openModal(bestHotel.key)}
+                      className="mt-2 w-full px-2 py-1 rounded text-xs bg-green-600 text-white hover:bg-green-700"
+                    >Détails</button>
                   </>
                 ) : (
-                  <div className="mt-2 text-sm">Aucun donnée</div>
+                  <div className="mt-2 text-xs text-gray-500">—</div>
                 )}
               </div>
 
-              <div className="bg-white border p-3 rounded flex flex-col justify-between">
-                <div className="text-sm text-muted-foreground">Pire hôtel</div>
+              <div className="border rounded-lg p-3 bg-gradient-to-br from-red-50 to-rose-50">
+                <div className="text-xs font-medium text-red-700 uppercase">⚠️ À surveiller</div>
                 {worstHotel ? (
                   <>
-                    <div className="mt-2 text-lg font-semibold">{worstHotel.name}</div>
-                    <div className="mt-1 text-sm">Moyenne: {Number(worstHotel.overall).toFixed(2)}/5</div>
-                    <div className="mt-3">
-                      <button
-                        onClick={() => openModal(worstHotel.key)}
-                        className="px-3 py-1 rounded-md border text-sm"
-                      >Voir</button>
-                    </div>
+                    <div className="mt-2 font-bold text-sm text-gray-900">{worstHotel.name}</div>
+                    <div className="mt-1 text-lg font-bold text-red-700">{Number(worstHotel.overall).toFixed(2)}/5</div>
+                    <button
+                      onClick={() => openModal(worstHotel.key)}
+                      className="mt-2 w-full px-2 py-1 rounded text-xs bg-red-600 text-white hover:bg-red-700"
+                    >Détails</button>
                   </>
                 ) : (
-                  <div className="mt-2 text-sm">Aucun donnée</div>
+                  <div className="mt-2 text-xs text-gray-500">—</div>
                 )}
               </div>
 
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-md p-3">
-                <div className="text-sm font-medium">Hôtels à surveiller (moyenne générale basse)</div>
-                <ul className="mt-2 space-y-2">
-                  {analysis.badHotels.slice(0, 6).map((h: any) => (
-                    <li key={h.key} className="flex items-center justify-between bg-white border p-2 rounded">
-                      <div className="text-sm">{h.name}</div>
-                      <div className="text-sm font-semibold">{Number(h.overall).toFixed(2)}/5</div>
-                    </li>
-                  ))}
-                </ul>
+              <div className="border rounded-lg p-3 bg-gradient-to-br from-blue-50 to-cyan-50">
+                <div className="text-xs font-medium text-blue-700 uppercase">📊 Total hôtels</div>
+                <div className="mt-2 font-bold text-2xl text-blue-700">{(analysis.goodHotels || []).length}</div>
+                <div className="mt-1 text-xs text-gray-500">hôtels analysés</div>
               </div>
-
             </div>
+
+            {analysis.badHotels.length > 1 && (
+              <div className="mt-4 border-t pt-4">
+                <div className="text-xs font-medium text-muted-foreground uppercase">Hôtels à surveiller</div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {analysis.badHotels.slice(0, 5).map((h: any) => (
+                    <div key={h.key} className="inline-flex items-center gap-2 bg-red-50 px-2 py-1 rounded text-xs">
+                      <span className="font-medium">{h.name}</span>
+                      <span className="font-bold text-red-700">{Number(h.overall).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="bg-white rounded-md p-4 shadow-sm mt-6">
