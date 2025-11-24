@@ -509,6 +509,8 @@ export async function exportAllRespondentsPdf(
           postal: details?.postal || r.postal || null,
           duration: details?.duration || r.duration || null,
           address: details?.address || r.address || null,
+          email: details?.email || r.email || null,
+          agency: details?.agency || r.agency || null,
           // global period from options if present
           startDate: options && options.startDate ? options.startDate : null,
           endDate: options && options.endDate ? options.endDate : null,
