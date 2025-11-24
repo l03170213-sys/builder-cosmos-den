@@ -427,7 +427,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 0, name: "Nom" },
         { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
         { colIndex: 2, name: "✈️ TRANSPORTS Aérien" },
-        { colIndex: 3, name: "���� Car navette" },
+        { colIndex: 3, name: "🚐 Car navette" },
         { colIndex: 4, name: "��� HÉBERGEMENT" },
         { colIndex: 5, name: "🛏️ CHAMBRES" },
         { colIndex: 6, name: "🏊 PISCINE" },
@@ -635,7 +635,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
       else if (scells[71] && scells[71].v != null) fcell = scells[71];
       result.feedback = fcell ? String(fcell.v) : null;
 
-      // attach meta fields (date, age BK, postal, duration, address, name, email) from sheet1 when available
+      // attach meta fields (date, age BK, postal, duration, address, email, agency, name) from sheet1 when available
       try {
         result.date =
           scells[2] && scells[2].v != null ? String(scells[2].v) : null;
@@ -661,6 +661,19 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         });
         if (addrIdx !== -1 && scells[addrIdx] && scells[addrIdx].v != null)
           result.address = String(scells[addrIdx].v);
+      } catch (e) {}
+      try {
+        // attempt to find agency column by header heuristics
+        const agencyIdx = scols.findIndex((h: string) => {
+          const nh = normalize(h || "");
+          return (
+            nh.includes("agence") ||
+            nh.includes("agency") ||
+            nh.includes("travel agency")
+          );
+        });
+        if (agencyIdx !== -1 && scells[agencyIdx] && scells[agencyIdx].v != null)
+          result.agency = String(scells[agencyIdx].v);
       } catch (e) {}
       try {
         // attempt to find duration column by header heuristics
