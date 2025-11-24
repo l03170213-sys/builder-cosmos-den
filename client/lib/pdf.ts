@@ -534,6 +534,8 @@ export async function exportAllRespondentsPdf(
         null,
         {
           address: r.address || null,
+          email: r.email || null,
+          agency: r.agency || null,
           startDate: options && options.startDate ? options.startDate : null,
           endDate: options && options.endDate ? options.endDate : null,
         },
