@@ -457,76 +457,72 @@ export default function Analyses() {
           </section>
 
           <section className="bg-white rounded-md p-4 shadow-sm mt-6">
-            <h3 className="text-lg font-semibold mb-3">Comparaison par catégorie (tous les hôtels)</h3>
-            <div className="text-sm text-muted-foreground mb-3">Tableau comparatif des moyennes par catégorie pour chaque hôtel.</div>
+            <h3 className="text-lg font-semibold mb-2">Comparaison par catégorie</h3>
 
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground">Rechercher</label>
-                <input
-                  id="category-filter"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="border rounded px-2 py-1 text-sm"
-                  placeholder="Nom de la catégorie..."
-                />
+            <div className="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b">
+              <input
+                id="category-filter"
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="border rounded px-2 py-1 text-sm"
+                placeholder="🔍 Catégorie..."
+              />
+
+              <div className="flex items-center gap-1">
+                <input value={categoryMin} onChange={(e)=>setCategoryMin(e.target.value)} placeholder="min" className="border rounded px-2 py-1 text-xs w-16" />
+                <span className="text-xs text-gray-400">à</span>
+                <input value={categoryMax} onChange={(e)=>setCategoryMax(e.target.value)} placeholder="max" className="border rounded px-2 py-1 text-xs w-16" />
               </div>
 
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground">Filtre moyenne</label>
-                <input value={categoryMin} onChange={(e)=>setCategoryMin(e.target.value)} placeholder="min" className="border rounded px-2 py-1 text-sm w-20" />
-                <input value={categoryMax} onChange={(e)=>setCategoryMax(e.target.value)} placeholder="max" className="border rounded px-2 py-1 text-sm w-20" />
-              </div>
+              <select id="category-sort" value={categorySortBy} onChange={(e) => setCategorySortBy(e.target.value as any)} className="border rounded px-2 py-1 text-xs">
+                <option value="avg">Moyenne</option>
+                <option value="std">Écart-type</option>
+                <option value="count"># hôtels</option>
+                <option value="name">Nom</option>
+              </select>
 
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground">Trier par</label>
-                <select id="category-sort" value={categorySortBy} onChange={(e) => setCategorySortBy(e.target.value as any)} className="border rounded px-2 py-1 text-sm">
-                  <option value="avg">Moyenne</option>
-                  <option value="std">Écart-type</option>
-                  <option value="count">Nombre d'hôtels</option>
-                  <option value="name">Nom</option>
-                </select>
-
-                <select id="category-sort-dir" value={categorySortDir} onChange={(e) => setCategorySortDir(e.target.value as any)} className="border rounded px-2 py-1 text-sm">
-                  <option value="desc">Desc</option>
-                  <option value="asc">Asc</option>
-                </select>
-              </div>
+              <button onClick={() => setCategorySortDir(d => d === 'desc' ? 'asc' : 'desc')} className="text-xs px-2 py-1 border rounded hover:bg-gray-100">
+                {categorySortDir === 'desc' ? '↓ Desc' : '↑ Asc'}
+              </button>
 
               <div className="ml-auto flex items-center gap-2">
-                <button onClick={exportCategoryCsv} className="px-3 py-1 rounded-md border text-sm">Exporter CSV</button>
-                <button onClick={exportCategoryJson} className="px-3 py-1 rounded-md border text-sm">Exporter JSON</button>
-                <button onClick={exportCategoryExcel} className="px-3 py-1 rounded-md border text-sm">Exporter Excel</button>
+                <button onClick={exportCategoryCsv} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">CSV</button>
+                <button onClick={exportCategoryJson} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">JSON</button>
+                <button onClick={exportCategoryExcel} className="px-2 py-1 rounded text-xs border hover:bg-gray-50">Excel</button>
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full table-fixed text-sm">
-                <thead>
-                  <tr className="text-left">
-                    <th onClick={()=>toggleSort('name')} className="p-2 w-64 cursor-pointer">Catégorie {categorySortBy==='name' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
-                    <th onClick={()=>toggleSort('avg')} className="p-2 w-24 cursor-pointer">Moyenne {categorySortBy==='avg' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
-                    <th className="p-2 w-48">Meilleur hôtel</th>
-                    {resorts.map((r) => (
-                      <th key={r.key} className="p-2 text-center">{r.name}</th>
+              <table className="w-full text-xs">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th onClick={()=>toggleSort('name')} className="p-2 text-left font-semibold cursor-pointer hover:bg-gray-100">#  {categorySortBy==='name' ? (categorySortDir==='desc' ? '↓' : '��') : ''}</th>
+                    <th onClick={()=>toggleSort('avg')} className="p-2 text-center font-semibold cursor-pointer hover:bg-gray-100">Moy {categorySortBy==='avg' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
+                    {resorts.slice(0, 5).map((r) => (
+                      <th key={r.key} className="p-2 text-center font-semibold">{r.name.substring(0, 8)}</th>
                     ))}
+                    {resorts.length > 5 && <th className="p-2 text-center text-gray-400 text-xs">+{resorts.length - 5}</th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {categoryRows.map((stat: any) => {
-                    const best = (stat.hotels || []).slice().sort((a: any, b: any) => b.val - a.val)[0];
-                    return (
-                      <tr key={stat.name} className="border-t">
-                        <td className="p-2 align-top">{stat.name}</td>
-                        <td className="p-2 font-semibold">{stat.avg != null ? Number(stat.avg).toFixed(2) : '—'}</td>
-                        <td className="p-2">{best ? `${best.name} (${Number(best.val).toFixed(2)})` : '—'}</td>
-                        {resorts.map((r) => {
-                          const found = (stat.hotels || []).find((h: any) => h.key === r.key);
-                          return <td key={r.key} className="p-2 text-center">{found ? Number(found.val).toFixed(2) : '—'}</td>;
-                        })}
-                      </tr>
-                    );
-                  })}
+                  {categoryRows.map((stat: any, idx: number) => (
+                    <tr key={stat.name} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="p-2 font-medium text-left text-gray-900">{stat.name.substring(0, 30)}</td>
+                      <td className="p-2 text-center font-bold text-blue-700">{stat.avg != null ? Number(stat.avg).toFixed(1) : '—'}</td>
+                      {resorts.slice(0, 5).map((r) => {
+                        const found = (stat.hotels || []).find((h: any) => h.key === r.key);
+                        const val = found ? Number(found.val).toFixed(1) : '—';
+                        const num = found ? Number(found.val) : null;
+                        const color = num != null && num >= 4.5 ? 'text-green-700' : num != null && num < 3 ? 'text-red-700' : 'text-gray-700';
+                        return (
+                          <td key={r.key} className={`p-2 text-center font-semibold ${color}`}>
+                            {val}
+                          </td>
+                        );
+                      })}
+                      {resorts.length > 5 && <td className="p-2 text-center text-gray-400">...</td>}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
