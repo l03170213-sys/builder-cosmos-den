@@ -401,7 +401,7 @@ export default function Analyses() {
           </section>
 
           <section className="bg-white rounded-md p-4 shadow-sm">
-            <h3 className="text-lg font-semibold mb-2">Résumé & Alertes</h3>
+            <h3 className="text-lg font-semibold mb-3">Aperçu</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="border rounded-lg p-3 bg-gradient-to-br from-green-50 to-emerald-50">
