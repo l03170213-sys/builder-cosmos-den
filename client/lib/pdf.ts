@@ -210,12 +210,12 @@ function addRespondentPage(
   doc.text(
     `Note générale: ${formatOverall(overall)}`,
     20,
-    metaParts.length ? 55 : 45,
+    startY + 8,
   );
   doc.setFontSize(11);
   const feedbackText = sanitizeText(feedback) || "(aucun)";
   // wrap text
-  const startFeedbackY = metaParts.length ? 70 : 60;
+  const startFeedbackY = startY + 22;
   doc.text("Avis du répondant:", 20, startFeedbackY);
   const split = doc.splitTextToSize(feedbackText, 170);
   doc.text(split, 20, startFeedbackY + 8);
