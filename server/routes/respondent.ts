@@ -427,7 +427,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         { colIndex: 0, name: "Nom" },
         { colIndex: 1, name: "🌟 APPRÉCIATION GLOBALE" },
         { colIndex: 2, name: "✈️ TRANSPORTS Aérien" },
-        { colIndex: 3, name: "🚐 Car navette" },
+        { colIndex: 3, name: "���� Car navette" },
         { colIndex: 4, name: "��� HÉBERGEMENT" },
         { colIndex: 5, name: "🛏️ CHAMBRES" },
         { colIndex: 6, name: "🏊 PISCINE" },
@@ -618,6 +618,7 @@ export const getResortRespondentDetails: RequestHandler = async (req, res) => {
         age: null as null | string,
         postal: null as null | string,
         duration: null as null | string,
+        address: null as null | string,
         name: null as null | string,
         email: null as null | string,
       };
