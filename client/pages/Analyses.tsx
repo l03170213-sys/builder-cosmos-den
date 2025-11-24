@@ -342,7 +342,7 @@ export default function Analyses() {
 
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div className="bg-white rounded-md p-4 shadow-sm">
-              <h3 className="text-lg font-semibold mb-3">Comparaison inter-hôtel (Moyenne Générale)</h3>
+              <h3 className="text-lg font-semibold mb-4">Moyennes générales</h3>
               {allResortsQuery.isLoading ? (
                 <div className="h-64 animate-pulse bg-gray-200 rounded" />
               ) : (
@@ -361,34 +361,35 @@ export default function Analyses() {
             </div>
 
             <div className="bg-white rounded-md p-4 shadow-sm">
-              <h3 className="text-lg font-semibold mb-3">Sélectionner des hôtels à comparer (max 8)</h3>
-              <div className="flex flex-wrap gap-2">
+              <h3 className="text-lg font-semibold mb-4">Comparaison par catégories</h3>
+              <div className="flex flex-wrap gap-1.5">
                 {resorts.map((r) => (
                   <button
                     key={r.key}
                     onClick={() => toggleSelect(r.key)}
-                    className={`px-3 py-1 rounded-md border ${selectedKeys.includes(r.key) ? "bg-primary text-white" : "bg-white"}`}
+                    className={`px-2.5 py-1 rounded text-xs border transition ${selectedKeys.includes(r.key) ? "bg-primary text-white border-primary" : "bg-white hover:bg-gray-50"}`}
                   >
                     {r.name}
                   </button>
                 ))}
               </div>
+              <div className="text-xs text-gray-500 mt-2 mb-4">max. 8 hôtels</div>
 
-              <div className="mt-4">
+              <div>
                 {radarData.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">Sélectionne au moins un hôtel pour voir la comparaison par catégorie.</div>
+                  <div className="h-48 flex items-center justify-center text-sm text-gray-400">Sélectionnez des hôtels</div>
                 ) : (
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart cx="50%" cy="50%" outerRadius={90} data={radarData}>
                         <PolarGrid />
-                        <PolarAngleAxis dataKey="category" />
+                        <PolarAngleAxis dataKey="category" tick={{ fontSize: 11 }} />
                         <PolarRadiusAxis angle={30} domain={[0, 5]} />
                         {selectedKeys.map((k, idx) => {
                           const color = ["#3b82f6", "#06b6d4", "#ef4444", "#f59e0b", "#10b981", "#7c3aed", "#f97316", "#8b5cf6"][idx % 8];
                           return <Radar key={k} name={resorts.find((x) => x.key === k)?.name || k} dataKey={k} stroke={color} fill={color} fillOpacity={0.4} />;
                         })}
-                        <Legend />
+                        <Legend wrapperStyle={{ fontSize: 11 }} />
                         <Tooltip />
                       </RadarChart>
                     </ResponsiveContainer>
@@ -496,7 +497,7 @@ export default function Analyses() {
               <table className="w-full text-xs">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
-                    <th onClick={()=>toggleSort('name')} className="p-2 text-left font-semibold cursor-pointer hover:bg-gray-100">#  {categorySortBy==='name' ? (categorySortDir==='desc' ? '↓' : '��') : ''}</th>
+                    <th onClick={()=>toggleSort('name')} className="p-2 text-left font-semibold cursor-pointer hover:bg-gray-100">#  {categorySortBy==='name' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
                     <th onClick={()=>toggleSort('avg')} className="p-2 text-center font-semibold cursor-pointer hover:bg-gray-100">Moy {categorySortBy==='avg' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
                     {resorts.slice(0, 5).map((r) => (
                       <th key={r.key} className="p-2 text-center font-semibold">{r.name.substring(0, 8)}</th>
