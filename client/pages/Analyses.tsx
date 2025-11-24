@@ -504,30 +504,31 @@ export default function Analyses() {
               </div>
             )}
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-gray-50 sticky top-0">
+            <div className="overflow-x-auto max-h-96">
+              <table className="w-full text-xs border-collapse">
+                <thead className="bg-gray-900 text-white sticky top-0 z-10">
                   <tr>
-                    <th onClick={()=>toggleSort('name')} className="p-2 text-left font-semibold cursor-pointer hover:bg-gray-100">#  {categorySortBy==='name' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
-                    <th onClick={()=>toggleSort('avg')} className="p-2 text-center font-semibold cursor-pointer hover:bg-gray-100">Moy {categorySortBy==='avg' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
+                    <th onClick={()=>toggleSort('name')} className="p-2 text-left font-semibold cursor-pointer hover:bg-gray-800 border-b"># {categorySortBy==='name' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
+                    <th onClick={()=>toggleSort('avg')} className="p-2 text-center font-semibold cursor-pointer hover:bg-gray-800 border-b">Moy {categorySortBy==='avg' ? (categorySortDir==='desc' ? '↓' : '↑') : ''}</th>
                     {resorts.slice(0, 5).map((r) => (
-                      <th key={r.key} className="p-2 text-center font-semibold">{r.name.substring(0, 8)}</th>
+                      <th key={r.key} className="p-2 text-center font-semibold border-b text-xs">{r.name.substring(0, 10)}</th>
                     ))}
-                    {resorts.length > 5 && <th className="p-2 text-center text-gray-400 text-xs">+{resorts.length - 5}</th>}
+                    {resorts.length > 5 && <th className="p-2 text-center border-b text-xs opacity-60">+{resorts.length - 5}</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {categoryRows.map((stat: any, idx: number) => (
-                    <tr key={stat.name} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="p-2 font-medium text-left text-gray-900">{stat.name.substring(0, 30)}</td>
-                      <td className="p-2 text-center font-bold text-blue-700">{stat.avg != null ? Number(stat.avg).toFixed(1) : '—'}</td>
+                    <tr key={stat.name} className="border-b hover:bg-blue-50 transition">
+                      <td className="p-2 font-medium text-gray-900 text-left max-w-xs truncate" title={stat.name}>{stat.name.substring(0, 25)}</td>
+                      <td className="p-2 text-center font-bold text-blue-700 bg-blue-50">{stat.avg != null ? Number(stat.avg).toFixed(1) : '—'}</td>
                       {resorts.slice(0, 5).map((r) => {
                         const found = (stat.hotels || []).find((h: any) => h.key === r.key);
                         const val = found ? Number(found.val).toFixed(1) : '—';
                         const num = found ? Number(found.val) : null;
+                        const bgColor = num != null && num >= 4.5 ? 'bg-green-50' : num != null && num < 3 ? 'bg-red-50' : 'bg-white';
                         const color = num != null && num >= 4.5 ? 'text-green-700' : num != null && num < 3 ? 'text-red-700' : 'text-gray-700';
                         return (
-                          <td key={r.key} className={`p-2 text-center font-semibold ${color}`}>
+                          <td key={r.key} className={`p-2 text-center font-bold ${color} ${bgColor}`}>
                             {val}
                           </td>
                         );
