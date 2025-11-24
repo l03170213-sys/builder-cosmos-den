@@ -28,6 +28,7 @@ export default function Analyses() {
   const { resort: selectedResortKey, setSelected } = useSelectedResort();
   const resorts = useResorts();
   const currentResort = resorts.find((r) => r.key === selectedResortKey) || resorts[0];
+  const [showFilters, setShowFilters] = React.useState(false);
 
   const { data, isLoading, isError } = useQuery<ResortAveragesResponse | null>({
     queryKey: ["resort-averages-analyses", selectedResortKey],
