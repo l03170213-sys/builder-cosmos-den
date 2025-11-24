@@ -513,6 +513,7 @@ export async function exportAllRespondentsPdf(
         r.feedback || "",
         null,
         {
+          address: r.address || null,
           startDate: options && options.startDate ? options.startDate : null,
           endDate: options && options.endDate ? options.endDate : null,
         },
