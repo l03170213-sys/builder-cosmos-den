@@ -339,7 +339,7 @@ export default function Analyses() {
       <div className="flex flex-col min-w-0">
         <Header />
         <main className="max-w-screen-2xl mx-auto w-full px-4 py-6 space-y-6">
-          <h2 className="text-2xl font-semibold mb-4">Analyses & Comparaisons</h2>
+          <h2 className="text-2xl font-semibold">Analyses</h2>
 
           <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <div className="bg-white rounded-md p-4 shadow-sm">
