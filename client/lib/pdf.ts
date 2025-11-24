@@ -305,6 +305,8 @@ export async function exportRespondentPdf(resortKey: string, respondent: any) {
         postal: details?.postal || respondent.postal || null,
         duration: details?.duration || respondent.duration || null,
         address: details?.address || respondent.address || null,
+        email: details?.email || respondent.email || null,
+        agency: details?.agency || respondent.agency || null,
       },
     );
     doc.save(
